@@ -1,6 +1,6 @@
 "use client"
 
-import { Calculator, FolderOpen, Home, Receipt, Users } from "lucide-react"
+import { FolderOpen, Home, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -10,8 +10,6 @@ const navigation = [
 	{ name: "대시보드", href: "/", icon: Home },
 	{ name: "회원 관리", href: "/members", icon: Users },
 	{ name: "프로젝트", href: "/projects", icon: FolderOpen },
-	{ name: "지출 청구", href: "/expense-claims", icon: Receipt },
-	{ name: "회계 관리", href: "/accounting", icon: Calculator },
 ]
 
 export function Navigation() {
