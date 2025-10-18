@@ -1,6 +1,6 @@
 "use client"
 
-import { Calculator, FolderOpen, Receipt, Users } from "lucide-react"
+import { FolderOpen, Users } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -8,13 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 const stats = {
 	totalMembers: 12,
 	activeProjects: 3,
-	pendingClaims: 5,
-	accountBalance: 550,
 	recentActivity: [
 		{ type: "member", description: "새 회원 가입: 김철수", time: "2시간 전" },
 		{ type: "project", description: '프로젝트 "웹앱" 상태가 활성으로 변경됨', time: "4시간 전" },
-		{ type: "expense", description: "지출 청구서 제출: 재료비 150,000원", time: "1일 전" },
-		{ type: "transaction", description: "새 수입: 후원금 200,000원", time: "2일 전" },
 	],
 }
 
@@ -27,7 +23,7 @@ export default function DashboardPage() {
 			</div>
 
 			{/* Stats Cards */}
-			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+			<div className="grid gap-4 md:grid-cols-2">
 				<Card>
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 						<CardTitle className="text-sm font-medium">총 회원 수</CardTitle>
@@ -49,28 +45,6 @@ export default function DashboardPage() {
 						<p className="text-xs text-muted-foreground">이번 달 완료: 1개</p>
 					</CardContent>
 				</Card>
-
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium">대기 중인 청구서</CardTitle>
-						<Receipt className="h-4 w-4 text-muted-foreground" />
-					</CardHeader>
-					<CardContent>
-						<div className="text-2xl font-bold">{stats.pendingClaims}</div>
-						<p className="text-xs text-muted-foreground">검토 필요</p>
-					</CardContent>
-				</Card>
-
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium">계좌 잔액</CardTitle>
-						<Calculator className="h-4 w-4 text-muted-foreground" />
-					</CardHeader>
-					<CardContent>
-						<div className="text-2xl font-bold">{stats.accountBalance.toLocaleString()}원</div>
-						<p className="text-xs text-muted-foreground">지난 달 대비 +200,000원</p>
-					</CardContent>
-				</Card>
 			</div>
 
 			{/* Recent Activity */}
@@ -89,13 +63,7 @@ export default function DashboardPage() {
 										<p className="text-xs text-muted-foreground">{activity.time}</p>
 									</div>
 									<Badge variant="outline" className="text-xs">
-										{activity.type === "member"
-											? "회원"
-											: activity.type === "project"
-												? "프로젝트"
-												: activity.type === "expense"
-													? "지출"
-													: "거래"}
+										{activity.type === "member" ? "회원" : "프로젝트"}
 									</Badge>
 								</div>
 							))}
@@ -119,18 +87,6 @@ export default function DashboardPage() {
 								<div className="flex items-center space-x-2">
 									<FolderOpen className="h-4 w-4" />
 									<span className="text-sm font-medium">프로젝트 생성</span>
-								</div>
-							</div>
-							<div className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
-								<div className="flex items-center space-x-2">
-									<Receipt className="h-4 w-4" />
-									<span className="text-sm font-medium">지출 청구서 제출</span>
-								</div>
-							</div>
-							<div className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
-								<div className="flex items-center space-x-2">
-									<Calculator className="h-4 w-4" />
-									<span className="text-sm font-medium">회계 보기</span>
 								</div>
 							</div>
 						</div>

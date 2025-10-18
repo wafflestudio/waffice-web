@@ -1,17 +1,10 @@
 import type {
-	AccountBalance,
-	ExpenseClaim,
-	ExpenseClaimCreate,
-	ExpenseClaimUpdate,
 	Member,
 	MemberCreate,
 	MemberUpdate,
 	Project,
 	ProjectCreate,
 	ProjectUpdate,
-	Transaction,
-	TransactionCreate,
-	TransactionUpdate,
 	User,
 	UserHistory,
 	UserHistoryCreate,
@@ -175,95 +168,6 @@ class ApiClient {
 		return this.request<void>(`/projects/${id}`, {
 			method: "DELETE",
 		})
-	}
-
-	// Expense Claim API (TODO: Not yet in OpenAPI spec - using mock/placeholder endpoints)
-	async getExpenseClaims(skip = 0, limit = 100): Promise<ExpenseClaim[]> {
-		console.warn("getExpenseClaims: Not in OpenAPI spec yet - using mock endpoint")
-		return this.request<ExpenseClaim[]>(`/expense-claims?skip=${skip}&limit=${limit}`)
-	}
-
-	async getExpenseClaim(id: number): Promise<ExpenseClaim> {
-		console.warn("getExpenseClaim: Not in OpenAPI spec yet - using mock endpoint")
-		return this.request<ExpenseClaim>(`/expense-claims/${id}`)
-	}
-
-	async createExpenseClaim(claim: ExpenseClaimCreate, memberId: number): Promise<ExpenseClaim> {
-		console.warn("createExpenseClaim: Not in OpenAPI spec yet - using mock endpoint")
-		return this.request<ExpenseClaim>(`/expense-claims?member_id=${memberId}`, {
-			method: "POST",
-			body: JSON.stringify(claim),
-		})
-	}
-
-	async updateExpenseClaim(id: number, claim: ExpenseClaimUpdate): Promise<ExpenseClaim> {
-		console.warn("updateExpenseClaim: Not in OpenAPI spec yet - using mock endpoint")
-		return this.request<ExpenseClaim>(`/expense-claims/${id}`, {
-			method: "PUT",
-			body: JSON.stringify(claim),
-		})
-	}
-
-	async approveExpenseClaim(id: number, reviewerId: number, reviewNotes?: string): Promise<void> {
-		console.warn("approveExpenseClaim: Not in OpenAPI spec yet - using mock endpoint")
-		return this.request<void>(`/expense-claims/${id}/approve`, {
-			method: "PUT",
-			body: JSON.stringify({ reviewer_id: reviewerId, review_notes: reviewNotes }),
-		})
-	}
-
-	async rejectExpenseClaim(id: number, reviewerId: number, reviewNotes?: string): Promise<void> {
-		console.warn("rejectExpenseClaim: Not in OpenAPI spec yet - using mock endpoint")
-		return this.request<void>(`/expense-claims/${id}/reject`, {
-			method: "PUT",
-			body: JSON.stringify({ reviewer_id: reviewerId, review_notes: reviewNotes }),
-		})
-	}
-
-	async deleteExpenseClaim(id: number): Promise<void> {
-		console.warn("deleteExpenseClaim: Not in OpenAPI spec yet - using mock endpoint")
-		return this.request<void>(`/expense-claims/${id}`, {
-			method: "DELETE",
-		})
-	}
-
-	// Transaction API (TODO: Not yet in OpenAPI spec - using mock/placeholder endpoints)
-	async getTransactions(skip = 0, limit = 100): Promise<Transaction[]> {
-		console.warn("getTransactions: Not in OpenAPI spec yet - using mock endpoint")
-		return this.request<Transaction[]>(`/transactions?skip=${skip}&limit=${limit}`)
-	}
-
-	async getTransaction(id: number): Promise<Transaction> {
-		console.warn("getTransaction: Not in OpenAPI spec yet - using mock endpoint")
-		return this.request<Transaction>(`/transactions/${id}`)
-	}
-
-	async createTransaction(transaction: TransactionCreate): Promise<Transaction> {
-		console.warn("createTransaction: Not in OpenAPI spec yet - using mock endpoint")
-		return this.request<Transaction>("/transactions", {
-			method: "POST",
-			body: JSON.stringify(transaction),
-		})
-	}
-
-	async updateTransaction(id: number, transaction: TransactionUpdate): Promise<Transaction> {
-		console.warn("updateTransaction: Not in OpenAPI spec yet - using mock endpoint")
-		return this.request<Transaction>(`/transactions/${id}`, {
-			method: "PUT",
-			body: JSON.stringify(transaction),
-		})
-	}
-
-	async deleteTransaction(id: number): Promise<void> {
-		console.warn("deleteTransaction: Not in OpenAPI spec yet - using mock endpoint")
-		return this.request<void>(`/transactions/${id}`, {
-			method: "DELETE",
-		})
-	}
-
-	async getAccountBalance(): Promise<AccountBalance> {
-		console.warn("getAccountBalance: Not in OpenAPI spec yet - using mock endpoint")
-		return this.request<AccountBalance>("/transactions/summary/balance")
 	}
 }
 

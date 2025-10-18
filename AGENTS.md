@@ -7,8 +7,6 @@ Development guidelines and instructions for AI agents working on this project.
 **Waffice-Web** is an internal management web application for Waffle Studio (와플 스튜디오). This Next.js 15 frontend application provides comprehensive administration features for:
 - Member management
 - Project tracking
-- Expense claims processing
-- Financial accounting and transactions
 
 ## Technology Stack
 
@@ -126,7 +124,7 @@ The backend API is defined in `openapi.json`. When the backend team updates this
 ### Current API Status
 
 - **Implemented**: User management, User history
-- **Pending**: Member, Project, Expense Claim, Transaction APIs
+- **Pending**: Member, Project APIs
   - These use mock endpoints with warnings
   - Will be replaced when added to OpenAPI spec
 
