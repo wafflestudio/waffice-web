@@ -1,0 +1,337 @@
+{
+	"openapi": "3.1.0",
+	"info": { "title": "FastAPI", "version": "0.1.0" },
+	"paths": {
+		"/api/user/create": {
+			"post": {
+				"tags": ["user"],
+				"summary": "Create Pending User",
+				"operationId": "create_pending_user_api_user_create_post",
+				"requestBody": {
+					"content": {
+						"application/json": { "schema": { "$ref": "#/components/schemas/UserPendingCreate" } }
+					},
+					"required": true
+				},
+				"responses": {
+					"201": {
+						"description": "Successful Response",
+						"content": { "application/json": { "schema": {} } }
+					},
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/user/enroll": {
+			"post": {
+				"tags": ["user"],
+				"summary": "Enroll User",
+				"operationId": "enroll_user_api_user_enroll_post",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "additionalProperties": true, "type": "object", "title": "Payload" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"201": {
+						"description": "Successful Response",
+						"content": { "application/json": { "schema": {} } }
+					},
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/user/deny": {
+			"post": {
+				"tags": ["user"],
+				"summary": "Deny User",
+				"operationId": "deny_user_api_user_deny_post",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "additionalProperties": true, "type": "object", "title": "Payload" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "Successful Response",
+						"content": { "application/json": { "schema": {} } }
+					},
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/user/info": {
+			"get": {
+				"tags": ["user"],
+				"summary": "User Info",
+				"operationId": "user_info_api_user_info_get",
+				"parameters": [
+					{
+						"name": "userid",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "integer", "title": "Userid" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful Response",
+						"content": { "application/json": { "schema": {} } }
+					},
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/user/all": {
+			"get": {
+				"tags": ["user"],
+				"summary": "User All",
+				"operationId": "user_all_api_user_all_get",
+				"responses": {
+					"200": {
+						"description": "Successful Response",
+						"content": { "application/json": { "schema": {} } }
+					}
+				}
+			}
+		},
+		"/api/user/update": {
+			"post": {
+				"tags": ["user"],
+				"summary": "User Update",
+				"operationId": "user_update_api_user_update_post",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "additionalProperties": true, "type": "object", "title": "Payload" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "Successful Response",
+						"content": { "application/json": { "schema": {} } }
+					},
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/user/access": {
+			"post": {
+				"tags": ["user"],
+				"summary": "User Access",
+				"operationId": "user_access_api_user_access_post",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": { "additionalProperties": true, "type": "object", "title": "Payload" }
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "Successful Response",
+						"content": { "application/json": { "schema": {} } }
+					},
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/userhist/create": {
+			"post": {
+				"tags": ["user_history"],
+				"summary": "Userhist Create",
+				"operationId": "userhist_create_api_userhist_create_post",
+				"requestBody": {
+					"content": {
+						"application/json": { "schema": { "$ref": "#/components/schemas/UserHistoryCreate" } }
+					},
+					"required": true
+				},
+				"responses": {
+					"201": {
+						"description": "Successful Response",
+						"content": { "application/json": { "schema": {} } }
+					},
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/userhist/info": {
+			"get": {
+				"tags": ["user_history"],
+				"summary": "Userhist Info",
+				"operationId": "userhist_info_api_userhist_info_get",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "integer", "title": "Id" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful Response",
+						"content": { "application/json": { "schema": {} } }
+					},
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/userhist/all": {
+			"get": {
+				"tags": ["user_history"],
+				"summary": "Userhist All",
+				"operationId": "userhist_all_api_userhist_all_get",
+				"responses": {
+					"200": {
+						"description": "Successful Response",
+						"content": { "application/json": { "schema": {} } }
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"schemas": {
+			"HTTPValidationError": {
+				"properties": {
+					"detail": {
+						"items": { "$ref": "#/components/schemas/ValidationError" },
+						"type": "array",
+						"title": "Detail"
+					}
+				},
+				"type": "object",
+				"title": "HTTPValidationError"
+			},
+			"UserHistoryCreate": {
+				"properties": {
+					"userid": { "type": "integer", "title": "Userid" },
+					"type": { "$ref": "#/components/schemas/UserHistoryType" },
+					"description": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Description"
+					},
+					"curr_privilege": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Curr Privilege"
+					},
+					"curr_time_stop": {
+						"anyOf": [{ "type": "integer" }, { "type": "null" }],
+						"title": "Curr Time Stop"
+					},
+					"prev_privilege": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Prev Privilege"
+					},
+					"prev_time_stop": {
+						"anyOf": [{ "type": "integer" }, { "type": "null" }],
+						"title": "Prev Time Stop"
+					}
+				},
+				"type": "object",
+				"required": ["userid", "type"],
+				"title": "UserHistoryCreate"
+			},
+			"UserHistoryType": {
+				"type": "string",
+				"enum": ["join", "left", "discipline", "project_join", "project_left"],
+				"title": "UserHistoryType"
+			},
+			"UserPendingCreate": {
+				"properties": {
+					"google_id": { "type": "string", "title": "Google Id" },
+					"email": { "type": "string", "format": "email", "title": "Email" },
+					"name": { "type": "string", "title": "Name" },
+					"profile_picture": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Profile Picture"
+					}
+				},
+				"type": "object",
+				"required": ["google_id", "email", "name"],
+				"title": "UserPendingCreate"
+			},
+			"ValidationError": {
+				"properties": {
+					"loc": {
+						"items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
+						"type": "array",
+						"title": "Location"
+					},
+					"msg": { "type": "string", "title": "Message" },
+					"type": { "type": "string", "title": "Error Type" }
+				},
+				"type": "object",
+				"required": ["loc", "msg", "type"],
+				"title": "ValidationError"
+			}
+		}
+	}
+}
