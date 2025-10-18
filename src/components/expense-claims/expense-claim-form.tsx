@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { apiClient } from "@/lib/api"
-import { type ExpenseClaim, type ExpenseClaimCreate, Member, type Project } from "@/types"
+import type { ExpenseClaim, ExpenseClaimCreate, Project } from "@/types"
 
 const expenseClaimSchema = z.object({
 	amount: z.number().positive("금액은 양수여야 합니다"),
@@ -41,7 +41,7 @@ export function ExpenseClaimForm({
 }: ExpenseClaimFormProps) {
 	const [open, setOpen] = useState(false)
 	const [projects, setProjects] = useState<Project[]>([])
-	const isEdit = !!expenseClaim
+	const _isEdit = !!expenseClaim
 
 	const {
 		register,

@@ -8,7 +8,7 @@ import { ProjectTable } from "@/components/projects/project-table"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { apiClient } from "@/lib/api"
-import { Project, type ProjectCreate, type ProjectUpdate } from "@/types"
+import type { ProjectCreate, ProjectUpdate } from "@/types"
 
 export default function ProjectsPage() {
 	const queryClient = useQueryClient()

@@ -2,13 +2,13 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { MemberForm } from "@/components/members/member-form"
 import { MemberTable } from "@/components/members/member-table"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { apiClient } from "@/lib/api"
-import { Member, type MemberCreate, type MemberUpdate } from "@/types"
+import type { MemberCreate, MemberUpdate } from "@/types"
 
 export default function MembersPage() {
 	const queryClient = useQueryClient()

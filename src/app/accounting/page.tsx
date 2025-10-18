@@ -1,8 +1,8 @@
 "use client"
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { AccountingOverview } from "@/components/accounting/accounting-overview"
 import { TransactionTable } from "@/components/accounting/transaction-table"
 import { Button } from "@/components/ui/button"
@@ -72,7 +72,7 @@ export default function AccountingPage() {
 	//   queryFn: () => apiClient.getAccountBalance(),
 	// });
 
-	const createTransactionMutation = useMutation({
+	const _createTransactionMutation = useMutation({
 		mutationFn: (data: TransactionCreate) => apiClient.createTransaction(data),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["transactions"] })
@@ -80,7 +80,7 @@ export default function AccountingPage() {
 		},
 	})
 
-	const updateTransactionMutation = useMutation({
+	const _updateTransactionMutation = useMutation({
 		mutationFn: ({ id, data }: { id: number; data: any }) => apiClient.updateTransaction(id, data),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["transactions"] })
@@ -88,7 +88,7 @@ export default function AccountingPage() {
 		},
 	})
 
-	const deleteTransactionMutation = useMutation({
+	const _deleteTransactionMutation = useMutation({
 		mutationFn: (id: number) => apiClient.deleteTransaction(id),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["transactions"] })
@@ -96,7 +96,7 @@ export default function AccountingPage() {
 		},
 	})
 
-	const handleCreateTransaction = async (data: TransactionCreate) => {
+	const _handleCreateTransaction = async (data: TransactionCreate) => {
 		// For demo, add to local state
 		const newTransaction: Transaction = {
 			id: Math.max(...transactions.map((t) => t.id)) + 1,

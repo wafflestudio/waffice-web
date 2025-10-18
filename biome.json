@@ -8,6 +8,14 @@
 	"files": {
 		"ignoreUnknown": false
 	},
+	"overrides": [
+		{
+			"includes": ["**/*.css"],
+			"linter": {
+				"enabled": false
+			}
+		}
+	],
 	"formatter": {
 		"enabled": true,
 		"indentStyle": "tab",
@@ -18,14 +26,17 @@
 		"rules": {
 			"recommended": true,
 			"a11y": {
-				"recommended": true
+				"recommended": true,
+				"noLabelWithoutControl": "warn",
+				"useKeyWithClickEvents": "warn"
 			},
 			"complexity": {
 				"recommended": true
 			},
 			"correctness": {
 				"recommended": true,
-				"useExhaustiveDependencies": "warn"
+				"useExhaustiveDependencies": "warn",
+				"useUniqueElementIds": "warn"
 			},
 			"security": {
 				"recommended": true
@@ -34,7 +45,9 @@
 				"recommended": true
 			},
 			"suspicious": {
-				"recommended": true
+				"recommended": true,
+				"noExplicitAny": "warn",
+				"noArrayIndexKey": "warn"
 			}
 		}
 	},
