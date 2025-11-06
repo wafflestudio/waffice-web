@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { Logo } from "@/components/auth/logo"
 import { GoogleButton } from "@/components/auth/google-button"
 import { Button } from "@/components/ui/button"
@@ -9,14 +10,15 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
  * 로그인 페이지
  */
 export default function LoginPage() {
+	const router = useRouter()
+
 	const handleGoogleLogin = () => {
 		// TODO: Google OAuth 로그인 로직 구현
 		console.log("Google 로그인 클릭")
 	}
 
 	const handleSignup = () => {
-		// TODO: 회원가입 페이지로 이동
-		console.log("회원가입 클릭")
+		router.push("/signup")
 	}
 
 	return (
