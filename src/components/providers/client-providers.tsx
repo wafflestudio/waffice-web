@@ -13,7 +13,7 @@ export function ClientProviders({ children }: ClientProvidersProps) {
 	const [queryClient] = useState(() => new QueryClient())
 	const pathname = usePathname()
 
-	// 로그인 페이지는 레이아웃 없이 렌더링
+	// 인증(로그인/회원가입) 페이지는 레이아웃 없이 렌더링
 	const isAuthPage = pathname?.startsWith("/login") || pathname?.startsWith("/signup")
 
 	return (

@@ -27,17 +27,21 @@ import {
 } from "@/components/ui/select"
 
 const STUDENT_ID_REGEX = /^\d{4}-\d{5}$/
+const STUDENT_ID_FORMAT_ERROR = "학번은 YYYY-XXXXX 형식이어야 합니다."
 
 const signupSchema = z
 	.object({
 		name: z.string().min(1, "필수 입력항목입니다."),
-		generation: z.string().min(1, "기수를 입력해 주세요."),
+		generation: z
+			.string()
+			.min(1, "기수를 입력해 주세요.")
+			.regex(/^\d+$/, "기수는 숫자로 입력해 주세요."),
 		email: z.string().email("이메일을 확인해주세요."),
 		enrollmentStatus: z.enum(["학부생", "졸업생"]),
 		// 입력 필드가 존재하므로 기본값 ""을 받게 됨. 교차 필드 검사에서 유효성 체크.
 		studentId: z.string().optional(),
 		major: z.string().optional(),
-		schoolEmail: z.string().optional(),
+		schoolEmail: z.string().email("이메일 형식이 올바르지 않습니다.").optional().or(z.literal("")),
 		organization: z.string().optional(),
 		position: z.string().optional(),
 		githubId: z.string().optional(),
@@ -61,7 +65,7 @@ const signupSchema = z
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
 					path: ["studentId"],
-					message: "학번은 YYYY-XXXXX 형식이어야 합니다.",
+					message: STUDENT_ID_FORMAT_ERROR,
 				})
 			}
 		} else {
@@ -71,7 +75,7 @@ const signupSchema = z
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
 					path: ["studentId"],
-					message: "학번은 YYYY-XXXXX 형식이어야 합니다.",
+					message: STUDENT_ID_FORMAT_ERROR,
 				})
 			}
 		}
@@ -106,7 +110,9 @@ export default function SignupPage() {
 	const isGraduate = enrollmentStatus === "졸업생"
 
 	const onSubmit = (data: SignupFormValues) => {
+		// TODO: API 호출하여 회원가입 데이터 전송
 		console.log(data)
+		router.push("/signup/pending")
 	}
 
 	return (

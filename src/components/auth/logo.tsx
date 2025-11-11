@@ -20,7 +20,9 @@ function Logo({ size = "md", className }: LogoProps) {
 
 	return (
 		<div className={cn("flex items-center justify-center", className)}>
-			<span className={cn(sizeClasses[size])}>🧇</span>
+			<span className={cn(sizeClasses[size])} role="img" aria-label="와플 스튜디오 로고">
+				🧇
+			</span>
 		</div>
 	)
 }
