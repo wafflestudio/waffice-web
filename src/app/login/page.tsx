@@ -1,8 +1,8 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { Logo } from "@/components/auth/logo"
 import { GoogleButton } from "@/components/auth/google-button"
+import { Logo } from "@/components/auth/logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 

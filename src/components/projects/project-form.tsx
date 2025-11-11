@@ -43,7 +43,6 @@ export function ProjectForm({ project, onSubmit, trigger }: ProjectFormProps) {
 		register,
 		handleSubmit,
 		reset,
-		setValue,
 		formState: { errors, isSubmitting },
 	} = useForm<ProjectFormData>({
 		resolver: zodResolver(projectSchema),
