@@ -47,6 +47,9 @@ export interface Member {
 	name: string
 	email: string
 	phone?: string
+	github_username?: string
+	generation?: string
+	role?: string
 	status: "active" | "inactive" | "suspended"
 	join_date: string
 	created_at: string
