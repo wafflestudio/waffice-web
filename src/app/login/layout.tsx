@@ -9,10 +9,6 @@ export const metadata: Metadata = {
  * 로그인 페이지 전용 레이아웃
  * 사이드바 없이 깔끔한 화면 제공
  */
-export default function LoginLayout({
-	children,
-}: {
-	children: React.ReactNode
-}) {
+export default function LoginLayout({ children }: { children: React.ReactNode }) {
 	return <>{children}</>
 }

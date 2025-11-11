@@ -26,10 +26,7 @@ export default function SignupPendingPage() {
 				</p>
 				<p className="mt-6 text-sm text-muted-foreground">
 					문의가 필요하신가요?{" "}
-					<a
-						href="mailto:master@wafflestudio.com"
-						className="underline underline-offset-2"
-					>
+					<a href="mailto:master@wafflestudio.com" className="underline underline-offset-2">
 						master@wafflestudio.com
 					</a>
 				</p>
@@ -37,4 +34,3 @@ export default function SignupPendingPage() {
 		</div>
 	)
 }
-

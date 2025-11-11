@@ -156,11 +156,7 @@ export default function SignupPage() {
 									<FormItem>
 										<FormLabel>이메일</FormLabel>
 										<FormControl>
-											<Input
-												type="email"
-												placeholder="이메일을 입력해 주세요."
-												{...field}
-											/>
+											<Input type="email" placeholder="이메일을 입력해 주세요." {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -173,10 +169,7 @@ export default function SignupPage() {
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>재학 상태</FormLabel>
-										<Select
-											onValueChange={field.onChange}
-											defaultValue={field.value}
-										>
+										<Select onValueChange={field.onChange} defaultValue={field.value}>
 											<FormControl>
 												<SelectTrigger>
 													<SelectValue placeholder="재학 상태를 선택해 주세요." />
@@ -202,12 +195,12 @@ export default function SignupPage() {
 											<FormItem>
 												<FormLabel>학번</FormLabel>
 												<FormControl>
-												<Input
-													placeholder="YYYY-XXXXX (예: 2021-12345)"
-													maxLength={10}
-													pattern="\\d{4}-\\d{5}"
-													{...field}
-												/>
+													<Input
+														placeholder="YYYY-XXXXX (예: 2021-12345)"
+														maxLength={10}
+														pattern="\\d{4}-\\d{5}"
+														{...field}
+													/>
 												</FormControl>
 												<FormMessage />
 											</FormItem>
@@ -221,10 +214,7 @@ export default function SignupPage() {
 											<FormItem>
 												<FormLabel>전공</FormLabel>
 												<FormControl>
-													<Input
-														placeholder="전공을 입력해 주세요."
-														{...field}
-													/>
+													<Input placeholder="전공을 입력해 주세요." {...field} />
 												</FormControl>
 												<FormMessage />
 											</FormItem>
@@ -292,10 +282,7 @@ export default function SignupPage() {
 									<FormItem>
 										<FormLabel>GitHub ID (선택)</FormLabel>
 										<FormControl>
-											<Input
-												placeholder="GitHub ID를 입력해 주세요."
-												{...field}
-											/>
+											<Input placeholder="GitHub ID를 입력해 주세요." {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -309,15 +296,10 @@ export default function SignupPage() {
 								render={({ field }) => (
 									<FormItem className="flex flex-row items-start space-x-3 space-y-0">
 										<FormControl>
-											<Checkbox
-												checked={field.value}
-												onCheckedChange={field.onChange}
-											/>
+											<Checkbox checked={field.value} onCheckedChange={field.onChange} />
 										</FormControl>
 										<div className="space-y-1 leading-none">
-											<FormLabel>
-												개인정보 수집 및 이용에 동의합니다. (필수)
-											</FormLabel>
+											<FormLabel>개인정보 수집 및 이용에 동의합니다. (필수)</FormLabel>
 											<FormMessage />
 										</div>
 									</FormItem>
@@ -331,15 +313,10 @@ export default function SignupPage() {
 								render={({ field }) => (
 									<FormItem className="flex flex-row items-start space-x-3 space-y-0">
 										<FormControl>
-											<Checkbox
-												checked={field.value}
-												onCheckedChange={field.onChange}
-											/>
+											<Checkbox checked={field.value} onCheckedChange={field.onChange} />
 										</FormControl>
 										<div className="space-y-1 leading-none">
-											<FormLabel>
-												와플스튜디오 이용약관에 동의합니다. (선택)
-											</FormLabel>
+											<FormLabel>와플스튜디오 이용약관에 동의합니다. (선택)</FormLabel>
 											<FormMessage />
 										</div>
 									</FormItem>
@@ -353,15 +330,10 @@ export default function SignupPage() {
 								render={({ field }) => (
 									<FormItem className="flex flex-row items-start space-x-3 space-y-0">
 										<FormControl>
-											<Checkbox
-												checked={field.value}
-												onCheckedChange={field.onChange}
-											/>
+											<Checkbox checked={field.value} onCheckedChange={field.onChange} />
 										</FormControl>
 										<div className="space-y-1 leading-none">
-											<FormLabel>
-												이메일 및 SMS 수신에 동의합니다. (선택)
-											</FormLabel>
+											<FormLabel>이메일 및 SMS 수신에 동의합니다. (선택)</FormLabel>
 											<FormMessage />
 										</div>
 									</FormItem>

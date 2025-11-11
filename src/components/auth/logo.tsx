@@ -26,4 +26,3 @@ function Logo({ size = "md", className }: LogoProps) {
 }
 
 export { Logo }
-

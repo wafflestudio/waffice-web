@@ -14,11 +14,7 @@ interface GoogleButtonProps {
  */
 function GoogleButton({ children, onClick, fullWidth = false }: GoogleButtonProps) {
 	return (
-		<Button
-			onClick={onClick}
-			className={fullWidth ? "w-full" : ""}
-			variant="default"
-		>
+		<Button onClick={onClick} className={fullWidth ? "w-full" : ""} variant="default">
 			{/* Google 아이콘 SVG */}
 			<svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 				<path
