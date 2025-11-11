@@ -267,35 +267,37 @@ export default function MembersPage() {
 						<div className="space-y-3">
 							<Label>자격</Label>
 							<div className="flex flex-col items-start gap-3 px-4 py-3 border rounded-lg">
-							{["활동회원", "정회원", "준회원"].map((role) => (
-								<button
-								key={role}
-								type="button"
-								onClick={() => setNewRole(role)}
-								className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
-								>
-								<span
-									className={`text-sm font-medium ${
-									newRole === role ? "text-[#FF6B6B]" : "text-gray-700"
-									}`}
-								>
-									{role}
-								</span>
-								{newRole === role && (
-									<svg
-									className="w-4 h-4 text-[#FF6B6B]"
-									fill="currentColor"
-									viewBox="0 0 20 20"
+								{["활동회원", "정회원", "준회원"].map((role) => (
+									<button
+										key={role}
+										type="button"
+										onClick={() => setNewRole(role)}
+										className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
 									>
-									<path
-										fillRule="evenodd"
-										d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-										clipRule="evenodd"
-									/>
-									</svg>
-								)}
-								</button>
-							))}
+										<span
+											className={`text-sm font-medium ${
+												newRole === role ? "text-[#FF6B6B]" : "text-gray-700"
+											}`}
+										>
+											{role}
+										</span>
+										{newRole === role && (
+											<svg
+												className="w-4 h-4 text-[#FF6B6B]"
+												fill="currentColor"
+												viewBox="0 0 20 20"
+												aria-label="선택됨"
+											>
+												<title>선택됨</title>
+												<path
+													fillRule="evenodd"
+													d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+													clipRule="evenodd"
+												/>
+											</svg>
+										)}
+									</button>
+								))}
 							</div>
 						</div>
 
