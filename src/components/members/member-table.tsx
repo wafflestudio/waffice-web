@@ -27,7 +27,9 @@ interface MemberTableProps {
 	onPageChange: (page: number) => void
 	selectedMembers: number[]
 	onSelectedMembersChange: (members: number[]) => void
+	onMemberUpdate?: (id: number, data: Record<string, any>) => Promise<void>
 }
+import { MemberForm } from "@/components/members/member-form"
 
 const ITEMS_PER_PAGE = 10
 
@@ -38,6 +40,7 @@ export function MemberTable({
 	onPageChange,
 	selectedMembers,
 	onSelectedMembersChange,
+	onMemberUpdate,
 }: MemberTableProps) {
 	const [generationSort, setGenerationSort] = useState<"desc" | "asc" | null>(null)
 
@@ -100,7 +103,21 @@ export function MemberTable({
 										onCheckedChange={(checked) => handleSelectMember(member.id, checked as boolean)}
 									/>
 								</TableCell>
-								<TableCell className="font-medium">{member.name}</TableCell>
+								<TableCell className="font-medium">
+									{onMemberUpdate ? (
+										<MemberForm
+											member={member}
+											onSubmit={(data) => onMemberUpdate(member.id, data)}
+											trigger={
+												<button className="text-left font-medium hover:underline">
+													{member.name}
+												</button>
+											}
+										/>
+									) : (
+										member.name
+									)}
+								</TableCell>
 								<TableCell className="text-gray-600">{member.generation || "23.5기"}</TableCell>
 								<TableCell className="text-gray-600">{member.email}</TableCell>
 								<TableCell className="text-gray-600">

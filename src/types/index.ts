@@ -48,8 +48,10 @@ export interface Member {
 	email: string
 	phone?: string
 	github_username?: string
+	slack_id?: string
 	generation?: string
 	role?: string
+	affiliation?: string
 	status: "active" | "inactive" | "suspended"
 	join_date: string
 	created_at: string
@@ -67,6 +69,13 @@ export interface MemberUpdate {
 	name?: string
 	email?: string
 	phone?: string
+	github_username?: string
+	slack_id?: string
+	generation?: string
+	role?: string
+	affiliation?: string
+	join_date?: string
+	created_at?: string
 	status?: "active" | "inactive" | "suspended"
 }
 

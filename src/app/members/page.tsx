@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Toast } from "@/components/ui/toast"
 import type { Member } from "@/types"
+import { apiClient } from "@/lib/api"
 
 // 임시 목 데이터 - API 연결 전까지 사용
 const mockMembers: Member[] = [
@@ -149,19 +150,38 @@ export default function MembersPage() {
 	const [changeReason, setChangeReason] = useState("")
 	const [showToast, setShowToast] = useState(false)
 
+	// 멤버 목록을 로컬 상태로 관리 (추후 API로 대체)
+	const [membersState, setMembersState] = useState<Member[]>(mockMembers)
 	// TODO: API 연결 시 아래 코드로 교체
 	// const {
-	// 	data: members = [],
-	// 	isLoading,
-	// 	error,
+	//  data: members = [],
+	//  isLoading,
+	//  error,
 	// } = useQuery({
-	// 	queryKey: ["members"],
-	// 	queryFn: () => apiClient.getMembers(),
+	//  queryKey: ["members"],
+	//  queryFn: () => apiClient.getMembers(),
 	// })
 
-	const members = mockMembers
+	const members = membersState
 	const isLoading = false
 	const error = null
+
+	// 회원 정보 수정 핸들러
+	const handleMemberUpdate = async (id: number, data: Record<string, any>) => {
+		try {
+			// API가 준비되면 아래 주석 해제
+			// await apiClient.updateMember(id, data)
+
+			// 로컬 상태 업데이트 (서버 응답 형태에 맞춰 필요 시 조정)
+			setMembersState((prev) => prev.map((m) => (m.id === id ? { ...m, ...data } : m)))
+
+			// 성공 토스트
+			setShowToast(true)
+		} catch (err) {
+			console.error("Failed to update member:", err)
+			alert("회원 정보 업데이트에 실패했습니다. 콘솔을 확인하세요.")
+		}
+	}
 
 	const handleRoleChange = () => {
 		if (selectedMembers.length === 0) {
@@ -258,6 +278,7 @@ export default function MembersPage() {
 				onPageChange={setCurrentPage}
 				selectedMembers={selectedMembers}
 				onSelectedMembersChange={setSelectedMembers}
+				onMemberUpdate={handleMemberUpdate}
 			/>
 
 			{/* 회원 자격 변경 다이얼로그 */}
