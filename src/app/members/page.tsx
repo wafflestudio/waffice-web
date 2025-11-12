@@ -1,7 +1,7 @@
 "use client"
 
 import { Search } from "lucide-react"
-import { useState } from "react"
+import { useId, useState } from "react"
 import { MemberTable } from "@/components/members/member-table"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,8 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Toast } from "@/components/ui/toast"
-import type { Member } from "@/types"
-import { apiClient } from "@/lib/api"
+import type { Member, MemberCreate, MemberUpdate } from "@/types"
 
 // 임시 목 데이터 - API 연결 전까지 사용
 const mockMembers: Member[] = [
@@ -152,6 +151,7 @@ export default function MembersPage() {
 
 	// 멤버 목록을 로컬 상태로 관리 (추후 API로 대체)
 	const [membersState, setMembersState] = useState<Member[]>(mockMembers)
+	const reasonId = useId()
 	// TODO: API 연결 시 아래 코드로 교체
 	// const {
 	//  data: members = [],
@@ -167,7 +167,7 @@ export default function MembersPage() {
 	const error = null
 
 	// 회원 정보 수정 핸들러
-	const handleMemberUpdate = async (id: number, data: Record<string, any>) => {
+	const handleMemberUpdate = async (id: number, data: MemberCreate | MemberUpdate) => {
 		try {
 			// API가 준비되면 아래 주석 해제
 			// await apiClient.updateMember(id, data)
@@ -210,7 +210,7 @@ export default function MembersPage() {
 		setIsDialogOpen(false)
 		setNewRole("")
 		setChangeReason("")
-		
+
 		// 성공 토스트 표시
 		setShowToast(true)
 	}
@@ -328,9 +328,9 @@ export default function MembersPage() {
 
 						{/* 변경 사유 */}
 						<div className="space-y-2">
-							<Label htmlFor="reason">변경 사유</Label>
+							<Label htmlFor={reasonId}>변경 사유</Label>
 							<textarea
-								id="reason"
+								id={reasonId}
 								placeholder="변경 사유를 입력해 주세요"
 								value={changeReason}
 								onChange={(e) => setChangeReason(e.target.value)}

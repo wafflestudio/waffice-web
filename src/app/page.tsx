@@ -55,8 +55,11 @@ export default function DashboardPage() {
 					</CardHeader>
 					<CardContent>
 						<div className="space-y-4">
-							{stats.recentActivity.map((activity, index) => (
-								<div key={index} className="flex items-center space-x-4">
+							{stats.recentActivity.map((activity) => (
+								<div
+									key={`${activity.type}-${activity.description}-${activity.time}`}
+									className="flex items-center space-x-4"
+								>
 									<div className="w-2 h-2 bg-primary rounded-full" />
 									<div className="flex-1 space-y-1">
 										<p className="text-sm font-medium leading-none">{activity.description}</p>

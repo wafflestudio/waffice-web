@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Sidebar } from "./sidebar"
 
@@ -38,14 +38,12 @@ export function MainLayout({ children }: MainLayoutProps) {
 							</Button>
 						) : (
 							<Link href="/login">
-								<Button className="bg-[#FF6B6B] hover:bg-[#FF5252] text-white">
-									로그인
-								</Button>
+								<Button className="bg-[#FF6B6B] hover:bg-[#FF5252] text-white">로그인</Button>
 							</Link>
 						)}
 					</div>
 				</header>
-				
+
 				{/* 페이지 콘텐츠 */}
 				<div className="container mx-auto p-6">{children}</div>
 			</main>

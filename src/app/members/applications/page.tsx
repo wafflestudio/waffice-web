@@ -162,6 +162,21 @@ export default function MemberApplicationsPage() {
 		setShowToast(true)
 	}
 
+	// 개별 승인/반려 핸들러 (이름 클릭 시 모달에서 사용)
+	const handleApproveSingle = (id: number, role: string) => {
+		console.log(`개별 승인: ${id}, 자격: ${role}`)
+		// TODO: API 호출
+		setToastMessage("해당 회원 가입이 승인되었습니다.")
+		setShowToast(true)
+	}
+
+	const handleRejectSingle = (id: number) => {
+		console.log(`개별 반려: ${id}`)
+		// TODO: API 호출
+		setToastMessage("해당 회원 가입이 반려되었습니다.")
+		setShowToast(true)
+	}
+
 	return (
 		<div className="space-y-6 p-8">
 			{/* 헤더 */}
@@ -187,7 +202,10 @@ export default function MemberApplicationsPage() {
 							className="pl-9"
 						/>
 					</div>
-					<Button className="bg-[#FF6B6B] hover:bg-[#FF5252] text-white" onClick={handleApproveClick}>
+					<Button
+						className="bg-[#FF6B6B] hover:bg-[#FF5252] text-white"
+						onClick={handleApproveClick}
+					>
 						가입 승인
 					</Button>
 					<Button
@@ -208,6 +226,8 @@ export default function MemberApplicationsPage() {
 				onPageChange={setCurrentPage}
 				selectedApplications={selectedApplications}
 				onSelectedApplicationsChange={setSelectedApplications}
+				onApprove={handleApproveSingle}
+				onReject={handleRejectSingle}
 			/>
 
 			{/* 승인 다이얼로그 */}

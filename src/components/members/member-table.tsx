@@ -18,7 +18,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table"
-import type { Member } from "@/types"
+import type { Member, MemberCreate, MemberUpdate } from "@/types"
 
 interface MemberTableProps {
 	members: Member[]
@@ -27,8 +27,9 @@ interface MemberTableProps {
 	onPageChange: (page: number) => void
 	selectedMembers: number[]
 	onSelectedMembersChange: (members: number[]) => void
-	onMemberUpdate?: (id: number, data: Record<string, any>) => Promise<void>
+	onMemberUpdate?: (id: number, data: MemberCreate | MemberUpdate) => Promise<void>
 }
+
 import { MemberForm } from "@/components/members/member-form"
 
 const ITEMS_PER_PAGE = 10
@@ -109,7 +110,7 @@ export function MemberTable({
 											member={member}
 											onSubmit={(data) => onMemberUpdate(member.id, data)}
 											trigger={
-												<button className="text-left font-medium hover:underline">
+												<button type="button" className="text-left font-medium hover:underline">
 													{member.name}
 												</button>
 											}

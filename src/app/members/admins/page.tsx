@@ -1,7 +1,8 @@
 "use client"
 
 import { Search } from "lucide-react"
-import { useState } from "react"
+import { useId, useState } from "react"
+import { AdminForm } from "@/components/members/admin-form"
 import { Button } from "@/components/ui/button"
 import {
 	Dialog,
@@ -135,7 +136,7 @@ const mockAdmins: Admin[] = [
 ]
 
 export default function MemberAdminsPage() {
-	const [searchQuery, setSearchQuery] = useState("")
+	const [_searchQuery, _setSearchQuery] = useState("")
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 	const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null)
@@ -145,7 +146,14 @@ export default function MemberAdminsPage() {
 	const [toastMessage, setToastMessage] = useState("")
 	const [isSelectOpen, setIsSelectOpen] = useState(false)
 
-	const admins = mockAdmins
+	const [admins, setAdmins] = useState<Admin[]>(mockAdmins)
+	const searchNameId = useId()
+
+	const handleAdminUpdate = (id: number, data: Partial<Admin>) => {
+		setAdmins((prev) => prev.map((a) => (a.id === id ? { ...a, ...data } : a)))
+		setShowToast(true)
+		setToastMessage("관리자 정보가 업데이트되었습니다.")
+	}
 
 	const handleAddClick = () => {
 		setIsAddDialogOpen(true)
@@ -158,6 +166,8 @@ export default function MemberAdminsPage() {
 		setSelectedAdmin(admin)
 		setIsDeleteDialogOpen(true)
 	}
+
+	// edit handled by AdminForm trigger in table
 
 	const handleAddSubmit = () => {
 		if (!searchName.trim()) {
@@ -226,7 +236,16 @@ export default function MemberAdminsPage() {
 								<TableCell>{admin.email}</TableCell>
 								<TableCell>{admin.permission}</TableCell>
 								<TableCell>{admin.belongTo}</TableCell>
-								<TableCell>
+								<TableCell className="flex items-center gap-2">
+									<AdminForm
+										admin={admin}
+										onSubmit={(id, data) => handleAdminUpdate(id, data)}
+										trigger={
+											<Button variant="outline" size="sm" className="h-8 px-3">
+												수정
+											</Button>
+										}
+									/>
 									<Button
 										variant="outline"
 										size="sm"
@@ -251,11 +270,12 @@ export default function MemberAdminsPage() {
 					<div className="space-y-4 py-4">
 						{/* 이름 검색 */}
 						<div className="space-y-2">
-							<Label htmlFor="search-name">이름</Label>
+							<Label htmlFor={searchNameId}>이름</Label>
 							<div className="relative">
 								<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+								{/* useId to generate unique id */}
 								<Input
-									id="search-name"
+									id={searchNameId}
 									placeholder="회원 이름을 검색해보세요."
 									value={searchName}
 									onChange={(e) => setSearchName(e.target.value)}
@@ -265,10 +285,12 @@ export default function MemberAdminsPage() {
 						</div>
 
 						{/* 분류 선택 */}
-						<div className={`space-y-2 transition-all duration-200 ${isSelectOpen ? 'mb-20' : 'mb-0'}`}>
+						<div
+							className={`space-y-2 transition-all duration-200 ${isSelectOpen ? "mb-20" : "mb-0"}`}
+						>
 							<Label>분류</Label>
-							<Select 
-								value={selectedRole} 
+							<Select
+								value={selectedRole}
 								onValueChange={setSelectedRole}
 								onOpenChange={setIsSelectOpen}
 							>

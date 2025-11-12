@@ -8,12 +8,11 @@ import { Button } from "@/components/ui/button"
 import {
 	Dialog,
 	DialogContent,
+	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-	DialogFooter,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { Member, MemberCreate, MemberUpdate } from "@/types"
 
@@ -46,21 +45,22 @@ export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
 		register,
 		handleSubmit,
 		reset,
-		formState: { errors, isSubmitting },
+		formState: { errors: _errors, isSubmitting },
 	} = useForm<MemberFormData>({
 		resolver: zodResolver(memberSchema),
 		defaultValues: (() => {
-			if (!member) return {
-				name: "",
-				role: "활동회원",
-				generation: "",
-				email: "",
-				github_username: "",
-				slack_id: "",
-				phone: "",
-				affiliation: "학부생",
-				created_at: "",
-			}
+			if (!member)
+				return {
+					name: "",
+					role: "활동회원",
+					generation: "",
+					email: "",
+					github_username: "",
+					slack_id: "",
+					phone: "",
+					affiliation: "학부생",
+					created_at: "",
+				}
 
 			const createdAtRaw = member.created_at || member.join_date || ""
 			let createdAtFormatted = ""
@@ -70,7 +70,7 @@ export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
 					createdAtFormatted = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(
 						d.getDate(),
 					).padStart(2, "0")}`
-				} catch (e) {
+				} catch (_e) {
 					createdAtFormatted = createdAtRaw
 				}
 			}
@@ -110,7 +110,7 @@ export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
 			<div className="grid grid-cols-3 gap-4 items-center">
 				<Label className="col-span-1">이름</Label>
 				<div className="col-span-2">
-					<Input readOnly {...register("name")} />
+					<div className="text-sm text-gray-700">{member?.name ?? ""}</div>
 				</div>
 
 				<Label className="col-span-1">자격</Label>
@@ -127,27 +127,27 @@ export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
 
 				<Label className="col-span-1">기수</Label>
 				<div className="col-span-2">
-					<Input readOnly {...register("generation")} />
+					<div className="text-sm text-gray-700">{member?.generation ?? ""}</div>
 				</div>
 
 				<Label className="col-span-1">이메일</Label>
 				<div className="col-span-2">
-					<Input readOnly {...register("email")} />
+					<div className="text-sm text-gray-700">{member?.email ?? ""}</div>
 				</div>
 
 				<Label className="col-span-1">Github 아이디</Label>
 				<div className="col-span-2">
-					<Input readOnly {...register("github_username")} />
+					<div className="text-sm text-gray-700">{member?.github_username ?? ""}</div>
 				</div>
 
 				<Label className="col-span-1">Slack 아이디</Label>
 				<div className="col-span-2">
-					<Input readOnly {...register("slack_id")} />
+					<div className="text-sm text-gray-700">{member?.slack_id ?? ""}</div>
 				</div>
 
 				<Label className="col-span-1">전화번호</Label>
 				<div className="col-span-2">
-					<Input readOnly {...register("phone")} />
+					<div className="text-sm text-gray-700">{member?.phone ?? ""}</div>
 				</div>
 
 				<Label className="col-span-1">소속</Label>
@@ -163,7 +163,13 @@ export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
 
 				<Label className="col-span-1">계정 생성일</Label>
 				<div className="col-span-2">
-					<Input readOnly {...register("created_at")} />
+					<div className="text-sm text-gray-700">
+						{member
+							? member.created_at || member.join_date
+								? member.created_at || member.join_date
+								: ""
+							: ""}
+					</div>
 				</div>
 			</div>
 

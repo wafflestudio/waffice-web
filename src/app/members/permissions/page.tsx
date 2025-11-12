@@ -162,7 +162,7 @@ const permissionsData: Permission[] = [
 
 export default function MemberPermissionsPage() {
 	const [expandedItems, setExpandedItems] = useState<string[]>(["members"])
-	const [permissions, setPermissions] = useState<Permission[]>(permissionsData)
+	const [permissions, _setPermissions] = useState<Permission[]>(permissionsData)
 
 	const toggleExpand = (id: string) => {
 		setExpandedItems((prev) =>
