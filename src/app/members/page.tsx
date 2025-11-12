@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Toast } from "@/components/ui/toast"
 import type { Member } from "@/types"
 
 // 임시 목 데이터 - API 연결 전까지 사용
@@ -146,6 +147,7 @@ export default function MembersPage() {
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
 	const [newRole, setNewRole] = useState<string>("")
 	const [changeReason, setChangeReason] = useState("")
+	const [showToast, setShowToast] = useState(false)
 
 	// TODO: API 연결 시 아래 코드로 교체
 	// const {
@@ -188,7 +190,9 @@ export default function MembersPage() {
 		setIsDialogOpen(false)
 		setNewRole("")
 		setChangeReason("")
-		alert("자격이 변경되었습니다.")
+		
+		// 성공 토스트 표시
+		setShowToast(true)
 	}
 
 	const handleCancelRoleChange = () => {
@@ -326,6 +330,13 @@ export default function MembersPage() {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
+
+			{/* 성공 토스트 알림 */}
+			<Toast
+				message="성공적으로 변경이 완료되었습니다."
+				isVisible={showToast}
+				onClose={() => setShowToast(false)}
+			/>
 		</div>
 	)
 }
