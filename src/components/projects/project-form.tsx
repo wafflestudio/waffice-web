@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useEffect, useState } from "react"
+import { useEffect, useId, useState } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
@@ -99,18 +99,23 @@ export function ProjectForm({ project, onSubmit, trigger }: ProjectFormProps) {
 		)
 	}
 
+	const nameId = useId()
+	const descriptionId = useId()
+	const budgetId = useId()
+	const statusId = useId()
+
 	const formContent = (
 		<form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
 			<div>
-				<Label htmlFor="name">프로젝트 이름</Label>
-				<Input id="name" {...register("name")} placeholder="프로젝트 이름을 입력하세요" />
+				<Label htmlFor={nameId}>프로젝트 이름</Label>
+				<Input id={nameId} {...register("name")} placeholder="프로젝트 이름을 입력하세요" />
 				{errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
 			</div>
 
 			<div>
-				<Label htmlFor="description">설명</Label>
+				<Label htmlFor={descriptionId}>설명</Label>
 				<Input
-					id="description"
+					id={descriptionId}
 					{...register("description")}
 					placeholder="프로젝트 설명을 입력하세요"
 				/>
@@ -120,9 +125,9 @@ export function ProjectForm({ project, onSubmit, trigger }: ProjectFormProps) {
 			</div>
 
 			<div>
-				<Label htmlFor="budget">예산 (선택사항)</Label>
+				<Label htmlFor={budgetId}>예산 (선택사항)</Label>
 				<Input
-					id="budget"
+					id={budgetId}
 					type="number"
 					step="0.01"
 					{...register("budget", { valueAsNumber: true })}
@@ -132,8 +137,8 @@ export function ProjectForm({ project, onSubmit, trigger }: ProjectFormProps) {
 			</div>
 
 			<div>
-				<Label htmlFor="status">상태</Label>
-				<select id="status" {...register("status")} className="w-full p-2 border rounded-md">
+				<Label htmlFor={statusId}>상태</Label>
+				<select id={statusId} {...register("status")} className="w-full p-2 border rounded-md">
 					<option value="planning">기획</option>
 					<option value="active">진행중</option>
 					<option value="completed">완료</option>

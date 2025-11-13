@@ -18,12 +18,12 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table"
-import type { Project } from "@/types"
+import type { Project, ProjectUpdate } from "@/types"
 import { ProjectForm } from "./project-form"
 
 interface ProjectTableProps {
 	projects: Project[]
-	onUpdate: (id: number, data: any) => Promise<void>
+	onUpdate: (id: number, data: ProjectUpdate) => Promise<void>
 	onDelete: (id: number) => Promise<void>
 }
 
@@ -64,7 +64,7 @@ export function ProjectTable({ projects, onUpdate, onDelete }: ProjectTableProps
 		setEditingProject(project)
 	}
 
-	const handleUpdate = async (data: any) => {
+	const handleUpdate = async (data: ProjectUpdate) => {
 		if (editingProject) {
 			await onUpdate(editingProject.id, data)
 			setEditingProject(null)

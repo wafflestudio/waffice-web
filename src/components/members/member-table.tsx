@@ -1,9 +1,9 @@
 "use client"
 
-import { Edit, MoreHorizontal, Trash2 } from "lucide-react"
+import { Check, ChevronDown } from "lucide-react"
 import { useState } from "react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -18,130 +18,233 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table"
-import type { Member } from "@/types"
-import { MemberForm } from "./member-form"
+import type { Member, MemberCreate, MemberUpdate } from "@/types"
 
 interface MemberTableProps {
 	members: Member[]
-	onUpdate: (id: number, data: any) => Promise<void>
-	onDelete: (id: number) => Promise<void>
+	searchQuery: string
+	currentPage: number
+	onPageChange: (page: number) => void
+	selectedMembers: number[]
+	onSelectedMembersChange: (members: number[]) => void
+	onMemberUpdate?: (id: number, data: MemberCreate | MemberUpdate) => Promise<void>
 }
 
-export function MemberTable({ members, onUpdate, onDelete }: MemberTableProps) {
-	const [editingMember, setEditingMember] = useState<Member | null>(null)
+import { MemberForm } from "@/components/members/member-form"
 
-	const getStatusBadgeVariant = (status: string) => {
-		switch (status) {
-			case "active":
-				return "default"
-			case "inactive":
-				return "secondary"
-			case "suspended":
-				return "destructive"
-			default:
-				return "outline"
+const ITEMS_PER_PAGE = 10
+
+export function MemberTable({
+	members,
+	searchQuery,
+	currentPage,
+	onPageChange,
+	selectedMembers,
+	onSelectedMembersChange,
+	onMemberUpdate,
+}: MemberTableProps) {
+	const [generationSort, setGenerationSort] = useState<"desc" | "asc" | null>(null)
+
+	// 검색 필터링
+	const filteredMembers = members.filter((member) =>
+		member.name.toLowerCase().includes(searchQuery.toLowerCase()),
+	)
+
+	// 기수 정렬
+	const sortedMembers = generationSort
+		? [...filteredMembers].sort((a, b) => {
+				const aGen = a.generation || ""
+				const bGen = b.generation || ""
+				const comparison = aGen.localeCompare(bGen)
+				return generationSort === "asc" ? comparison : -comparison
+			})
+		: filteredMembers
+
+	// 페이지네이션
+	const totalPages = Math.ceil(sortedMembers.length / ITEMS_PER_PAGE)
+	const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+	const paginatedMembers = sortedMembers.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+
+	// 체크박스 핸들링
+	const handleSelectAll = (checked: boolean) => {
+		if (checked) {
+			onSelectedMembersChange(paginatedMembers.map((m) => m.id))
+		} else {
+			onSelectedMembersChange([])
 		}
 	}
 
-	const getStatusText = (status: string) => {
-		switch (status) {
-			case "active":
-				return "활성"
-			case "inactive":
-				return "비활성"
-			case "suspended":
-				return "정지"
-			default:
-				return status
+	const handleSelectMember = (memberId: number, checked: boolean) => {
+		if (checked) {
+			onSelectedMembersChange([...selectedMembers, memberId])
+		} else {
+			onSelectedMembersChange(selectedMembers.filter((id) => id !== memberId))
 		}
 	}
 
-	const handleEdit = (member: Member) => {
-		setEditingMember(member)
-	}
-
-	const handleUpdate = async (data: any) => {
-		if (editingMember) {
-			await onUpdate(editingMember.id, data)
-			setEditingMember(null)
-		}
-	}
+	const isAllSelected =
+		paginatedMembers.length > 0 && paginatedMembers.every((m) => selectedMembers.includes(m.id))
 
 	return (
-		<>
-			<div className="rounded-md border">
+		<div className="space-y-4">
+			{/* 테이블 */}
+			<div className="rounded-lg border bg-white">
 				<Table>
 					<TableHeader>
-						<TableRow>
+						<TableRow className="bg-gray-50">
+							<TableHead className="w-12">
+								<Checkbox checked={isAllSelected} onCheckedChange={handleSelectAll} />
+							</TableHead>
 							<TableHead>이름</TableHead>
+							<TableHead>
+								<GenerationSortHeader sort={generationSort} onSortChange={setGenerationSort} />
+							</TableHead>
 							<TableHead>이메일</TableHead>
-							<TableHead>전화번호</TableHead>
-							<TableHead>상태</TableHead>
-							<TableHead>가입일</TableHead>
-							<TableHead className="w-[50px]">작업</TableHead>
+							<TableHead>Github 아이디</TableHead>
+							<TableHead>계정 생성일</TableHead>
+							<TableHead>자격</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{members.map((member) => (
+						{paginatedMembers.map((member) => (
 							<TableRow key={member.id}>
-								<TableCell className="font-medium">{member.name}</TableCell>
-								<TableCell>{member.email}</TableCell>
-								<TableCell>{member.phone || "-"}</TableCell>
 								<TableCell>
-									<Badge variant={getStatusBadgeVariant(member.status)}>
-										{getStatusText(member.status)}
-									</Badge>
+									<Checkbox
+										checked={selectedMembers.includes(member.id)}
+										onCheckedChange={(checked) => handleSelectMember(member.id, checked as boolean)}
+									/>
 								</TableCell>
-								<TableCell>{new Date(member.join_date).toLocaleDateString()}</TableCell>
-								<TableCell>
-									<DropdownMenu>
-										<DropdownMenuTrigger asChild>
-											<Button variant="ghost" size="sm">
-												<MoreHorizontal className="h-4 w-4" />
-											</Button>
-										</DropdownMenuTrigger>
-										<DropdownMenuContent align="end">
-											<DropdownMenuItem onClick={() => handleEdit(member)}>
-												<Edit className="mr-2 h-4 w-4" />
-												수정
-											</DropdownMenuItem>
-											<DropdownMenuItem
-												onClick={() => onDelete(member.id)}
-												className="text-destructive"
-											>
-												<Trash2 className="mr-2 h-4 w-4" />
-												삭제
-											</DropdownMenuItem>
-										</DropdownMenuContent>
-									</DropdownMenu>
+								<TableCell className="font-medium">
+									{onMemberUpdate ? (
+										<MemberForm
+											member={member}
+											onSubmit={(data) => onMemberUpdate(member.id, data)}
+											trigger={
+												<button type="button" className="text-left font-medium hover:underline">
+													{member.name}
+												</button>
+											}
+										/>
+									) : (
+										member.name
+									)}
 								</TableCell>
+								<TableCell className="text-gray-600">{member.generation || "-"}</TableCell>
+								<TableCell className="text-gray-600">{member.email}</TableCell>
+								<TableCell className="text-gray-600">{member.github_username || "-"}</TableCell>
+								<TableCell className="text-gray-600">
+									{new Date(member.join_date).toLocaleDateString("ko-KR", {
+										year: "numeric",
+										month: "2-digit",
+										day: "2-digit",
+									})}
+								</TableCell>
+								<TableCell className="text-gray-600">{member.role || "활동회원"}</TableCell>
 							</TableRow>
 						))}
 					</TableBody>
 				</Table>
 			</div>
 
-			{editingMember && (
-				<MemberForm
-					member={editingMember}
-					onSubmit={handleUpdate}
-					trigger={
-						<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-							<div className="bg-background p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-								<h2 className="text-lg font-semibold mb-4">회원 수정</h2>
-								<MemberForm member={editingMember} onSubmit={handleUpdate} />
-								<Button
-									variant="outline"
-									onClick={() => setEditingMember(null)}
-									className="mt-4 w-full"
-								>
-									취소
-								</Button>
-							</div>
-						</div>
+			{/* 페이지네이션 */}
+			<div className="flex items-center justify-center gap-2">
+				<Button
+					variant="ghost"
+					size="sm"
+					onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+					disabled={currentPage === 1}
+				>
+					{"<<"}
+				</Button>
+				<Button
+					variant="ghost"
+					size="sm"
+					onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+					disabled={currentPage === 1}
+				>
+					{"<"}
+				</Button>
+
+				{Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+					let pageNum: number
+					if (totalPages <= 5) {
+						pageNum = i + 1
+					} else if (currentPage <= 3) {
+						pageNum = i + 1
+					} else if (currentPage >= totalPages - 2) {
+						pageNum = totalPages - 4 + i
+					} else {
+						pageNum = currentPage - 2 + i
 					}
-				/>
-			)}
-		</>
+
+					return (
+						<Button
+							key={pageNum}
+							variant={currentPage === pageNum ? "default" : "ghost"}
+							size="sm"
+							onClick={() => onPageChange(pageNum)}
+							className={
+								currentPage === pageNum ? "bg-[#FF6B6B] hover:bg-[#FF5252] text-white" : ""
+							}
+						>
+							{pageNum}
+						</Button>
+					)
+				})}
+
+				<Button
+					variant="ghost"
+					size="sm"
+					onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+					disabled={currentPage === totalPages}
+				>
+					{">"}
+				</Button>
+				<Button
+					variant="ghost"
+					size="sm"
+					onClick={() => onPageChange(totalPages)}
+					disabled={currentPage === totalPages}
+				>
+					{">>"}
+				</Button>
+			</div>
+		</div>
+	)
+}
+
+// 기수 정렬 헤더 컴포넌트
+function GenerationSortHeader({
+	sort,
+	onSortChange,
+}: {
+	sort: "desc" | "asc" | null
+	onSortChange: (sort: "desc" | "asc" | null) => void
+}) {
+	const getSortIcon = () => {
+		if (sort === "desc") return "🔽"
+		if (sort === "asc") return "🔼"
+		return ""
+	}
+
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>
+				<Button variant="ghost" size="sm" className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3">
+					기수 {getSortIcon()}
+					<ChevronDown className="h-4 w-4 text-gray-400" />
+				</Button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="start" className="w-32">
+				<DropdownMenuItem onClick={() => onSortChange("desc")} className="flex items-center gap-2">
+					{sort === "desc" && <Check className="h-4 w-4 text-[#FF6B6B]" />}
+					내림차순
+				</DropdownMenuItem>
+				<DropdownMenuItem onClick={() => onSortChange("asc")} className="flex items-center gap-2">
+					{sort === "asc" && <Check className="h-4 w-4 text-[#FF6B6B]" />}
+					오름차순
+				</DropdownMenuItem>
+			</DropdownMenuContent>
+		</DropdownMenu>
 	)
 }

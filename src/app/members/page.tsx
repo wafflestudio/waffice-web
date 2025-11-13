@@ -1,63 +1,236 @@
 "use client"
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Plus } from "lucide-react"
-import { useState } from "react"
-import { MemberForm } from "@/components/members/member-form"
+import { Search } from "lucide-react"
+import { useId, useState } from "react"
 import { MemberTable } from "@/components/members/member-table"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { apiClient } from "@/lib/api"
-import type { MemberCreate, MemberUpdate } from "@/types"
+import {
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Toast } from "@/components/ui/toast"
+import type { Member, MemberCreate, MemberUpdate } from "@/types"
+
+// 임시 목 데이터 - API 연결 전까지 사용
+const mockMembers: Member[] = [
+	{
+		id: 1,
+		name: "홍길동",
+		email: "waffice@gmail.com",
+		github_username: "wafflestudio",
+		generation: "23.5기",
+		role: "활동회원",
+		status: "active",
+		join_date: "2025-10-01T00:00:00Z",
+		created_at: "2025-10-01T00:00:00Z",
+		updated_at: "2025-10-01T00:00:00Z",
+	},
+	{
+		id: 2,
+		name: "홍길동",
+		email: "waffice@gmail.com",
+		github_username: "wafflestudio",
+		generation: "23.5기",
+		role: "활동회원",
+		status: "active",
+		join_date: "2025-10-01T00:00:00Z",
+		created_at: "2025-10-01T00:00:00Z",
+		updated_at: "2025-10-01T00:00:00Z",
+	},
+	{
+		id: 3,
+		name: "홍길동",
+		email: "waffice@gmail.com",
+		github_username: "wafflestudio",
+		generation: "23.5기",
+		role: "활동회원",
+		status: "active",
+		join_date: "2025-10-01T00:00:00Z",
+		created_at: "2025-10-01T00:00:00Z",
+		updated_at: "2025-10-01T00:00:00Z",
+	},
+	{
+		id: 4,
+		name: "홍길동",
+		email: "waffice@gmail.com",
+		github_username: "wafflestudio",
+		generation: "23.5기",
+		role: "활동회원",
+		status: "active",
+		join_date: "2025-10-01T00:00:00Z",
+		created_at: "2025-10-01T00:00:00Z",
+		updated_at: "2025-10-01T00:00:00Z",
+	},
+	{
+		id: 5,
+		name: "홍길동",
+		email: "waffice@gmail.com",
+		github_username: "wafflestudio",
+		generation: "23.5기",
+		role: "활동회원",
+		status: "active",
+		join_date: "2025-10-01T00:00:00Z",
+		created_at: "2025-10-01T00:00:00Z",
+		updated_at: "2025-10-01T00:00:00Z",
+	},
+	{
+		id: 6,
+		name: "홍길동",
+		email: "waffice@gmail.com",
+		github_username: "wafflestudio",
+		generation: "23.5기",
+		role: "활동회원",
+		status: "active",
+		join_date: "2025-10-01T00:00:00Z",
+		created_at: "2025-10-01T00:00:00Z",
+		updated_at: "2025-10-01T00:00:00Z",
+	},
+	{
+		id: 7,
+		name: "홍길동",
+		email: "waffice@gmail.com",
+		github_username: "wafflestudio",
+		generation: "23.5기",
+		role: "활동회원",
+		status: "active",
+		join_date: "2025-10-01T00:00:00Z",
+		created_at: "2025-10-01T00:00:00Z",
+		updated_at: "2025-10-01T00:00:00Z",
+	},
+	{
+		id: 8,
+		name: "홍길동",
+		email: "waffice@gmail.com",
+		github_username: "wafflestudio",
+		generation: "23.5기",
+		role: "활동회원",
+		status: "active",
+		join_date: "2025-10-01T00:00:00Z",
+		created_at: "2025-10-01T00:00:00Z",
+		updated_at: "2025-10-01T00:00:00Z",
+	},
+	{
+		id: 9,
+		name: "홍길동",
+		email: "waffice@gmail.com",
+		github_username: "wafflestudio",
+		generation: "23.5기",
+		role: "활동회원",
+		status: "active",
+		join_date: "2025-10-01T00:00:00Z",
+		created_at: "2025-10-01T00:00:00Z",
+		updated_at: "2025-10-01T00:00:00Z",
+	},
+	{
+		id: 10,
+		name: "홍길동",
+		email: "waffice@gmail.com",
+		github_username: "wafflestudio",
+		generation: "23.5기",
+		role: "활동회원",
+		status: "active",
+		join_date: "2025-10-01T00:00:00Z",
+		created_at: "2025-10-01T00:00:00Z",
+		updated_at: "2025-10-01T00:00:00Z",
+	},
+]
 
 export default function MembersPage() {
-	const queryClient = useQueryClient()
-	const [showAddForm, setShowAddForm] = useState(false)
+	const [searchQuery, setSearchQuery] = useState("")
+	const [currentPage, setCurrentPage] = useState(1)
+	const [selectedMembers, setSelectedMembers] = useState<number[]>([])
+	const [isDialogOpen, setIsDialogOpen] = useState(false)
+	const [newRole, setNewRole] = useState<string>("")
+	const [changeReason, setChangeReason] = useState("")
+	const [showToast, setShowToast] = useState(false)
+	const [toastMessage, setToastMessage] = useState("")
 
-	const {
-		data: members = [],
-		isLoading,
-		error,
-	} = useQuery({
-		queryKey: ["members"],
-		queryFn: () => apiClient.getMembers(),
-	})
+	// 멤버 목록을 로컬 상태로 관리 (추후 API로 대체)
+	const [membersState, setMembersState] = useState<Member[]>(mockMembers)
+	const reasonId = useId()
+	// TODO: API 연결 시 아래 코드로 교체
+	// const {
+	//  data: members = [],
+	//  isLoading,
+	//  error,
+	// } = useQuery({
+	//  queryKey: ["members"],
+	//  queryFn: () => apiClient.getMembers(),
+	// })
 
-	const createMemberMutation = useMutation({
-		mutationFn: (data: MemberCreate) => apiClient.createMember(data),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["members"] })
-			setShowAddForm(false)
-		},
-	})
+	const members = membersState
+	const isLoading = false
+	const error = null
 
-	const updateMemberMutation = useMutation({
-		mutationFn: ({ id, data }: { id: number; data: MemberUpdate }) =>
-			apiClient.updateMember(id, data),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["members"] })
-		},
-	})
+	// 회원 정보 수정 핸들러
+	const handleMemberUpdate = async (id: number, data: MemberCreate | MemberUpdate) => {
+		try {
+			// API가 준비되면 아래 주석 해제
+			// await apiClient.updateMember(id, data)
 
-	const deleteMemberMutation = useMutation({
-		mutationFn: (id: number) => apiClient.deleteMember(id),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["members"] })
-		},
-	})
+			// 로컬 상태 업데이트 (서버 응답 형태에 맞춰 필요 시 조정)
+			setMembersState((prev) => prev.map((m) => (m.id === id ? { ...m, ...data } : m)))
 
-	const handleCreateMember = async (data: MemberCreate | MemberUpdate) => {
-		await createMemberMutation.mutateAsync(data as MemberCreate)
-	}
-
-	const handleUpdateMember = async (id: number, data: MemberUpdate) => {
-		await updateMemberMutation.mutateAsync({ id, data })
-	}
-
-	const handleDeleteMember = async (id: number) => {
-		if (confirm("Are you sure you want to delete this member?")) {
-			await deleteMemberMutation.mutateAsync(id)
+			// 성공 토스트
+			setToastMessage("회원 정보가 성공적으로 업데이트되었습니다.")
+			setShowToast(true)
+		} catch (err) {
+			console.error("Failed to update member:", err)
+			setToastMessage("회원 정보 업데이트에 실패했습니다.")
+			setShowToast(true)
 		}
+	}
+
+	const handleRoleChange = () => {
+		if (selectedMembers.length === 0) {
+			setToastMessage("변경할 회원을 선택해주세요.")
+			setShowToast(true)
+			return
+		}
+		setIsDialogOpen(true)
+	}
+
+	const handleSubmitRoleChange = () => {
+		if (!newRole) {
+			setToastMessage("자격을 선택해주세요.")
+			setShowToast(true)
+			return
+		}
+		if (!changeReason.trim()) {
+			setToastMessage("변경 사유를 입력해주세요.")
+			setShowToast(true)
+			return
+		}
+
+		// 로컬 상태 업데이트: 선택된 회원들의 role을 변경
+		setMembersState((prev) =>
+			prev.map((m) => (selectedMembers.includes(m.id) ? { ...m, role: newRole } : m)),
+		)
+
+		// TODO: API 호출하여 자격 변경
+		console.log("선택된 회원:", selectedMembers)
+		console.log("변경할 자격:", newRole)
+		console.log("변경 사유:", changeReason)
+
+		// 다이얼로그 닫고 초기화
+		setIsDialogOpen(false)
+		setNewRole("")
+		setChangeReason("")
+
+		// 성공 토스트 표시
+		setToastMessage("회원 자격이 성공적으로 변경되었습니다.")
+		setShowToast(true)
+	}
+
+	const handleCancelRoleChange = () => {
+		setIsDialogOpen(false)
+		setNewRole("")
+		setChangeReason("")
 	}
 
 	if (isLoading) {
@@ -79,39 +252,120 @@ export default function MembersPage() {
 	}
 
 	return (
-		<div className="space-y-6">
-			<div className="flex items-center justify-between">
+		<div className="space-y-6 p-8">
+			{/* 헤더 */}
+			<div>
 				<h1 className="text-3xl font-bold">회원 관리</h1>
-				<Button onClick={() => setShowAddForm(true)}>
-					<Plus className="mr-2 h-4 w-4" />
-					회원 추가
-				</Button>
 			</div>
 
-			<Card>
-				<CardHeader>
-					<CardTitle>스튜디오 회원 ({members.length}명)</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<MemberTable
-						members={members}
-						onUpdate={handleUpdateMember}
-						onDelete={handleDeleteMember}
-					/>
-				</CardContent>
-			</Card>
+			{/* 검색 영역 */}
+			<div className="space-y-4">
+				<div className="flex items-center justify-between">
+					<h2 className="text-lg font-medium">
+						전체 회원 ({members.length.toString().padStart(2, "0")})
+					</h2>
+				</div>
 
-			{showAddForm && (
-				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-					<div className="bg-background p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-						<h2 className="text-lg font-semibold mb-4">새 회원 추가</h2>
-						<MemberForm onSubmit={handleCreateMember} />
-						<Button variant="outline" onClick={() => setShowAddForm(false)} className="mt-4 w-full">
+				<div className="flex items-center gap-3">
+					<div className="relative flex-1 max-w-md">
+						<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+						<Input
+							placeholder="회원명을 입력해 주세요"
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							className="pl-9"
+						/>
+					</div>
+					<Button className="bg-[#FF6B6B] hover:bg-[#FF5252] text-white" onClick={handleRoleChange}>
+						회원 자격 변경
+					</Button>
+				</div>
+			</div>
+
+			{/* 테이블 */}
+			<MemberTable
+				members={members}
+				searchQuery={searchQuery}
+				currentPage={currentPage}
+				onPageChange={setCurrentPage}
+				selectedMembers={selectedMembers}
+				onSelectedMembersChange={setSelectedMembers}
+				onMemberUpdate={handleMemberUpdate}
+			/>
+
+			{/* 회원 자격 변경 다이얼로그 */}
+			<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+				<DialogContent className="sm:max-w-md">
+					<DialogHeader>
+						<DialogTitle>회원 자격 변경</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4 py-4">
+						{/* 자격 선택 */}
+						<div className="space-y-3">
+							<Label>자격</Label>
+							<div className="flex flex-col items-start gap-3 px-4 py-3 border rounded-lg">
+								{["활동회원", "정회원", "준회원"].map((role) => (
+									<button
+										key={role}
+										type="button"
+										onClick={() => setNewRole(role)}
+										className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+									>
+										<span
+											className={`text-sm font-medium ${
+												newRole === role ? "text-[#FF6B6B]" : "text-gray-700"
+											}`}
+										>
+											{role}
+										</span>
+										{newRole === role && (
+											<svg
+												className="w-4 h-4 text-[#FF6B6B]"
+												fill="currentColor"
+												viewBox="0 0 20 20"
+												aria-label="선택됨"
+											>
+												<title>선택됨</title>
+												<path
+													fillRule="evenodd"
+													d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+													clipRule="evenodd"
+												/>
+											</svg>
+										)}
+									</button>
+								))}
+							</div>
+						</div>
+
+						{/* 변경 사유 */}
+						<div className="space-y-2">
+							<Label htmlFor={reasonId}>변경 사유</Label>
+							<textarea
+								id={reasonId}
+								placeholder="변경 사유를 입력해 주세요"
+								value={changeReason}
+								onChange={(e) => setChangeReason(e.target.value)}
+								className="w-full min-h-[100px] p-2 border border-input rounded-md bg-background text-sm resize-y"
+							/>
+						</div>
+					</div>
+					<DialogFooter className="gap-2 sm:gap-0">
+						<Button variant="outline" onClick={handleCancelRoleChange}>
 							취소
 						</Button>
-					</div>
-				</div>
-			)}
+						<Button
+							className="bg-[#FF6B6B] hover:bg-[#FF5252] text-white"
+							onClick={handleSubmitRoleChange}
+						>
+							변경
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* 성공 토스트 알림 */}
+			<Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />
 		</div>
 	)
 }
