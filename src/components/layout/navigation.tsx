@@ -70,14 +70,14 @@ export function Navigation() {
 										className="h-10 w-10 shrink-0"
 										onClick={() => toggleExpand(item.name)}
 									>
-									<ChevronDown
-										className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")}
-									/>
-								</Button>
-							</div>
-							{isExpanded && item.subItems && (
-								<div className="ml-6 mt-1 space-y-1">
-									{item.subItems.map((subItem) => {
+										<ChevronDown
+											className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")}
+										/>
+									</Button>
+								</div>
+								{isExpanded && item.subItems && (
+									<div className="ml-6 mt-1 space-y-1">
+										{item.subItems.map((subItem) => {
 											const isSubActive = pathname === subItem.href
 											return (
 												<Link key={subItem.name} href={subItem.href}>
