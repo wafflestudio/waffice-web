@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import {
 	Dialog,
 	DialogContent,
-	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -131,7 +130,6 @@ export function AdminForm({ admin, onSubmit, trigger }: AdminFormProps) {
 						<DialogTitle>관리자 정보</DialogTitle>
 					</DialogHeader>
 					{content}
-					<DialogFooter />
 				</DialogContent>
 			</Dialog>
 		)

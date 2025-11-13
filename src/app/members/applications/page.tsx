@@ -124,7 +124,8 @@ export default function MemberApplicationsPage() {
 
 	const handleApproveClick = () => {
 		if (selectedApplications.length === 0) {
-			alert("승인할 신청을 선택해주세요.")
+			setToastMessage("승인할 신청을 선택해주세요.")
+			setShowToast(true)
 			return
 		}
 		setIsApproveDialogOpen(true)
@@ -132,7 +133,8 @@ export default function MemberApplicationsPage() {
 
 	const handleRejectClick = () => {
 		if (selectedApplications.length === 0) {
-			alert("반려할 신청을 선택해주세요.")
+			setToastMessage("반려할 신청을 선택해주세요.")
+			setShowToast(true)
 			return
 		}
 		setIsRejectDialogOpen(true)
@@ -140,7 +142,8 @@ export default function MemberApplicationsPage() {
 
 	const handleApproveSubmit = () => {
 		if (!selectedRole) {
-			alert("자격을 선택해주세요.")
+			setToastMessage("자격을 선택해주세요.")
+			setShowToast(true)
 			return
 		}
 		// TODO: API 호출하여 승인 처리

@@ -162,7 +162,7 @@ const permissionsData: Permission[] = [
 
 export default function MemberPermissionsPage() {
 	const [expandedItems, setExpandedItems] = useState<string[]>(["members"])
-	const [permissions, _setPermissions] = useState<Permission[]>(permissionsData)
+	const [permissions, setPermissions] = useState<Permission[]>(permissionsData)
 
 	const toggleExpand = (id: string) => {
 		setExpandedItems((prev) =>
@@ -175,9 +175,31 @@ export default function MemberPermissionsPage() {
 		role: keyof Omit<Permission, "id" | "name" | "children">,
 		checked: boolean,
 	) => {
+		// Helper to update nested permissions by id
+		function updatePermissionById(
+			permissions: Permission[],
+			targetId: string,
+			targetRole: keyof Omit<Permission, "id" | "name" | "children">,
+			value: boolean,
+		): Permission[] {
+			return permissions.map((perm) => {
+				if (perm.id === targetId) {
+					return { ...perm, [targetRole]: value }
+				}
+				if (perm.children) {
+					return {
+						...perm,
+						children: updatePermissionById(perm.children, targetId, targetRole, value),
+					}
+				}
+				return perm
+			})
+		}
+
+		setPermissions((prevPermissions) => updatePermissionById(prevPermissions, id, role, checked))
+
 		// TODO: API 호출하여 권한 변경
 		console.log(`권한 변경: ${id}, ${role}, ${checked}`)
-		// 실제로는 상태를 업데이트하고 API 호출
 	}
 
 	const renderPermissionRow = (permission: Permission, level: number = 0): React.ReactNode => {

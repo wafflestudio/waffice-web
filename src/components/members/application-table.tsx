@@ -113,21 +113,31 @@ export function ApplicationTable({
 		app.name.toLowerCase().includes(searchQuery.toLowerCase()),
 	)
 
-	// 정렬
-	const sortedApplications = [...filteredApplications]
-	if (generationSort) {
-		sortedApplications.sort((a, b) => {
-			const comparison = a.generation.localeCompare(b.generation)
-			return generationSort === "asc" ? comparison : -comparison
-		})
-	}
-	if (dateSort) {
-		sortedApplications.sort((a, b) => {
-			const comparison =
+	// 정렬 (mutual exclusion: 한 번에 하나의 정렬만 활성화)
+	const sortedApplications = [...filteredApplications].sort((a, b) => {
+		// 두 정렬이 모두 설정된 경우, 기수로 먼저 정렬 후 날짜로 정렬
+		if (generationSort && dateSort) {
+			const genComp = a.generation.localeCompare(b.generation)
+			if (genComp !== 0) {
+				return generationSort === "asc" ? genComp : -genComp
+			}
+			const dateComp =
 				new Date(a.application_date).getTime() - new Date(b.application_date).getTime()
-			return dateSort === "asc" ? comparison : -comparison
-		})
-	}
+			return dateSort === "asc" ? dateComp : -dateComp
+		}
+		// 기수 정렬만
+		if (generationSort) {
+			const genComp = a.generation.localeCompare(b.generation)
+			return generationSort === "asc" ? genComp : -genComp
+		}
+		// 날짜 정렬만
+		if (dateSort) {
+			const dateComp =
+				new Date(a.application_date).getTime() - new Date(b.application_date).getTime()
+			return dateSort === "asc" ? dateComp : -dateComp
+		}
+		return 0
+	})
 
 	// 페이지네이션
 	const totalPages = Math.ceil(sortedApplications.length / ITEMS_PER_PAGE)

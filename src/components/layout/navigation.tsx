@@ -1,5 +1,6 @@
 "use client"
 
+import type { LucideIcon } from "lucide-react"
 import { ChevronDown, FolderOpen, Home, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -7,7 +8,14 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-const navigation = [
+interface NavItem {
+	name: string
+	href: string
+	icon: LucideIcon
+	subItems?: { name: string; href: string }[]
+}
+
+const navigation: NavItem[] = [
 	{ name: "대시보드", href: "/", icon: Home },
 	{
 		name: "회원 관리",
@@ -62,14 +70,14 @@ export function Navigation() {
 										className="h-10 w-10 shrink-0"
 										onClick={() => toggleExpand(item.name)}
 									>
-										<ChevronDown
-											className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")}
-										/>
-									</Button>
-								</div>
-								{isExpanded && (
-									<div className="ml-6 mt-1 space-y-1">
-										{item.subItems.map((subItem) => {
+									<ChevronDown
+										className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")}
+									/>
+								</Button>
+							</div>
+							{isExpanded && item.subItems && (
+								<div className="ml-6 mt-1 space-y-1">
+									{item.subItems.map((subItem) => {
 											const isSubActive = pathname === subItem.href
 											return (
 												<Link key={subItem.name} href={subItem.href}>

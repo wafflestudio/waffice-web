@@ -50,10 +50,20 @@ export function MemberTable({
 		member.name.toLowerCase().includes(searchQuery.toLowerCase()),
 	)
 
+	// 기수 정렬
+	const sortedMembers = generationSort
+		? [...filteredMembers].sort((a, b) => {
+				const aGen = a.generation || ""
+				const bGen = b.generation || ""
+				const comparison = aGen.localeCompare(bGen)
+				return generationSort === "asc" ? comparison : -comparison
+			})
+		: filteredMembers
+
 	// 페이지네이션
-	const totalPages = Math.ceil(filteredMembers.length / ITEMS_PER_PAGE)
+	const totalPages = Math.ceil(sortedMembers.length / ITEMS_PER_PAGE)
 	const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
-	const paginatedMembers = filteredMembers.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+	const paginatedMembers = sortedMembers.slice(startIndex, startIndex + ITEMS_PER_PAGE)
 
 	// 체크박스 핸들링
 	const handleSelectAll = (checked: boolean) => {
@@ -119,11 +129,9 @@ export function MemberTable({
 										member.name
 									)}
 								</TableCell>
-								<TableCell className="text-gray-600">{member.generation || "23.5기"}</TableCell>
+								<TableCell className="text-gray-600">{member.generation || "-"}</TableCell>
 								<TableCell className="text-gray-600">{member.email}</TableCell>
-								<TableCell className="text-gray-600">
-									{member.github_username || "wafflestudio"}
-								</TableCell>
+								<TableCell className="text-gray-600">{member.github_username || "-"}</TableCell>
 								<TableCell className="text-gray-600">
 									{new Date(member.join_date).toLocaleDateString("ko-KR", {
 										year: "numeric",

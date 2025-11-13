@@ -148,6 +148,7 @@ export default function MembersPage() {
 	const [newRole, setNewRole] = useState<string>("")
 	const [changeReason, setChangeReason] = useState("")
 	const [showToast, setShowToast] = useState(false)
+	const [toastMessage, setToastMessage] = useState("")
 
 	// 멤버 목록을 로컬 상태로 관리 (추후 API로 대체)
 	const [membersState, setMembersState] = useState<Member[]>(mockMembers)
@@ -176,16 +177,19 @@ export default function MembersPage() {
 			setMembersState((prev) => prev.map((m) => (m.id === id ? { ...m, ...data } : m)))
 
 			// 성공 토스트
+			setToastMessage("회원 정보가 성공적으로 업데이트되었습니다.")
 			setShowToast(true)
 		} catch (err) {
 			console.error("Failed to update member:", err)
-			alert("회원 정보 업데이트에 실패했습니다. 콘솔을 확인하세요.")
+			setToastMessage("회원 정보 업데이트에 실패했습니다.")
+			setShowToast(true)
 		}
 	}
 
 	const handleRoleChange = () => {
 		if (selectedMembers.length === 0) {
-			alert("변경할 회원을 선택해주세요.")
+			setToastMessage("변경할 회원을 선택해주세요.")
+			setShowToast(true)
 			return
 		}
 		setIsDialogOpen(true)
@@ -193,13 +197,20 @@ export default function MembersPage() {
 
 	const handleSubmitRoleChange = () => {
 		if (!newRole) {
-			alert("자격을 선택해주세요.")
+			setToastMessage("자격을 선택해주세요.")
+			setShowToast(true)
 			return
 		}
 		if (!changeReason.trim()) {
-			alert("변경 사유를 입력해주세요.")
+			setToastMessage("변경 사유를 입력해주세요.")
+			setShowToast(true)
 			return
 		}
+
+		// 로컬 상태 업데이트: 선택된 회원들의 role을 변경
+		setMembersState((prev) =>
+			prev.map((m) => (selectedMembers.includes(m.id) ? { ...m, role: newRole } : m)),
+		)
 
 		// TODO: API 호출하여 자격 변경
 		console.log("선택된 회원:", selectedMembers)
@@ -212,6 +223,7 @@ export default function MembersPage() {
 		setChangeReason("")
 
 		// 성공 토스트 표시
+		setToastMessage("회원 자격이 성공적으로 변경되었습니다.")
 		setShowToast(true)
 	}
 
@@ -353,11 +365,7 @@ export default function MembersPage() {
 			</Dialog>
 
 			{/* 성공 토스트 알림 */}
-			<Toast
-				message="성공적으로 변경이 완료되었습니다."
-				isVisible={showToast}
-				onClose={() => setShowToast(false)}
-			/>
+			<Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />
 		</div>
 	)
 }

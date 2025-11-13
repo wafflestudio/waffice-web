@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import {
 	Dialog,
 	DialogContent,
-	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -116,7 +115,6 @@ export function ApplicationForm({
 						<DialogTitle>가입 신청 정보</DialogTitle>
 					</DialogHeader>
 					{content}
-					<DialogFooter />
 				</DialogContent>
 			</Dialog>
 		)

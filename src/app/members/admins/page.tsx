@@ -136,7 +136,6 @@ const mockAdmins: Admin[] = [
 ]
 
 export default function MemberAdminsPage() {
-	const [_searchQuery, _setSearchQuery] = useState("")
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 	const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null)
@@ -144,7 +143,6 @@ export default function MemberAdminsPage() {
 	const [selectedRole, setSelectedRole] = useState("")
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState("")
-	const [isSelectOpen, setIsSelectOpen] = useState(false)
 
 	const [admins, setAdmins] = useState<Admin[]>(mockAdmins)
 	const searchNameId = useId()
@@ -159,7 +157,6 @@ export default function MemberAdminsPage() {
 		setIsAddDialogOpen(true)
 		setSearchName("")
 		setSelectedRole("")
-		setIsSelectOpen(false)
 	}
 
 	const handleDeleteClick = (admin: Admin) => {
@@ -171,13 +168,28 @@ export default function MemberAdminsPage() {
 
 	const handleAddSubmit = () => {
 		if (!searchName.trim()) {
-			alert("회원 이름을 입력해주세요.")
+			setToastMessage("회원 이름을 입력해주세요.")
+			setShowToast(true)
 			return
 		}
 		if (!selectedRole) {
-			alert("분류를 선택해주세요.")
+			setToastMessage("분류를 선택해주세요.")
+			setShowToast(true)
 			return
 		}
+
+		// 새 관리자 추가 (로컬 상태)
+		const newAdmin: Admin = {
+			id: Math.max(...admins.map((a) => a.id)) + 1,
+			role: selectedRole === "admin" ? "관리자" : "팀장",
+			name: searchName,
+			generation: "23.5기",
+			email: "waffice@gmail.com",
+			permission: "전메뉴",
+			belongTo: "운영팀",
+			category: "",
+		}
+		setAdmins((prev) => [...prev, newAdmin])
 
 		// TODO: API 호출하여 관리자 추가
 		console.log("추가할 관리자:", searchName, selectedRole)
@@ -190,8 +202,13 @@ export default function MemberAdminsPage() {
 	}
 
 	const handleDeleteSubmit = () => {
-		// TODO: API 호출하여 관리자 삭제
-		console.log("삭제할 관리자:", selectedAdmin)
+		if (selectedAdmin) {
+			// 관리자 삭제 (로컬 상태)
+			setAdmins((prev) => prev.filter((a) => a.id !== selectedAdmin.id))
+
+			// TODO: API 호출하여 관리자 삭제
+			console.log("삭제할 관리자:", selectedAdmin)
+		}
 
 		setIsDeleteDialogOpen(false)
 		setSelectedAdmin(null)
@@ -285,15 +302,9 @@ export default function MemberAdminsPage() {
 						</div>
 
 						{/* 분류 선택 */}
-						<div
-							className={`space-y-2 transition-all duration-200 ${isSelectOpen ? "mb-20" : "mb-0"}`}
-						>
+						<div className="space-y-2">
 							<Label>분류</Label>
-							<Select
-								value={selectedRole}
-								onValueChange={setSelectedRole}
-								onOpenChange={setIsSelectOpen}
-							>
+							<Select value={selectedRole} onValueChange={setSelectedRole}>
 								<SelectTrigger>
 									<SelectValue placeholder="선택" />
 								</SelectTrigger>

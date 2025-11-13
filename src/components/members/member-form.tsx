@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import {
 	Dialog,
 	DialogContent,
-	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -45,7 +44,7 @@ export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
 		register,
 		handleSubmit,
 		reset,
-		formState: { errors: _errors, isSubmitting },
+		formState: { isSubmitting },
 	} = useForm<MemberFormData>({
 		resolver: zodResolver(memberSchema),
 		defaultValues: (() => {
@@ -164,11 +163,7 @@ export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
 				<Label className="col-span-1">계정 생성일</Label>
 				<div className="col-span-2">
 					<div className="text-sm text-gray-700">
-						{member
-							? member.created_at || member.join_date
-								? member.created_at || member.join_date
-								: ""
-							: ""}
+						{member?.created_at || member?.join_date || ""}
 					</div>
 				</div>
 			</div>
@@ -193,7 +188,6 @@ export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
 						<DialogTitle>{isEdit ? "회원 정보" : "새 회원 추가"}</DialogTitle>
 					</DialogHeader>
 					{formContent}
-					<DialogFooter />
 				</DialogContent>
 			</Dialog>
 		)
