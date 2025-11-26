@@ -1,7 +1,6 @@
 import Image from "next/image"
-
-import WaffleLogo from "../../../public/WAFFLE_logo.png"
 import { cn } from "@/lib/utils"
+import WaffleLogo from "../../../public/WAFFLE_logo.png"
 
 interface LogoProps {
 	/** 로고 크기 */
@@ -24,13 +23,7 @@ function Logo({ size = "md", className }: LogoProps) {
 
 	return (
 		<div className={cn("flex items-center justify-center", className)}>
-			<Image
-				src={WaffleLogo}
-				alt="와플 스튜디오 로고"
-				width={width}
-				height={height}
-				priority
-			/>
+			<Image src={WaffleLogo} alt="와플 스튜디오 로고" width={width} height={height} priority />
 		</div>
 	)
 }
