@@ -1,3 +1,6 @@
+import Image from "next/image"
+
+import WaffleLogo from "../../../public/WAFFLE_logo.png"
 import { cn } from "@/lib/utils"
 
 interface LogoProps {
@@ -9,20 +12,25 @@ interface LogoProps {
 
 /**
  * 와플 스튜디오 로고 컴포넌트
- * TODO: 향후 이미지로 교체 예정
  */
 function Logo({ size = "md", className }: LogoProps) {
-	const sizeClasses = {
-		sm: "text-2xl",
-		md: "text-4xl",
-		lg: "text-5xl",
+	const logoSizes: Record<NonNullable<LogoProps["size"]>, { width: number; height: number }> = {
+		sm: { width: 24, height: 26 },
+		md: { width: 39, height: 41 },
+		lg: { width: 54, height: 57 },
 	}
+
+	const { width, height } = logoSizes[size]
 
 	return (
 		<div className={cn("flex items-center justify-center", className)}>
-			<span className={cn(sizeClasses[size])} role="img" aria-label="와플 스튜디오 로고">
-				🧇
-			</span>
+			<Image
+				src={WaffleLogo}
+				alt="와플 스튜디오 로고"
+				width={width}
+				height={height}
+				priority
+			/>
 		</div>
 	)
 }

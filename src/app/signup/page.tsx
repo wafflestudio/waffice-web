@@ -118,11 +118,9 @@ export default function SignupPage() {
 	return (
 		<div className="flex min-h-screen items-center justify-center p-4">
 			<Card className="w-full max-w-md">
-				<CardHeader className="space-y-4">
-					<div className="flex justify-center">
-						<Logo size="lg" />
-					</div>
-					<CardTitle className="text-center">회원가입</CardTitle>
+				<CardHeader className="flex flex-col items-start text-left space-y-3">
+					<Logo size="md" />
+					<h1 className="text-2xl font-bold">가입 신청</h1>
 				</CardHeader>
 				<CardContent>
 					<Form {...form}>

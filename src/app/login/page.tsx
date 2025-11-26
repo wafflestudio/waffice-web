@@ -24,8 +24,8 @@ export default function LoginPage() {
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-muted/30">
 			<Card className="w-full max-w-md">
-				<CardHeader className="items-center">
-					<Logo size="md" className="mb-4" />
+				<CardHeader className="flex flex-col items-start text-left space-y-3">
+					<Logo size="md" />
 					<h1 className="text-2xl font-bold">로그인</h1>
 				</CardHeader>
 				<CardContent className="space-y-4">

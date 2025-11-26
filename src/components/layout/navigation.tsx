@@ -27,7 +27,7 @@ const navigation: NavItem[] = [
 			{ name: "관리자 설정", href: "/members/admins" },
 		],
 	},
-	{ name: "프로젝트", href: "/projects", icon: FolderOpen },
+	{ name: "프로젝트 관리", href: "/projects", icon: FolderOpen },
 ]
 
 export function Navigation() {
