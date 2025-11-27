@@ -23,8 +23,6 @@ const navigation: NavItem[] = [
 		icon: Users,
 		subItems: [
 			{ name: "가입 신청 관리", href: "/members/applications" },
-			{ name: "접근 권한 관리", href: "/members/permissions" },
-			{ name: "관리자 설정", href: "/members/admins" },
 		],
 	},
 	{ name: "프로젝트 관리", href: "/projects", icon: FolderOpen },
