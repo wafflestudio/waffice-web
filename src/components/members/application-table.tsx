@@ -45,6 +45,17 @@ const ITEMS_PER_PAGE = 10
 
 type SortOrder = "asc" | "desc" | null
 
+const formatDateString = (value: string) => {
+	if (!value) return "-"
+	const parsed = new Date(value)
+	return Number.isNaN(parsed.getTime()) ? "-" : parsed.toLocaleDateString()
+}
+
+const getDateValue = (value: string) => {
+	const parsed = new Date(value).getTime()
+	return Number.isNaN(parsed) ? 0 : parsed
+}
+
 // 기수 정렬 헤더 (파일 상단에 위치하여 재생성 방지)
 function GenerationSortHeader({
 	generationSort,
@@ -121,8 +132,7 @@ export function ApplicationTable({
 			if (genComp !== 0) {
 				return generationSort === "asc" ? genComp : -genComp
 			}
-			const dateComp =
-				new Date(a.application_date).getTime() - new Date(b.application_date).getTime()
+			const dateComp = getDateValue(a.application_date) - getDateValue(b.application_date)
 			return dateSort === "asc" ? dateComp : -dateComp
 		}
 		// 기수 정렬만
@@ -132,8 +142,7 @@ export function ApplicationTable({
 		}
 		// 날짜 정렬만
 		if (dateSort) {
-			const dateComp =
-				new Date(a.application_date).getTime() - new Date(b.application_date).getTime()
+			const dateComp = getDateValue(a.application_date) - getDateValue(b.application_date)
 			return dateSort === "asc" ? dateComp : -dateComp
 		}
 		return 0
@@ -220,7 +229,7 @@ export function ApplicationTable({
 								<TableCell>{application.generation}</TableCell>
 								<TableCell>{application.email}</TableCell>
 								<TableCell>{application.github_username}</TableCell>
-								<TableCell>{new Date(application.application_date).toLocaleDateString()}</TableCell>
+								<TableCell>{formatDateString(application.application_date)}</TableCell>
 								<TableCell>
 									<span className="text-[#FF6B6B]">확인 중</span>
 								</TableCell>

@@ -8,7 +8,9 @@ import type {
 	User,
 	UserHistory,
 	UserHistoryCreate,
+	UserListResponse,
 	UserPendingCreate,
+	UserWithProfile,
 } from "@/types"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
@@ -20,13 +22,26 @@ class ApiClient {
 		this.baseUrl = baseUrl
 	}
 
+	private getAccessToken(): string | null {
+		if (typeof window !== "undefined") {
+			return localStorage.getItem("accessToken") || null
+		}
+		return process.env.NEXT_PUBLIC_API_TOKEN || null
+	}
+
 	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
 		const url = `${this.baseUrl}${endpoint}`
+		const headers = new Headers(options.headers)
+
+		headers.set("Content-Type", "application/json")
+
+		const token = this.getAccessToken()
+		if (token && !headers.has("Authorization")) {
+			headers.set("Authorization", `Bearer ${token}`)
+		}
+
 		const response = await fetch(url, {
-			headers: {
-				"Content-Type": "application/json",
-				...options.headers,
-			},
+			headers,
 			...options,
 		})
 
@@ -65,6 +80,11 @@ class ApiClient {
 
 	async getAllUsers(): Promise<User[]> {
 		return this.request<User[]>("/api/user/all")
+	}
+
+	async getAllUsersWithProfile(): Promise<UserWithProfile[]> {
+		const data = await this.request<UserListResponse>("/api/exct/user/all")
+		return data.users ?? []
 	}
 
 	async updateUser(payload: Record<string, unknown>): Promise<void> {

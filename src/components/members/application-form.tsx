@@ -28,6 +28,12 @@ interface ApplicationFormProps {
 	trigger?: React.ReactNode
 }
 
+const formatDateString = (value: string) => {
+	if (!value) return "-"
+	const parsed = new Date(value)
+	return Number.isNaN(parsed.getTime()) ? "-" : parsed.toLocaleDateString()
+}
+
 export function ApplicationForm({
 	application,
 	onApprove,
@@ -86,7 +92,7 @@ export function ApplicationForm({
 				<Label className="col-span-1">가입 신청일</Label>
 				<div className="col-span-2">
 					<div className="text-sm text-gray-700">
-						{new Date(application.application_date).toLocaleDateString()}
+						{formatDateString(application.application_date)}
 					</div>
 				</div>
 			</div>

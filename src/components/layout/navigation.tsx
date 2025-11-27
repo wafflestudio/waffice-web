@@ -21,9 +21,7 @@ const navigation: NavItem[] = [
 		name: "회원 관리",
 		href: "/members",
 		icon: Users,
-		subItems: [
-			{ name: "가입 신청 관리", href: "/members/applications" },
-		],
+		subItems: [{ name: "가입 신청 관리", href: "/members/applications" }],
 	},
 	{ name: "프로젝트 관리", href: "/projects", icon: FolderOpen },
 ]

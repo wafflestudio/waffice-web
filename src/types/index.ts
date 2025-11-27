@@ -41,6 +41,28 @@ export interface UserHistory {
 	created_at?: string
 }
 
+// Extended user info for admin endpoints
+export interface UserWithProfile {
+	id: number
+	google_id: string
+	email?: string
+	name?: string
+	type?: "programmer" | "designer" | (string & {})
+	privilege?: "associate" | "regular" | "active" | (string & {})
+	admin?: number
+	profile_major?: string | null
+	profile_cardinal?: string | null
+	profile_position?: string | null
+	receive_email?: boolean
+	ctime?: number
+	atime?: number
+}
+
+export interface UserListResponse {
+	ok: boolean
+	users: UserWithProfile[]
+}
+
 // Legacy Member types (for backwards compatibility until full migration)
 export interface Member {
 	id: number

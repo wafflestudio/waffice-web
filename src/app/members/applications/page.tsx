@@ -1,5 +1,6 @@
 "use client"
 
+import { useQuery } from "@tanstack/react-query"
 import { Search } from "lucide-react"
 import { useState } from "react"
 import { ApplicationTable } from "@/components/members/application-table"
@@ -14,100 +15,18 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Toast } from "@/components/ui/toast"
+import { apiClient } from "@/lib/api"
+import type { UserWithProfile } from "@/types"
 
-// 임시 목 데이터 - API 연결 전까지 사용
-const mockApplications = [
-	{
-		id: 1,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		status: "승인",
-	},
-	{
-		id: 2,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		status: "승인",
-	},
-	{
-		id: 3,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		status: "승인",
-	},
-	{
-		id: 4,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		status: "승인",
-	},
-	{
-		id: 5,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		status: "승인",
-	},
-	{
-		id: 6,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		status: "승인",
-	},
-	{
-		id: 7,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		status: "승인",
-	},
-	{
-		id: 8,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		status: "반려",
-	},
-	{
-		id: 9,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		status: "반려",
-	},
-	{
-		id: 10,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		status: "반려",
-	},
-]
+interface Application {
+	id: number
+	name: string
+	generation: string
+	email: string
+	github_username: string
+	application_date: string
+	status: string
+}
 
 export default function MemberApplicationsPage() {
 	const [searchQuery, setSearchQuery] = useState("")
@@ -119,8 +38,24 @@ export default function MemberApplicationsPage() {
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState("")
 
-	// TODO: API 연결 시 아래 코드로 교체
-	const applications = mockApplications
+	const {
+		data: users = [],
+		isLoading,
+		error,
+	} = useQuery<UserWithProfile[], Error>({
+		queryKey: ["member-applications", "all-users"],
+		queryFn: () => apiClient.getAllUsersWithProfile(),
+	})
+
+	const applications: Application[] = users.map((user: UserWithProfile) => ({
+		id: user.id,
+		name: user.name || "이름 없음",
+		generation: user.profile_cardinal ?? "-",
+		email: user.email ?? "-",
+		github_username: user.google_id ?? "-",
+		application_date: user.ctime ? new Date(user.ctime * 1000).toISOString() : "",
+		status: user.admin && user.admin > 0 ? "승인" : "대기",
+	}))
 
 	const handleApproveClick = () => {
 		if (selectedApplications.length === 0) {
@@ -178,6 +113,24 @@ export default function MemberApplicationsPage() {
 		// TODO: API 호출
 		setToastMessage("해당 회원 가입이 반려되었습니다.")
 		setShowToast(true)
+	}
+
+	if (isLoading) {
+		return (
+			<div className="flex items-center justify-center h-64">
+				<div className="text-lg">가입 신청 목록을 불러오는 중...</div>
+			</div>
+		)
+	}
+
+	if (error) {
+		return (
+			<div className="flex items-center justify-center h-64">
+				<div className="text-lg text-destructive">
+					가입 신청 목록을 불러오는 중 오류가 발생했습니다. 다시 시도해주세요.
+				</div>
+			</div>
+		)
 	}
 
 	return (
