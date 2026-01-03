@@ -54,7 +54,7 @@ export function MemberTable({
 
 	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "미가입"]
 	const ENROLLMENT_OPTIONS = ["학부생", "휴학생", "졸업생"]
-	const ACCESS_RIGHT_OPTIONS = ["운영진", "팀장"]
+	const ACCESS_RIGHT_OPTIONS = ["운영진", "팀장"] satisfies AccessRight[]
 
 	// 검색 필터링
 	const filteredMembers = members
