@@ -15,6 +15,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Toast } from "@/components/ui/toast"
 
+interface Application {
+	id: number
+	name: string
+	generation: string
+	email: string
+	github_username: string
+	application_date: string
+	role: string
+	status: string
+}
+
 // 임시 목 데이터 - API 연결 전까지 사용
 const mockApplications = [
 	{
@@ -24,6 +35,7 @@ const mockApplications = [
 		email: "waffice@gmail.com",
 		github_username: "wafflestudio",
 		application_date: "2025-10-01T00:00:00Z",
+		role: "활동회원",
 		status: "승인",
 	},
 	{
@@ -33,6 +45,7 @@ const mockApplications = [
 		email: "waffice@gmail.com",
 		github_username: "wafflestudio",
 		application_date: "2025-10-01T00:00:00Z",
+		role: "정회원",
 		status: "승인",
 	},
 	{
@@ -42,6 +55,7 @@ const mockApplications = [
 		email: "waffice@gmail.com",
 		github_username: "wafflestudio",
 		application_date: "2025-10-01T00:00:00Z",
+		role: "준회원",
 		status: "승인",
 	},
 	{
@@ -51,6 +65,7 @@ const mockApplications = [
 		email: "waffice@gmail.com",
 		github_username: "wafflestudio",
 		application_date: "2025-10-01T00:00:00Z",
+		role: "미가입",
 		status: "승인",
 	},
 	{
@@ -60,6 +75,7 @@ const mockApplications = [
 		email: "waffice@gmail.com",
 		github_username: "wafflestudio",
 		application_date: "2025-10-01T00:00:00Z",
+		role: "활동회원",
 		status: "승인",
 	},
 	{
@@ -69,6 +85,7 @@ const mockApplications = [
 		email: "waffice@gmail.com",
 		github_username: "wafflestudio",
 		application_date: "2025-10-01T00:00:00Z",
+		role: "정회원",
 		status: "승인",
 	},
 	{
@@ -78,6 +95,7 @@ const mockApplications = [
 		email: "waffice@gmail.com",
 		github_username: "wafflestudio",
 		application_date: "2025-10-01T00:00:00Z",
+		role: "준회원",
 		status: "승인",
 	},
 	{
@@ -87,6 +105,7 @@ const mockApplications = [
 		email: "waffice@gmail.com",
 		github_username: "wafflestudio",
 		application_date: "2025-10-01T00:00:00Z",
+		role: "미가입",
 		status: "반려",
 	},
 	{
@@ -96,6 +115,7 @@ const mockApplications = [
 		email: "waffice@gmail.com",
 		github_username: "wafflestudio",
 		application_date: "2025-10-01T00:00:00Z",
+		role: "활동회원",
 		status: "반려",
 	},
 	{
@@ -105,6 +125,7 @@ const mockApplications = [
 		email: "waffice@gmail.com",
 		github_username: "wafflestudio",
 		application_date: "2025-10-01T00:00:00Z",
+		role: "정회원",
 		status: "반려",
 	},
 ]
@@ -118,9 +139,14 @@ export default function MemberApplicationsPage() {
 	const [selectedRole, setSelectedRole] = useState<string>("")
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState("")
+	const [applications, _setApplications] = useState<Application[]>(mockApplications)
 
 	// TODO: API 연결 시 아래 코드로 교체
-	const applications = mockApplications
+	// const {
+	//  data: applications = [],
+	//  isLoading,
+	//  error,
+	// } = useQuery(...)
 
 	const handleApproveClick = () => {
 		if (selectedApplications.length === 0) {

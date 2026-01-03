@@ -18,6 +18,7 @@ interface Application {
 	email: string
 	github_username: string
 	application_date: string
+	role?: string
 	status: string
 }
 
@@ -35,7 +36,7 @@ export function ApplicationForm({
 	trigger,
 }: ApplicationFormProps) {
 	const [open, setOpen] = useState(false)
-	const [selectedRole, setSelectedRole] = useState<string>("활동회원")
+	const [selectedRole, setSelectedRole] = useState<string>(application.role || "활동회원")
 
 	const handleApprove = () => {
 		onApprove(application.id, selectedRole)
@@ -65,6 +66,7 @@ export function ApplicationForm({
 						<option>활동회원</option>
 						<option>준회원</option>
 						<option>정회원</option>
+						<option>미가입</option>
 					</select>
 				</div>
 
