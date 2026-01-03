@@ -6,8 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
 	DropdownMenu,
+	DropdownMenuCheckboxItem,
 	DropdownMenuContent,
 	DropdownMenuItem,
+	DropdownMenuRadioGroup,
+	DropdownMenuRadioItem,
+	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -18,7 +22,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table"
-import type { Member, MemberCreate, MemberUpdate } from "@/types"
+import type { AccessRight, Member, MemberCreate, MemberUpdate } from "@/types"
 
 interface MemberTableProps {
 	members: Member[]
@@ -44,11 +48,24 @@ export function MemberTable({
 	onMemberUpdate,
 }: MemberTableProps) {
 	const [generationSort, setGenerationSort] = useState<"desc" | "asc" | null>(null)
+	const [roleFilter, setRoleFilter] = useState<string>("전체")
+	const [enrollmentFilter, setEnrollmentFilter] = useState<string>("전체")
+	const [accessRightsFilter, setAccessRightsFilter] = useState<AccessRight[]>([])
+
+	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "미가입"]
+	const ENROLLMENT_OPTIONS = ["학부생", "휴학생", "졸업생"]
+	const ACCESS_RIGHT_OPTIONS = ["운영진", "팀장"] satisfies AccessRight[]
 
 	// 검색 필터링
-	const filteredMembers = members.filter((member) =>
-		member.name.toLowerCase().includes(searchQuery.toLowerCase()),
-	)
+	const filteredMembers = members
+		.filter((member) => member.name.toLowerCase().includes(searchQuery.toLowerCase()))
+		.filter((member) => roleFilter === "전체" || (member.role || "활동회원") === roleFilter)
+		.filter((member) => enrollmentFilter === "전체" || member.affiliation === enrollmentFilter)
+		.filter((member) =>
+			accessRightsFilter.length === 0
+				? true
+				: accessRightsFilter.every((right) => member.access_rights?.includes(right)),
+		)
 
 	// 기수 정렬
 	const sortedMembers = generationSort
@@ -102,7 +119,79 @@ export function MemberTable({
 							<TableHead>이메일</TableHead>
 							<TableHead>Github 아이디</TableHead>
 							<TableHead>계정 생성일</TableHead>
-							<TableHead>자격</TableHead>
+							<TableHead>
+								<FilterHeader
+									label="자격"
+									buttonLabel={roleFilter === "전체" ? "전체" : roleFilter}
+									renderContent={() => (
+										<DropdownMenuRadioGroup
+											value={roleFilter}
+											onValueChange={(value) => setRoleFilter(value)}
+										>
+											<DropdownMenuRadioItem value="전체">전체</DropdownMenuRadioItem>
+											{ROLE_OPTIONS.map((role) => (
+												<DropdownMenuRadioItem key={role} value={role}>
+													{role}
+												</DropdownMenuRadioItem>
+											))}
+										</DropdownMenuRadioGroup>
+									)}
+								/>
+							</TableHead>
+							<TableHead>
+								<FilterHeader
+									label="재학여부"
+									buttonLabel={enrollmentFilter === "전체" ? "전체" : enrollmentFilter}
+									renderContent={() => (
+										<DropdownMenuRadioGroup
+											value={enrollmentFilter}
+											onValueChange={(value) => setEnrollmentFilter(value)}
+										>
+											<DropdownMenuRadioItem value="전체">전체</DropdownMenuRadioItem>
+											{ENROLLMENT_OPTIONS.map((status) => (
+												<DropdownMenuRadioItem key={status} value={status}>
+													{status}
+												</DropdownMenuRadioItem>
+											))}
+										</DropdownMenuRadioGroup>
+									)}
+								/>
+							</TableHead>
+							<TableHead>
+								<FilterHeader
+									label="접근 권한"
+									buttonLabel={
+										accessRightsFilter.length === 0 ? "전체" : accessRightsFilter.join(", ")
+									}
+									renderContent={() => (
+										<div className="space-y-1">
+											<DropdownMenuCheckboxItem
+												checked={accessRightsFilter.length === 0}
+												onCheckedChange={() => setAccessRightsFilter([])}
+											>
+												전체
+											</DropdownMenuCheckboxItem>
+											<DropdownMenuSeparator />
+											{ACCESS_RIGHT_OPTIONS.map((right) => (
+												<DropdownMenuCheckboxItem
+													key={right}
+													checked={accessRightsFilter.includes(right)}
+													onCheckedChange={(checked) => {
+														setAccessRightsFilter((prev) => {
+															if (checked) {
+																return [...prev.filter(Boolean), right]
+															}
+															return prev.filter((r) => r !== right)
+														})
+													}}
+												>
+													{right}
+												</DropdownMenuCheckboxItem>
+											))}
+										</div>
+									)}
+								/>
+							</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -140,6 +229,10 @@ export function MemberTable({
 									})}
 								</TableCell>
 								<TableCell className="text-gray-600">{member.role || "활동회원"}</TableCell>
+								<TableCell className="text-gray-600">{member.affiliation || "학부생"}</TableCell>
+								<TableCell className="text-gray-600">
+									{member.access_rights?.length ? member.access_rights.join(", ") : "없음"}
+								</TableCell>
 							</TableRow>
 						))}
 					</TableBody>
@@ -221,17 +314,11 @@ function GenerationSortHeader({
 	sort: "desc" | "asc" | null
 	onSortChange: (sort: "desc" | "asc" | null) => void
 }) {
-	const getSortIcon = () => {
-		if (sort === "desc") return "🔽"
-		if (sort === "asc") return "🔼"
-		return ""
-	}
-
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
 				<Button variant="ghost" size="sm" className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3">
-					기수 {getSortIcon()}
+					기수
 					<ChevronDown className="h-4 w-4 text-gray-400" />
 				</Button>
 			</DropdownMenuTrigger>
@@ -244,6 +331,31 @@ function GenerationSortHeader({
 					{sort === "asc" && <Check className="h-4 w-4 text-[#FF6B6B]" />}
 					오름차순
 				</DropdownMenuItem>
+			</DropdownMenuContent>
+		</DropdownMenu>
+	)
+}
+
+function FilterHeader({
+	label,
+	buttonLabel,
+	renderContent,
+}: {
+	label: string
+	buttonLabel: string
+	renderContent: () => React.ReactNode
+}) {
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>
+				<Button variant="ghost" size="sm" className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3">
+					{label}
+					<ChevronDown className="h-4 w-4 text-gray-400" />
+					<span className="sr-only">{buttonLabel}</span>
+				</Button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="start" className="w-40">
+				{renderContent()}
 			</DropdownMenuContent>
 		</DropdownMenu>
 	)

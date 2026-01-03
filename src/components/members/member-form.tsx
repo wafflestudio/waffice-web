@@ -5,6 +5,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
 	Dialog,
 	DialogContent,
@@ -13,7 +14,7 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import type { Member, MemberCreate, MemberUpdate } from "@/types"
+import type { AccessRight, Member, MemberCreate, MemberUpdate } from "@/types"
 
 // 폼 스키마: 대부분 읽기 전용으로 보여줄 필드를 포함하되, 저장 시에는 role과 affiliation만 전송
 const memberSchema = z.object({
@@ -24,7 +25,8 @@ const memberSchema = z.object({
 	github_username: z.string().optional(),
 	slack_id: z.string().optional(),
 	phone: z.string().optional(),
-	affiliation: z.enum(["학부생", "졸업생"]).optional(),
+	affiliation: z.enum(["학부생", "휴학생", "졸업생"]).optional(),
+	access_rights: z.array(z.enum(["운영진", "팀장"])).optional(),
 	created_at: z.string().optional(),
 })
 
@@ -44,6 +46,8 @@ export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
 		register,
 		handleSubmit,
 		reset,
+		setValue,
+		watch,
 		formState: { isSubmitting },
 	} = useForm<MemberFormData>({
 		resolver: zodResolver(memberSchema),
@@ -58,6 +62,7 @@ export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
 					slack_id: "",
 					phone: "",
 					affiliation: "학부생",
+					access_rights: [],
 					created_at: "",
 				}
 
@@ -82,18 +87,29 @@ export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
 				github_username: member.github_username || "",
 				slack_id: member.slack_id || "",
 				phone: member.phone || "",
-				affiliation: (member.affiliation as "학부생" | "졸업생") || "학부생",
+				affiliation: (member.affiliation as "학부생" | "휴학생" | "졸업생") || "학부생",
+				access_rights: member.access_rights || [],
 				created_at: createdAtFormatted,
 			}
 		})(),
 	})
 
+	const accessRights = watch("access_rights") || []
+
+	const toggleAccessRight = (value: AccessRight) => {
+		const next = accessRights.includes(value)
+			? accessRights.filter((item) => item !== value)
+			: [...accessRights, value]
+		setValue("access_rights", next)
+	}
+
 	const handleFormSubmit = async (data: MemberFormData) => {
 		try {
-			// 사용자가 변경 가능한 필드(role, affiliation)만 부모로 전달
+			// 사용자가 변경 가능한 필드(role, affiliation, access_rights)만 부모로 전달
 			const payload: MemberUpdate = {
 				role: data.role,
 				affiliation: data.affiliation,
+				access_rights: data.access_rights,
 			}
 
 			await onSubmit(payload)
@@ -156,8 +172,31 @@ export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
 						className="flex h-9 w-full items-center rounded-md border border-input bg-transparent px-3 py-2 text-sm"
 					>
 						<option>학부생</option>
+						<option>휴학생</option>
 						<option>졸업생</option>
 					</select>
+				</div>
+
+				<Label className="col-span-1">접근 권한</Label>
+				<div className="col-span-2 space-y-2">
+					<div className="text-xs text-muted-foreground">중복 선택 가능</div>
+					<div className="flex flex-col gap-2">
+						{(["운영진", "팀장"] as AccessRight[]).map((right, idx) => {
+							const checkboxId = `access-${right}-${idx}`
+							return (
+								<div key={right} className="flex items-center gap-2 text-sm text-gray-700">
+									<Checkbox
+										id={checkboxId}
+										checked={accessRights.includes(right)}
+										onCheckedChange={() => toggleAccessRight(right)}
+									/>
+									<Label htmlFor={checkboxId} className="cursor-pointer font-normal">
+										{right}
+									</Label>
+								</div>
+							)
+						})}
+					</div>
 				</div>
 
 				<Label className="col-span-1">계정 생성일</Label>

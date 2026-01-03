@@ -42,6 +42,9 @@ export interface UserHistory {
 }
 
 // Legacy Member types (for backwards compatibility until full migration)
+export type EnrollmentStatus = "학부생" | "휴학생" | "졸업생"
+export type AccessRight = "운영진" | "팀장"
+
 export interface Member {
 	id: number
 	name: string
@@ -51,7 +54,8 @@ export interface Member {
 	slack_id?: string
 	generation?: string
 	role?: string
-	affiliation?: string
+	affiliation?: EnrollmentStatus
+	access_rights?: AccessRight[]
 	status: "active" | "inactive" | "suspended"
 	join_date: string
 	created_at: string
@@ -63,6 +67,8 @@ export interface MemberCreate {
 	email: string
 	phone?: string
 	status?: "active" | "inactive" | "suspended"
+	affiliation?: EnrollmentStatus
+	access_rights?: AccessRight[]
 }
 
 export interface MemberUpdate {
@@ -73,7 +79,8 @@ export interface MemberUpdate {
 	slack_id?: string
 	generation?: string
 	role?: string
-	affiliation?: string
+	affiliation?: EnrollmentStatus
+	access_rights?: AccessRight[]
 	join_date?: string
 	created_at?: string
 	status?: "active" | "inactive" | "suspended"

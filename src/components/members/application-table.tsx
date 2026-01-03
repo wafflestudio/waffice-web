@@ -9,6 +9,8 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
+	DropdownMenuRadioGroup,
+	DropdownMenuRadioItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -27,6 +29,7 @@ interface Application {
 	email: string
 	github_username: string
 	application_date: string
+	role: string
 	status: string
 }
 
@@ -58,7 +61,9 @@ function GenerationSortHeader({
 			<DropdownMenuTrigger asChild>
 				<button type="button" className="flex items-center gap-1 hover:text-foreground">
 					기수
-					{generationSort && (generationSort === "desc" ? " 🔽" : " 🔼")}
+					<span className="sr-only">
+						{generationSort ? `정렬: ${generationSort}` : "정렬 없음"}
+					</span>
 					<ChevronDown className="h-4 w-4" />
 				</button>
 			</DropdownMenuTrigger>
@@ -83,13 +88,13 @@ function DateSortHeader({
 			<DropdownMenuTrigger asChild>
 				<button type="button" className="flex items-center gap-1 hover:text-foreground">
 					가입 신청일
-					{dateSort && (dateSort === "desc" ? " 🔽" : " 🔼")}
+					<span className="sr-only">{dateSort ? `정렬: ${dateSort}` : "정렬 없음"}</span>
 					<ChevronDown className="h-4 w-4" />
 				</button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="start">
-				<DropdownMenuItem onClick={() => onChange("desc")}>내림차순</DropdownMenuItem>
-				<DropdownMenuItem onClick={() => onChange("asc")}>오름차순</DropdownMenuItem>
+				<DropdownMenuItem onClick={() => onChange("desc")}>오래된 순</DropdownMenuItem>
+				<DropdownMenuItem onClick={() => onChange("asc")}>최신 순</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
 	)
@@ -107,11 +112,13 @@ export function ApplicationTable({
 }: ApplicationTableProps) {
 	const [generationSort, setGenerationSort] = useState<SortOrder>(null)
 	const [dateSort, setDateSort] = useState<SortOrder>(null)
+	const [roleFilter, setRoleFilter] = useState<string>("전체")
+	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "미가입"]
 
 	// 검색 필터링
-	const filteredApplications = applications.filter((app) =>
-		app.name.toLowerCase().includes(searchQuery.toLowerCase()),
-	)
+	const filteredApplications = applications
+		.filter((app) => app.name.toLowerCase().includes(searchQuery.toLowerCase()))
+		.filter((app) => roleFilter === "전체" || app.role === roleFilter)
 
 	// 정렬 (mutual exclusion: 한 번에 하나의 정렬만 활성화)
 	const sortedApplications = [...filteredApplications].sort((a, b) => {
@@ -186,7 +193,29 @@ export function ApplicationTable({
 							<TableHead>
 								<DateSortHeader dateSort={dateSort} onChange={setDateSort} />
 							</TableHead>
-							<TableHead>자격</TableHead>
+							<TableHead>
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<button type="button" className="flex items-center gap-1 hover:text-foreground">
+											자격
+											<ChevronDown className="h-4 w-4" />
+											<span className="sr-only">
+												{roleFilter === "전체" ? "전체" : `필터: ${roleFilter}`}
+											</span>
+										</button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent align="start" className="w-32">
+										<DropdownMenuRadioGroup value={roleFilter} onValueChange={setRoleFilter}>
+											<DropdownMenuRadioItem value="전체">전체</DropdownMenuRadioItem>
+											{ROLE_OPTIONS.map((role) => (
+												<DropdownMenuRadioItem key={role} value={role}>
+													{role}
+												</DropdownMenuRadioItem>
+											))}
+										</DropdownMenuRadioGroup>
+									</DropdownMenuContent>
+								</DropdownMenu>
+							</TableHead>
 							<TableHead>승인여부</TableHead>
 						</TableRow>
 					</TableHeader>
@@ -221,9 +250,7 @@ export function ApplicationTable({
 								<TableCell>{application.email}</TableCell>
 								<TableCell>{application.github_username}</TableCell>
 								<TableCell>{new Date(application.application_date).toLocaleDateString()}</TableCell>
-								<TableCell>
-									<span className="text-[#FF6B6B]">확인 중</span>
-								</TableCell>
+								<TableCell>{application.role || "미가입"}</TableCell>
 								<TableCell>{application.status}</TableCell>
 							</TableRow>
 						))}
