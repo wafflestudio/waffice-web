@@ -1,7 +1,9 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
+import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -25,80 +27,52 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { authClient, saveAccessToken } from "@/lib/auth"
 
-const STUDENT_ID_REGEX = /^\d{4}-\d{5}$/
-const STUDENT_ID_FORMAT_ERROR = "학번은 YYYY-XXXXX 형식이어야 합니다."
-
-const signupSchema = z
-	.object({
-		name: z.string().min(1, "필수 입력항목입니다."),
-		generation: z
-			.string()
-			.min(1, "기수를 입력해 주세요.")
-			.regex(/^\d+$/, "기수는 숫자로 입력해 주세요."),
-		email: z.string().email("이메일을 확인해주세요."),
-		enrollmentStatus: z.enum(["학부생", "졸업생"]),
-		// 입력 필드가 존재하므로 기본값 ""을 받게 됨. 교차 필드 검사에서 유효성 체크.
-		studentId: z.string().optional(),
-		major: z.string().optional(),
-		schoolEmail: z.string().email("이메일 형식이 올바르지 않습니다.").optional().or(z.literal("")),
-		organization: z.string().optional(),
-		position: z.string().optional(),
-		githubId: z.string().optional(),
-		termsPersonalInfo: z.boolean().refine((val) => val === true, {
-			message: "필수 항목입니다.",
-		}),
-		termsWaffleStudio: z.boolean(),
-		termsEmailSms: z.boolean(),
-	})
-	.superRefine((data, ctx) => {
-		// 학부생일 경우 학번 형식 YYYY-XXXXX 강제
-		if (data.enrollmentStatus === "학부생") {
-			const value = (data.studentId ?? "").trim()
-			if (!value) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					path: ["studentId"],
-					message: "학번은 YYYY-XXXXX 형식으로 입력해 주세요.",
-				})
-			} else if (!STUDENT_ID_REGEX.test(value)) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					path: ["studentId"],
-					message: STUDENT_ID_FORMAT_ERROR,
-				})
-			}
-		} else {
-			// 졸업생이더라도 값이 있다면 형식을 맞추도록 안내
-			const value = (data.studentId ?? "").trim()
-			if (value && !STUDENT_ID_REGEX.test(value)) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					path: ["studentId"],
-					message: STUDENT_ID_FORMAT_ERROR,
-				})
-			}
-		}
-	})
+const signupSchema = z.object({
+	name: z.string().min(1, "필수 입력항목입니다.").max(100, "이름은 100자 이내여야 합니다."),
+	phone: z.string().optional(),
+	enrollmentStatus: z.enum(["학부생", "졸업생"]),
+	affiliation: z.string().optional(),
+	bio: z.string().max(500, "자기소개는 500자 이내여야 합니다.").optional(),
+	githubUsername: z.string().optional(),
+	termsPersonalInfo: z.boolean().refine((val) => val === true, {
+		message: "필수 항목입니다.",
+	}),
+	termsWaffleStudio: z.boolean(),
+	termsEmailSms: z.boolean(),
+})
 
 type SignupFormValues = z.infer<typeof signupSchema>
 
 export default function SignupPage() {
 	const router = useRouter()
+	const [authToken, setAuthToken] = useState<string | null>(null)
+	const [isLoading, setIsLoading] = useState(true)
+	const [isSubmitting, setIsSubmitting] = useState(false)
+	const [submitError, setSubmitError] = useState<string | null>(null)
+
+	useEffect(() => {
+		const token = sessionStorage.getItem("auth_token")
+		if (!token) {
+			router.replace("/login")
+			return
+		}
+		setAuthToken(token)
+		sessionStorage.removeItem("auth_token")
+		setIsLoading(false)
+	}, [router])
 
 	const form = useForm<SignupFormValues>({
 		resolver: zodResolver(signupSchema),
 		defaultValues: {
 			name: "",
-			generation: "",
-			email: "",
+			phone: "",
 			enrollmentStatus: "학부생",
-			studentId: "",
-			major: "",
-			schoolEmail: "",
-			organization: "",
-			position: "",
-			githubId: "",
+			affiliation: "",
+			bio: "",
+			githubUsername: "",
 			termsPersonalInfo: false,
 			termsWaffleStudio: false,
 			termsEmailSms: false,
@@ -107,12 +81,51 @@ export default function SignupPage() {
 
 	const enrollmentStatus = form.watch("enrollmentStatus")
 	const isStudent = enrollmentStatus === "학부생"
-	const isGraduate = enrollmentStatus === "졸업생"
 
-	const onSubmit = (data: SignupFormValues) => {
-		// TODO: API 호출하여 회원가입 데이터 전송
-		console.log(data)
-		router.push("/signup/pending")
+	const onSubmit = async (data: SignupFormValues) => {
+		if (!authToken) {
+			setSubmitError("인증 토큰이 없습니다. 다시 로그인해주세요.")
+			return
+		}
+
+		setIsSubmitting(true)
+		setSubmitError(null)
+
+		try {
+			const response = await authClient.signup({
+				auth_token: authToken,
+				name: data.name,
+				phone: data.phone || undefined,
+				affiliation: data.affiliation || undefined,
+				bio: data.bio || undefined,
+				github_username: data.githubUsername || undefined,
+			})
+
+			if (response.ok) {
+				saveAccessToken(response.data.token.access_token)
+
+				if (response.data.status === "pending") {
+					router.replace("/signup/pending")
+				} else {
+					router.replace("/")
+				}
+			} else {
+				setSubmitError("회원가입에 실패했습니다.")
+			}
+		} catch (error) {
+			const message = error instanceof Error ? error.message : "회원가입에 실패했습니다."
+			setSubmitError(message)
+		} finally {
+			setIsSubmitting(false)
+		}
+	}
+
+	if (isLoading) {
+		return (
+			<div className="min-h-screen flex items-center justify-center">
+				<Loader2 className="h-8 w-8 animate-spin text-primary" />
+			</div>
+		)
 	}
 
 	return (
@@ -125,6 +138,12 @@ export default function SignupPage() {
 				<CardContent>
 					<Form {...form}>
 						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+							{submitError && (
+								<div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
+									{submitError}
+								</div>
+							)}
+
 							<FormField
 								control={form.control}
 								name="name"
@@ -141,26 +160,12 @@ export default function SignupPage() {
 
 							<FormField
 								control={form.control}
-								name="generation"
+								name="phone"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>기수</FormLabel>
+										<FormLabel>연락처 (선택)</FormLabel>
 										<FormControl>
-											<Input placeholder="기수를 입력해 주세요." {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-
-							<FormField
-								control={form.control}
-								name="email"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>이메일</FormLabel>
-										<FormControl>
-											<Input type="email" placeholder="이메일을 입력해 주세요." {...field} />
+											<Input placeholder="연락처를 입력해 주세요." {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -189,111 +194,57 @@ export default function SignupPage() {
 								)}
 							/>
 
-							{/* 학부생일 경우에만 표시 */}
-							{isStudent && (
-								<>
-									<FormField
-										control={form.control}
-										name="studentId"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>학번</FormLabel>
-												<FormControl>
-													<Input
-														placeholder="YYYY-XXXXX (예: 2021-12345)"
-														maxLength={10}
-														pattern="\\d{4}-\\d{5}"
-														{...field}
-													/>
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-
-									<FormField
-										control={form.control}
-										name="major"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>전공</FormLabel>
-												<FormControl>
-													<Input placeholder="전공을 입력해 주세요." {...field} />
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-
-									<FormField
-										control={form.control}
-										name="schoolEmail"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>학교 이메일</FormLabel>
-												<FormControl>
-													<Input
-														type="email"
-														placeholder="학교 이메일을 입력해 주세요."
-														{...field}
-													/>
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-								</>
-							)}
-
-							{/* 졸업생일 경우에만 표시 */}
-							{isGraduate && (
-								<>
-									<FormField
-										control={form.control}
-										name="organization"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>소속</FormLabel>
-												<FormControl>
-													<Input placeholder="소속을 입력해 주세요." {...field} />
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-
-									<FormField
-										control={form.control}
-										name="position"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>직책</FormLabel>
-												<FormControl>
-													<Input placeholder="직책을 입력해 주세요." {...field} />
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-								</>
-							)}
-
-							{/* GitHub ID */}
 							<FormField
 								control={form.control}
-								name="githubId"
+								name="affiliation"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>GitHub ID (선택)</FormLabel>
+										<FormLabel>{isStudent ? "소속 (선택)" : "소속/회사 (선택)"}</FormLabel>
 										<FormControl>
-											<Input placeholder="GitHub ID를 입력해 주세요." {...field} />
+											<Input
+												placeholder={
+													isStudent ? "소속을 입력해 주세요." : "소속 또는 회사를 입력해 주세요."
+												}
+												{...field}
+											/>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
 								)}
 							/>
 
-							{/* 개인정보 수집 및 이용 동의 */}
+							<FormField
+								control={form.control}
+								name="bio"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>자기소개 (선택)</FormLabel>
+										<FormControl>
+											<Textarea
+												placeholder="간단한 자기소개를 입력해 주세요."
+												className="resize-none"
+												{...field}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								control={form.control}
+								name="githubUsername"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>GitHub 사용자명 (선택)</FormLabel>
+										<FormControl>
+											<Input placeholder="@를 제외한 사용자명을 입력해 주세요." {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
 							<FormField
 								control={form.control}
 								name="termsPersonalInfo"
@@ -310,7 +261,6 @@ export default function SignupPage() {
 								)}
 							/>
 
-							{/* 와플스튜디오 이용약관 동의 */}
 							<FormField
 								control={form.control}
 								name="termsWaffleStudio"
@@ -327,7 +277,6 @@ export default function SignupPage() {
 								)}
 							/>
 
-							{/* 이메일/SMS 수신 동의 */}
 							<FormField
 								control={form.control}
 								name="termsEmailSms"
@@ -344,15 +293,23 @@ export default function SignupPage() {
 								)}
 							/>
 
-							<Button type="submit" className="w-full">
-								가입하기
+							<Button type="submit" className="w-full" disabled={isSubmitting}>
+								{isSubmitting ? (
+									<>
+										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+										가입 중...
+									</>
+								) : (
+									"가입하기"
+								)}
 							</Button>
 
 							<Button
 								type="button"
 								variant="ghost"
 								className="w-full"
-								onClick={() => router.push("/login")}
+								onClick={() => router.replace("/login")}
+								disabled={isSubmitting}
 							>
 								로그인 페이지로 돌아가기
 							</Button>

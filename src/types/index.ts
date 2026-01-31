@@ -1,3 +1,62 @@
+// Auth types (from OpenAPI)
+export type AuthStatus = "new" | "pending" | "active"
+
+export interface GoogleTokenRequest {
+	code: string
+	redirect_uri: string
+}
+
+export interface GoogleTokenResponse {
+	ok: boolean
+	data: {
+		status: AuthStatus
+		auth_token: string
+	}
+}
+
+export interface SigninRequest {
+	auth_token: string
+}
+
+export interface SignupRequest {
+	auth_token: string
+	name: string
+	phone?: string
+	affiliation?: string
+	bio?: string
+	github_username?: string
+}
+
+export interface Token {
+	access_token: string
+	token_type: string
+}
+
+export interface UserDetail {
+	id: number
+	email: string
+	name: string
+	profile_picture?: string | null
+	phone?: string
+	affiliation?: string
+	bio?: string
+	github_username?: string
+	status: AuthStatus
+	created_at: string
+	updated_at: string
+}
+
+export interface AuthResult {
+	status: AuthStatus
+	token: Token
+	user: UserDetail
+}
+
+export interface AuthResponse {
+	ok: boolean
+	data: AuthResult
+}
+
 // User types (from OpenAPI)
 export interface UserPendingCreate {
 	google_id: string
