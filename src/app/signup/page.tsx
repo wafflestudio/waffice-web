@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -52,13 +52,21 @@ export default function SignupPage() {
 	const [isLoading, setIsLoading] = useState(true)
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [submitError, setSubmitError] = useState<string | null>(null)
+	const hasProcessedToken = useRef(false)
 
 	useEffect(() => {
+		// Prevent double execution in React Strict Mode
+		if (hasProcessedToken.current) {
+			return
+		}
+
 		const token = sessionStorage.getItem("auth_token")
 		if (!token) {
 			router.replace("/login")
 			return
 		}
+
+		hasProcessedToken.current = true
 		setAuthToken(token)
 		sessionStorage.removeItem("auth_token")
 		setIsLoading(false)
