@@ -27,6 +27,16 @@ export function useGoogleOAuth(
 	const popupRef = useRef<Window | null>(null)
 	const checkIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
+	// Store callbacks in refs to avoid useEffect re-runs on every render
+	const onSuccessRef = useRef(onSuccess)
+	const onErrorRef = useRef(onError)
+
+	// Keep refs updated
+	useEffect(() => {
+		onSuccessRef.current = onSuccess
+		onErrorRef.current = onError
+	}, [onSuccess, onError])
+
 	const clearCheckInterval = useCallback(() => {
 		if (checkIntervalRef.current) {
 			clearInterval(checkIntervalRef.current)
@@ -57,14 +67,14 @@ export function useGoogleOAuth(
 			if (oauthError) {
 				setError(oauthError)
 				setIsLoading(false)
-				onError?.(oauthError)
+				onErrorRef.current?.(oauthError)
 				return
 			}
 
 			if (!code) {
 				setError("인증 코드를 받지 못했습니다.")
 				setIsLoading(false)
-				onError?.("인증 코드를 받지 못했습니다.")
+				onErrorRef.current?.("인증 코드를 받지 못했습니다.")
 				return
 			}
 
@@ -77,7 +87,7 @@ export function useGoogleOAuth(
 				})
 
 				if (response.ok) {
-					onSuccess({
+					onSuccessRef.current({
 						status: response.data.status,
 						authToken: response.data.auth_token,
 					})
@@ -87,21 +97,28 @@ export function useGoogleOAuth(
 			} catch (err) {
 				const errorMessage = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다."
 				setError(errorMessage)
-				onError?.(errorMessage)
+				onErrorRef.current?.(errorMessage)
 			} finally {
 				setIsLoading(false)
 			}
 		},
-		[onSuccess, onError, clearCheckInterval],
+		[clearCheckInterval],
 	)
 
+	// Message listener - now stable since handleMessage only depends on clearCheckInterval
 	useEffect(() => {
 		window.addEventListener("message", handleMessage)
 		return () => {
 			window.removeEventListener("message", handleMessage)
+		}
+	}, [handleMessage])
+
+	// Cleanup interval on unmount only
+	useEffect(() => {
+		return () => {
 			clearCheckInterval()
 		}
-	}, [handleMessage, clearCheckInterval])
+	}, [clearCheckInterval])
 
 	const openPopup = useCallback(() => {
 		// Clear any existing interval first
@@ -129,7 +146,7 @@ export function useGoogleOAuth(
 		if (!popup) {
 			setError("팝업이 차단되었습니다. 팝업 차단을 해제해주세요.")
 			setIsLoading(false)
-			onError?.("팝업이 차단되었습니다.")
+			onErrorRef.current?.("팝업이 차단되었습니다.")
 			return
 		}
 
@@ -137,19 +154,24 @@ export function useGoogleOAuth(
 
 		// Check if popup was closed without completing auth
 		checkIntervalRef.current = setInterval(() => {
-			if (popup.closed) {
-				clearCheckInterval()
-				setIsLoading((current) => {
-					if (current) {
-						setError("인증이 취소되었습니다. 다시 시도해주세요.")
-						onError?.("인증이 취소되었습니다.")
-						return false
-					}
-					return current
-				})
+			try {
+				if (popup.closed) {
+					clearCheckInterval()
+					setIsLoading((current) => {
+						if (current) {
+							setError("인증이 취소되었습니다. 다시 시도해주세요.")
+							onErrorRef.current?.("인증이 취소되었습니다.")
+							return false
+						}
+						return current
+					})
+				}
+			} catch {
+				// Cross-Origin-Opener-Policy may block window.closed access
+				// In this case, we can't detect popup close
 			}
 		}, 500)
-	}, [onError, clearCheckInterval])
+	}, [clearCheckInterval])
 
 	return {
 		openPopup,
