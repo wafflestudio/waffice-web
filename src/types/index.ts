@@ -48,7 +48,6 @@ export interface UserDetail {
 
 export interface AuthResult {
 	status: AuthStatus
-	token: Token
 	user: UserDetail
 }
 

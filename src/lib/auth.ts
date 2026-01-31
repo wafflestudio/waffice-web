@@ -18,8 +18,10 @@ class AuthClient {
 	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
 		const url = `${this.baseUrl}${endpoint}`
 		const response = await fetch(url, {
+			credentials: "include",
 			headers: {
 				"Content-Type": "application/json",
+				"X-Requested-With": "XMLHttpRequest",
 				...options.headers,
 			},
 			...options,
@@ -59,35 +61,13 @@ class AuthClient {
 		})
 	}
 
-	async getMe(accessToken: string): Promise<AuthResponse> {
-		return this.request<AuthResponse>("/auth/me", {
-			headers: {
-				Authorization: `Bearer ${accessToken}`,
-			},
-		})
+	async getMe(): Promise<AuthResponse> {
+		return this.request<AuthResponse>("/auth/me")
+	}
+
+	async logout(): Promise<void> {
+		await this.request<{ ok: boolean }>("/auth/logout", { method: "POST" })
 	}
 }
 
 export const authClient = new AuthClient(API_BASE_URL)
-
-// Token storage utilities
-const ACCESS_TOKEN_KEY = "waffice_access_token"
-
-export function saveAccessToken(token: string): void {
-	if (typeof window !== "undefined") {
-		localStorage.setItem(ACCESS_TOKEN_KEY, token)
-	}
-}
-
-export function getAccessToken(): string | null {
-	if (typeof window !== "undefined") {
-		return localStorage.getItem(ACCESS_TOKEN_KEY)
-	}
-	return null
-}
-
-export function removeAccessToken(): void {
-	if (typeof window !== "undefined") {
-		localStorage.removeItem(ACCESS_TOKEN_KEY)
-	}
-}

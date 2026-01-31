@@ -7,7 +7,7 @@ import { GoogleButton } from "@/components/auth/google-button"
 import { Logo } from "@/components/auth/logo"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { useGoogleOAuth } from "@/hooks/use-google-oauth"
-import { authClient, saveAccessToken } from "@/lib/auth"
+import { authClient } from "@/lib/auth"
 import type { AuthStatus } from "@/types"
 
 export default function LoginPage() {
@@ -26,8 +26,6 @@ export default function LoginPage() {
 			try {
 				const response = await authClient.signin({ auth_token: result.authToken })
 				if (response.ok) {
-					saveAccessToken(response.data.token.access_token)
-
 					if (response.data.status === "pending") {
 						router.push("/signup/pending")
 					} else {

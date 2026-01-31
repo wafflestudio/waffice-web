@@ -28,7 +28,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { authClient, saveAccessToken } from "@/lib/auth"
+import { authClient } from "@/lib/auth"
 
 const signupSchema = z.object({
 	name: z.string().min(1, "필수 입력항목입니다.").max(100, "이름은 100자 이내여야 합니다."),
@@ -110,8 +110,6 @@ export default function SignupPage() {
 			})
 
 			if (response.ok) {
-				saveAccessToken(response.data.token.access_token)
-
 				if (response.data.status === "pending") {
 					router.replace("/signup/pending")
 				} else {

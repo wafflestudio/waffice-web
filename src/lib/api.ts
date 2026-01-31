@@ -10,7 +10,6 @@ import type {
 	UserHistoryCreate,
 	UserPendingCreate,
 } from "@/types"
-import { getAccessToken } from "./auth"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
@@ -23,11 +22,11 @@ class ApiClient {
 
 	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
 		const url = `${this.baseUrl}${endpoint}`
-		const token = getAccessToken()
 		const response = await fetch(url, {
+			credentials: "include",
 			headers: {
 				"Content-Type": "application/json",
-				...(token && { Authorization: `Bearer ${token}` }),
+				"X-Requested-With": "XMLHttpRequest",
 				...options.headers,
 			},
 			...options,
