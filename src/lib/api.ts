@@ -34,6 +34,7 @@ class ApiClient {
 			response = await fetch(url, {
 				headers: {
 					"Content-Type": "application/json",
+					"X-Requested-With": "XMLHttpRequest", // Required for CSRF protection
 					...options.headers,
 				},
 				credentials: "include", // Include cookies for auth
