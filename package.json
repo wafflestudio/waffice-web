@@ -5,6 +5,7 @@
 	"scripts": {
 		"dev": "next dev --turbopack",
 		"build": "next build --turbopack",
+		"build:dev": "export $(cat .env.dev | xargs) && next build --turbopack",
 		"start": "next start",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
@@ -32,6 +33,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.2.6",
+		"@playwright/test": "^1.58.1",
 		"@tailwindcss/postcss": "^4",
 		"@types/node": "^20",
 		"@types/react": "^19",

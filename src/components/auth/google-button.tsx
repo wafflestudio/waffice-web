@@ -7,14 +7,26 @@ interface GoogleButtonProps {
 	onClick?: () => void
 	/** 전체 너비 여부 */
 	fullWidth?: boolean
+	/** 비활성화 여부 */
+	disabled?: boolean
 }
 
 /**
  * Google 로그인 버튼 컴포넌트
  */
-function GoogleButton({ children, onClick, fullWidth = false }: GoogleButtonProps) {
+function GoogleButton({
+	children,
+	onClick,
+	fullWidth = false,
+	disabled = false,
+}: GoogleButtonProps) {
 	return (
-		<Button onClick={onClick} className={fullWidth ? "w-full" : ""} variant="default">
+		<Button
+			onClick={onClick}
+			className={fullWidth ? "w-full" : ""}
+			variant="default"
+			disabled={disabled}
+		>
 			<svg
 				className="w-5 h-5"
 				viewBox="0 0 24 24"

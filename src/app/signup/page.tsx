@@ -1,8 +1,9 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
+import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -26,7 +27,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
-import { apiClient } from "@/lib/api"
+import { authClient } from "@/lib/auth"
 
 const STUDENT_ID_REGEX = /^\d{4}-\d{5}$/
 const STUDENT_ID_FORMAT_ERROR = "학번은 YYYY-XXXXX 형식이어야 합니다."
@@ -86,18 +87,27 @@ type SignupFormValues = z.infer<typeof signupSchema>
 export default function SignupPage() {
 	const router = useRouter()
 	const [authToken, setAuthToken] = useState<string | null>(null)
+	const [isLoading, setIsLoading] = useState(true)
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [error, setError] = useState<string | null>(null)
+	const hasProcessedToken = useRef(false)
 
 	useEffect(() => {
-		// sessionStorage에서 auth_token 가져오기
-		const token = sessionStorage.getItem("auth_token")
-		if (!token) {
-			// auth_token이 없으면 로그인 페이지로 리다이렉트
-			router.push("/login")
+		// Prevent double execution in React Strict Mode
+		if (hasProcessedToken.current) {
 			return
 		}
+
+		const token = sessionStorage.getItem("auth_token")
+		if (!token) {
+			router.replace("/login")
+			return
+		}
+
+		hasProcessedToken.current = true
 		setAuthToken(token)
+		sessionStorage.removeItem("auth_token")
+		setIsLoading(false)
 	}, [router])
 
 	const form = useForm<SignupFormValues>({
@@ -140,7 +150,7 @@ export default function SignupPage() {
 				? `${data.generation}기 - ${data.studentId}`
 				: `${data.generation}기 - ${data.position}`
 
-			const response = await apiClient.signup({
+			const response = await authClient.signup({
 				auth_token: authToken,
 				name: data.name,
 				phone: data.phone || undefined,
@@ -149,30 +159,29 @@ export default function SignupPage() {
 				github_username: data.githubId || undefined,
 			})
 
-			if (!response.ok) {
-				throw new Error(response.message || "회원가입에 실패했습니다")
-			}
-
-			// 회원가입 성공 후 auth_token 제거
-			sessionStorage.removeItem("auth_token")
-
-			// 상태에 따라 리다이렉트
-			if (response.data?.status === "pending") {
-				router.push("/signup/pending")
+			if (response.ok) {
+				if (response.data.status === "pending") {
+					router.replace("/signup/pending")
+				} else {
+					router.replace("/")
+				}
 			} else {
-				// active 상태면 홈으로
-				router.push("/")
+				setError("회원가입에 실패했습니다.")
 			}
-		} catch (err) {
-			console.error("Signup error:", err)
-			setError(err instanceof Error ? err.message : "회원가입 중 오류가 발생했습니다")
+		} catch (error) {
+			const message = error instanceof Error ? error.message : "회원가입에 실패했습니다."
+			setError(message)
 		} finally {
 			setIsSubmitting(false)
 		}
 	}
 
-	if (!authToken) {
-		return null // 로딩 중이거나 리다이렉트 중
+	if (isLoading) {
+		return (
+			<div className="min-h-screen flex items-center justify-center">
+				<Loader2 className="h-8 w-8 animate-spin text-primary" />
+			</div>
+		)
 	}
 
 	return (
@@ -415,14 +424,21 @@ export default function SignupPage() {
 							/>
 
 							<Button type="submit" className="w-full" disabled={isSubmitting}>
-								{isSubmitting ? "가입 처리 중..." : "가입하기"}
+								{isSubmitting ? (
+									<>
+										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+										가입 중...
+									</>
+								) : (
+									"가입하기"
+								)}
 							</Button>
 
 							<Button
 								type="button"
 								variant="ghost"
 								className="w-full"
-								onClick={() => router.push("/login")}
+								onClick={() => router.replace("/login")}
 								disabled={isSubmitting}
 							>
 								로그인 페이지로 돌아가기

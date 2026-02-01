@@ -1,45 +1,17 @@
-// ============================================================================
-// Core Enums
-// ============================================================================
-
-export type Qualification = "pending" | "associate" | "regular" | "active"
-export type ProjectStatus = "active" | "maintenance" | "ended"
-export type MemberRole = "leader" | "member"
-export type HistoryAction =
-	| "qualification_changed"
-	| "admin_granted"
-	| "admin_revoked"
-	| "project_joined"
-	| "project_left"
-	| "project_role_changed"
-
-// ============================================================================
-// Common Types
-// ============================================================================
-
-export interface Website {
-	url: string
-	type: string // e.g., "github", "linkedin", "portfolio", "blog"
-	description?: string | null
-}
-
-export interface CursorPage<T> {
-	items: T[]
-	next_cursor?: number | null
-}
-
-// ============================================================================
-// Auth Types
-// ============================================================================
+// Auth types (from OpenAPI)
+export type AuthStatus = "new" | "pending" | "active"
 
 export interface GoogleTokenRequest {
 	code: string
 	redirect_uri: string
 }
 
-export interface AuthStatus {
-	status: "new" | "pending" | "active"
-	auth_token: string
+export interface GoogleTokenResponse {
+	ok: boolean
+	data: {
+		status: AuthStatus
+		auth_token: string
+	}
 }
 
 export interface SigninRequest {
@@ -49,161 +21,160 @@ export interface SigninRequest {
 export interface SignupRequest {
 	auth_token: string
 	name: string
-	phone?: string | null
-	affiliation?: string | null
-	bio?: string | null
-	github_username?: string | null
+	phone?: string
+	affiliation?: string
+	bio?: string
+	github_username?: string
 }
 
-export interface AuthResult {
-	status: "pending" | "active"
-	user: UserDetail
-}
-
-// ============================================================================
-// User Types
-// ============================================================================
-
-export interface UserBrief {
-	id: number
-	name: string
+export interface DevSigninRequest {
 	email: string
-	avatar_url: string | null
+	name: string
+	is_admin: boolean
+	qualification: "pending" | "associate" | "regular" | "active"
+}
+
+export interface Token {
+	access_token: string
+	token_type: string
 }
 
 export interface UserDetail {
 	id: number
 	email: string
 	name: string
-	generation: string
-	qualification: Qualification
-	is_admin: boolean
-	phone: string | null
-	affiliation: string | null
-	bio: string | null
-	avatar_url: string | null
-	github_username: string | null
-	slack_id: string | null
-	websites: Website[] | null
-	created_at: number // Unix timestamp
+	profile_picture?: string | null
+	phone?: string
+	affiliation?: string
+	bio?: string
+	github_username?: string
+	status: AuthStatus
+	created_at: string
+	updated_at: string
 }
 
-export interface ProfileUpdateRequest {
-	phone?: string | null
-	affiliation?: string | null
-	bio?: string | null
-	avatar_url?: string | null
-	github_username?: string | null
-	slack_id?: string | null
-	websites?: Website[] | null
+export interface AuthResult {
+	status: AuthStatus
+	user: UserDetail
 }
 
-export interface UserUpdateRequest extends ProfileUpdateRequest {
-	name?: string | null
-	qualification?: Qualification | null
-	is_admin?: boolean | null
-}
-
-export interface ApproveRequest {
-	qualification: Qualification // Cannot be "pending"
-}
-
-// ============================================================================
-// History Types
-// ============================================================================
-
-export interface HistoryDetail {
-	id: number
-	action: HistoryAction
-	payload: Record<string, unknown>
-	actor: UserBrief | null
-	created_at: number // Unix timestamp
-}
-
-// ============================================================================
-// Project Types
-// ============================================================================
-
-export interface ProjectBrief {
-	id: number
-	name: string
-	status: ProjectStatus
-	started_at: string // ISO date string
-	created_at: number // Unix timestamp
-}
-
-export interface MemberDetail {
-	id: number
-	user: UserBrief
-	role: MemberRole
-	position: string | null
-	joined_at: string | null // ISO date string
-	left_at: string | null // ISO date string
-}
-
-export interface ProjectDetail {
-	id: number
-	name: string
-	status: ProjectStatus
-	started_at: string // ISO date string
-	created_at: number // Unix timestamp
-	description: string | null
-	ended_at: string | null // ISO date string
-	websites: Website[] | null
-	members: MemberDetail[]
-}
-
-export interface MemberInput {
-	user_id: number
-	role: MemberRole
-	position?: string | null
-}
-
-export interface ProjectCreateRequest {
-	name: string
-	description?: string | null
-	status?: ProjectStatus
-	started_at: string // ISO date string
-	ended_at?: string | null
-	websites?: Website[] | null
-	members: MemberInput[]
-}
-
-export interface ProjectUpdateRequest {
-	name?: string | null
-	description?: string | null
-	status?: ProjectStatus | null
-	started_at?: string | null
-	ended_at?: string | null
-	websites?: Website[] | null
-}
-
-export interface MemberUpdateRequest {
-	role?: MemberRole | null
-	position?: string | null
-}
-
-// ============================================================================
-// Upload Types
-// ============================================================================
-
-export interface PresignedUrlRequest {
-	filename: string
-	content_type: string
-}
-
-export interface PresignedUrlResponse {
-	upload_url: string
-	file_url: string
-}
-
-// ============================================================================
-// API Response Wrapper
-// ============================================================================
-
-export interface ApiResponse<T> {
+export interface AuthResponse {
 	ok: boolean
-	data?: T | null
-	error?: string | null
-	message?: string | null
+	data: AuthResult
+}
+
+// User types (from OpenAPI)
+export interface UserPendingCreate {
+	google_id: string
+	email: string
+	name: string
+	profile_picture?: string | null
+}
+
+export interface User {
+	id: number
+	google_id: string
+	email: string
+	name: string
+	profile_picture?: string | null
+	status: "pending" | "active" | "inactive" | "suspended"
+	created_at?: string
+	updated_at?: string
+}
+
+export type UserHistoryType = "join" | "left" | "discipline" | "project_join" | "project_left"
+
+export interface UserHistoryCreate {
+	userid: number
+	type: UserHistoryType
+	description?: string | null
+	curr_privilege?: string | null
+	curr_time_stop?: number | null
+	prev_privilege?: string | null
+	prev_time_stop?: number | null
+}
+
+export interface UserHistory {
+	id: number
+	userid: number
+	type: UserHistoryType
+	description?: string | null
+	curr_privilege?: string | null
+	curr_time_stop?: number | null
+	prev_privilege?: string | null
+	prev_time_stop?: number | null
+	created_at?: string
+}
+
+// Legacy Member types (for backwards compatibility until full migration)
+export type EnrollmentStatus = "학부생" | "휴학생" | "졸업생"
+export type AccessRight = "운영진" | "팀장"
+
+export interface Member {
+	id: number
+	name: string
+	email: string
+	phone?: string
+	github_username?: string
+	slack_id?: string
+	generation?: string
+	role?: string
+	affiliation?: EnrollmentStatus
+	access_rights?: AccessRight[]
+	status: "active" | "inactive" | "suspended"
+	join_date: string
+	created_at: string
+	updated_at: string
+}
+
+export interface MemberCreate {
+	name: string
+	email: string
+	phone?: string
+	status?: "active" | "inactive" | "suspended"
+	affiliation?: EnrollmentStatus
+	access_rights?: AccessRight[]
+}
+
+export interface MemberUpdate {
+	name?: string
+	email?: string
+	phone?: string
+	github_username?: string
+	slack_id?: string
+	generation?: string
+	role?: string
+	affiliation?: EnrollmentStatus
+	access_rights?: AccessRight[]
+	join_date?: string
+	created_at?: string
+	status?: "active" | "inactive" | "suspended"
+}
+
+// Project types
+export interface Project {
+	id: number
+	name: string
+	description?: string
+	budget?: number
+	status: "planning" | "active" | "completed" | "cancelled"
+	created_at: string
+	updated_at: string
+	members: Member[]
+}
+
+export interface ProjectCreate {
+	name: string
+	description?: string
+	budget?: number
+	status?: "planning" | "active" | "completed" | "cancelled"
+	member_ids: number[]
+}
+
+export interface ProjectUpdate {
+	name?: string
+	description?: string
+	budget?: number
+	status?: "planning" | "active" | "completed" | "cancelled"
+	member_ids?: number[]
 }

@@ -1,126 +1,115 @@
 "use client"
 
+import { Loader2 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
-import { Logo } from "@/components/auth/logo"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { apiClient } from "@/lib/api"
+import { Suspense, useEffect, useState } from "react"
 
-/**
- * Google OAuth 콜백 페이지
- * Google 인증 후 리다이렉트되어 인증 코드를 처리합니다
- */
-export default function AuthCallbackPage() {
+function CallbackContent() {
 	const router = useRouter()
 	const searchParams = useSearchParams()
-	const [error, setError] = useState<string | null>(null)
-	const [status, setStatus] = useState<string>("인증 처리 중...")
+	const [status, setStatus] = useState<"processing" | "success" | "error" | "no-opener">(
+		"processing",
+	)
+	const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
 	useEffect(() => {
-		const handleCallback = async () => {
-			try {
-				// URL에서 인증 코드 추출
-				const code = searchParams.get("code")
-				const error = searchParams.get("error")
+		const code = searchParams.get("code")
+		const error = searchParams.get("error")
 
-				if (error) {
-					setError(`인증 실패: ${error}`)
-					return
-				}
+		if (error) {
+			setStatus("error")
+			setErrorMessage(error)
 
-				if (!code) {
-					setError("인증 코드를 받지 못했습니다")
-					return
-				}
-
-				setStatus("토큰 교환 중...")
-
-				// 콜백 URL 생성 (현재 URL에서 쿼리 파라미터 제거)
-				const redirectUri = `${window.location.origin}/auth/callback`
-
-				// 인증 코드를 auth_token으로 교환
-				const tokenResponse = await apiClient.exchangeGoogleToken({
-					code,
-					redirect_uri: redirectUri,
-				})
-
-				if (!tokenResponse.ok || !tokenResponse.data) {
-					throw new Error(tokenResponse.message || "토큰 교환 실패")
-				}
-
-				const { status: userStatus, auth_token } = tokenResponse.data
-
-				// 상태에 따라 분기 처리
-				switch (userStatus) {
-					case "new":
-						// 신규 사용자 - 회원가입 페이지로 이동 (auth_token을 세션 스토리지에 저장)
-						setStatus("회원가입 페이지로 이동 중...")
-						sessionStorage.setItem("auth_token", auth_token)
-						router.push("/signup")
-						break
-
-					case "pending":
-						// 가입 승인 대기 중 - 대기 페이지로 이동
-						setStatus("승인 대기 페이지로 이동 중...")
-						router.push("/signup/pending")
-						break
-
-					case "active": {
-						// 기존 사용자 - 로그인 처리
-						setStatus("로그인 처리 중...")
-						const signinResponse = await apiClient.signin({ auth_token })
-
-						if (!signinResponse.ok) {
-							throw new Error(signinResponse.message || "로그인 실패")
-						}
-
-						// 로그인 성공 - 홈으로 이동
-						setStatus("로그인 완료! 메인 페이지로 이동 중...")
-						router.push("/")
-						break
-					}
-
-					default:
-						throw new Error(`알 수 없는 사용자 상태: ${userStatus}`)
-				}
-			} catch (err) {
-				console.error("OAuth callback error:", err)
-				setError(err instanceof Error ? err.message : "인증 처리 중 오류가 발생했습니다")
+			// Send error to parent window
+			if (window.opener) {
+				window.opener.postMessage(
+					{
+						type: "GOOGLE_OAUTH_CALLBACK",
+						error,
+					},
+					window.location.origin,
+				)
+				window.close()
 			}
+			return
 		}
 
-		handleCallback()
-	}, [searchParams, router])
+		if (code) {
+			// Send code to parent window
+			if (window.opener) {
+				setStatus("success")
+				window.opener.postMessage(
+					{
+						type: "GOOGLE_OAUTH_CALLBACK",
+						code,
+					},
+					window.location.origin,
+				)
+				window.close()
+			} else {
+				// No opener - user directly accessed this page
+				setStatus("no-opener")
+			}
+		} else {
+			setStatus("error")
+			setErrorMessage("인증 코드를 받지 못했습니다.")
+		}
+	}, [searchParams])
+
+	const handleGoToLogin = () => {
+		router.replace("/login")
+	}
 
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-muted/30">
-			<Card className="w-full max-w-md">
-				<CardHeader className="flex flex-col items-center text-center space-y-3">
-					<Logo size="md" />
-					<h1 className="text-2xl font-bold">{error ? "인증 실패" : "Google 로그인"}</h1>
-				</CardHeader>
-				<CardContent className="space-y-4">
-					{error ? (
-						<div className="space-y-4">
-							<p className="text-destructive text-center">{error}</p>
-							<button
-								type="button"
-								onClick={() => router.push("/login")}
-								className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-							>
-								로그인 페이지로 돌아가기
-							</button>
-						</div>
-					) : (
-						<div className="text-center">
-							<div className="flex justify-center mb-4">
-								<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-							</div>
-							<p className="text-muted-foreground">{status}</p>
-						</div>
-					)}
-				</CardContent>
-			</Card>
+			<div className="text-center space-y-4">
+				{status === "processing" && (
+					<>
+						<Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+						<p className="text-muted-foreground">인증 처리 중...</p>
+					</>
+				)}
+				{status === "success" && (
+					<>
+						<p className="text-muted-foreground">인증이 완료되었습니다.</p>
+						<p className="text-sm text-muted-foreground">이 창은 자동으로 닫힙니다.</p>
+					</>
+				)}
+				{status === "error" && (
+					<>
+						<p className="text-destructive">인증 중 오류가 발생했습니다.</p>
+						{errorMessage && <p className="text-sm text-muted-foreground">{errorMessage}</p>}
+						<p className="text-sm text-muted-foreground">이 창을 닫고 다시 시도해주세요.</p>
+					</>
+				)}
+				{status === "no-opener" && (
+					<>
+						<p className="text-muted-foreground">잘못된 접근입니다.</p>
+						<p className="text-sm text-muted-foreground">로그인 페이지에서 다시 시도해주세요.</p>
+						<button
+							type="button"
+							onClick={handleGoToLogin}
+							className="mt-4 px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90"
+						>
+							로그인 페이지로 이동
+						</button>
+					</>
+				)}
+			</div>
 		</div>
+	)
+}
+
+export default function AuthCallbackPage() {
+	return (
+		<Suspense
+			fallback={
+				<div className="min-h-screen flex items-center justify-center bg-muted/30">
+					<Loader2 className="h-8 w-8 animate-spin text-primary" />
+				</div>
+			}
+		>
+			<CallbackContent />
+		</Suspense>
 	)
 }
