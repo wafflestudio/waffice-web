@@ -1,5 +1,6 @@
 import type {
 	AuthResponse,
+	DevSigninRequest,
 	GoogleTokenRequest,
 	GoogleTokenResponse,
 	SigninRequest,
@@ -56,6 +57,13 @@ class AuthClient {
 
 	async signup(request: SignupRequest): Promise<AuthResponse> {
 		return this.request<AuthResponse>("/auth/signup", {
+			method: "POST",
+			body: JSON.stringify(request),
+		})
+	}
+
+	async devSignin(request: DevSigninRequest): Promise<AuthResponse> {
+		return this.request<AuthResponse>("/auth/signin-dev", {
 			method: "POST",
 			body: JSON.stringify(request),
 		})

@@ -3,12 +3,15 @@
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { DevSigninForm } from "@/components/auth/dev-signin-form"
 import { GoogleButton } from "@/components/auth/google-button"
 import { Logo } from "@/components/auth/logo"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { useGoogleOAuth } from "@/hooks/use-google-oauth"
 import { authClient } from "@/lib/auth"
-import type { AuthStatus } from "@/types"
+import type { AuthResult, AuthStatus } from "@/types"
+
+const ENABLE_DEV_AUTH = process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH === "true"
 
 export default function LoginPage() {
 	const router = useRouter()
@@ -42,6 +45,19 @@ export default function LoginPage() {
 	}
 
 	const handleOAuthError = (error: string) => {
+		setAuthError(error)
+	}
+
+	const handleDevSigninSuccess = (result: AuthResult) => {
+		setAuthError(null)
+		if (result.status === "pending") {
+			router.push("/signup/pending")
+		} else {
+			router.push("/")
+		}
+	}
+
+	const handleDevSigninError = (error: string) => {
 		setAuthError(error)
 	}
 
@@ -81,6 +97,10 @@ export default function LoginPage() {
 					<p className="text-sm text-center text-muted-foreground">
 						아직 계정이 없으시다면 Google 로그인 후 회원가입을 진행해주세요.
 					</p>
+
+					{ENABLE_DEV_AUTH && (
+						<DevSigninForm onSuccess={handleDevSigninSuccess} onError={handleDevSigninError} />
+					)}
 				</CardContent>
 			</Card>
 		</div>

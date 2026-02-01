@@ -27,6 +27,13 @@ export interface SignupRequest {
 	github_username?: string
 }
 
+export interface DevSigninRequest {
+	email: string
+	name: string
+	is_admin: boolean
+	qualification: "pending" | "associate" | "regular" | "active"
+}
+
 export interface Token {
 	access_token: string
 	token_type: string
