@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -25,6 +26,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
+import { apiClient } from "@/lib/api"
 
 const STUDENT_ID_REGEX = /^\d{4}-\d{5}$/
 const STUDENT_ID_FORMAT_ERROR = "학번은 YYYY-XXXXX 형식이어야 합니다."
@@ -35,16 +37,16 @@ const signupSchema = z
 		generation: z
 			.string()
 			.min(1, "기수를 입력해 주세요.")
-			.regex(/^\d+$/, "기수는 숫자로 입력해 주세요."),
+			.regex(/^\d+(\.\d+)?$/, "기수는 숫자 형식으로 입력해 주세요. (예: 22, 22.5)"),
 		email: z.string().email("이메일을 확인해주세요."),
 		enrollmentStatus: z.enum(["학부생", "졸업생"]),
-		// 입력 필드가 존재하므로 기본값 ""을 받게 됨. 교차 필드 검사에서 유효성 체크.
 		studentId: z.string().optional(),
 		major: z.string().optional(),
 		schoolEmail: z.string().email("이메일 형식이 올바르지 않습니다.").optional().or(z.literal("")),
 		organization: z.string().optional(),
 		position: z.string().optional(),
 		githubId: z.string().optional(),
+		phone: z.string().optional(),
 		termsPersonalInfo: z.boolean().refine((val) => val === true, {
 			message: "필수 항목입니다.",
 		}),
@@ -52,7 +54,6 @@ const signupSchema = z
 		termsEmailSms: z.boolean(),
 	})
 	.superRefine((data, ctx) => {
-		// 학부생일 경우 학번 형식 YYYY-XXXXX 강제
 		if (data.enrollmentStatus === "학부생") {
 			const value = (data.studentId ?? "").trim()
 			if (!value) {
@@ -69,7 +70,6 @@ const signupSchema = z
 				})
 			}
 		} else {
-			// 졸업생이더라도 값이 있다면 형식을 맞추도록 안내
 			const value = (data.studentId ?? "").trim()
 			if (value && !STUDENT_ID_REGEX.test(value)) {
 				ctx.addIssue({
@@ -85,6 +85,20 @@ type SignupFormValues = z.infer<typeof signupSchema>
 
 export default function SignupPage() {
 	const router = useRouter()
+	const [authToken, setAuthToken] = useState<string | null>(null)
+	const [isSubmitting, setIsSubmitting] = useState(false)
+	const [error, setError] = useState<string | null>(null)
+
+	useEffect(() => {
+		// sessionStorage에서 auth_token 가져오기
+		const token = sessionStorage.getItem("auth_token")
+		if (!token) {
+			// auth_token이 없으면 로그인 페이지로 리다이렉트
+			router.push("/login")
+			return
+		}
+		setAuthToken(token)
+	}, [router])
 
 	const form = useForm<SignupFormValues>({
 		resolver: zodResolver(signupSchema),
@@ -99,6 +113,7 @@ export default function SignupPage() {
 			organization: "",
 			position: "",
 			githubId: "",
+			phone: "",
 			termsPersonalInfo: false,
 			termsWaffleStudio: false,
 			termsEmailSms: false,
@@ -109,10 +124,55 @@ export default function SignupPage() {
 	const isStudent = enrollmentStatus === "학부생"
 	const isGraduate = enrollmentStatus === "졸업생"
 
-	const onSubmit = (data: SignupFormValues) => {
-		// TODO: API 호출하여 회원가입 데이터 전송
-		console.log(data)
-		router.push("/signup/pending")
+	const onSubmit = async (data: SignupFormValues) => {
+		if (!authToken) {
+			setError("인증 토큰이 없습니다. 다시 로그인해주세요.")
+			return
+		}
+
+		setIsSubmitting(true)
+		setError(null)
+
+		try {
+			// API 스펙에 맞춰 회원가입 요청
+			const affiliation = isStudent ? data.major : data.organization
+			const bio = isStudent
+				? `${data.generation}기 - ${data.studentId}`
+				: `${data.generation}기 - ${data.position}`
+
+			const response = await apiClient.signup({
+				auth_token: authToken,
+				name: data.name,
+				phone: data.phone || undefined,
+				affiliation: affiliation || undefined,
+				bio: bio || undefined,
+				github_username: data.githubId || undefined,
+			})
+
+			if (!response.ok) {
+				throw new Error(response.message || "회원가입에 실패했습니다")
+			}
+
+			// 회원가입 성공 후 auth_token 제거
+			sessionStorage.removeItem("auth_token")
+
+			// 상태에 따라 리다이렉트
+			if (response.data?.status === "pending") {
+				router.push("/signup/pending")
+			} else {
+				// active 상태면 홈으로
+				router.push("/")
+			}
+		} catch (err) {
+			console.error("Signup error:", err)
+			setError(err instanceof Error ? err.message : "회원가입 중 오류가 발생했습니다")
+		} finally {
+			setIsSubmitting(false)
+		}
+	}
+
+	if (!authToken) {
+		return null // 로딩 중이거나 리다이렉트 중
 	}
 
 	return (
@@ -123,6 +183,9 @@ export default function SignupPage() {
 					<h1 className="text-2xl font-bold">가입 신청</h1>
 				</CardHeader>
 				<CardContent>
+					{error && (
+						<div className="mb-4 p-3 bg-destructive/10 text-destructive rounded-md">{error}</div>
+					)}
 					<Form {...form}>
 						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 							<FormField
@@ -189,7 +252,6 @@ export default function SignupPage() {
 								)}
 							/>
 
-							{/* 학부생일 경우에만 표시 */}
 							{isStudent && (
 								<>
 									<FormField
@@ -202,7 +264,6 @@ export default function SignupPage() {
 													<Input
 														placeholder="YYYY-XXXXX (예: 2021-12345)"
 														maxLength={10}
-														pattern="\\d{4}-\\d{5}"
 														{...field}
 													/>
 												</FormControl>
@@ -245,7 +306,6 @@ export default function SignupPage() {
 								</>
 							)}
 
-							{/* 졸업생일 경우에만 표시 */}
 							{isGraduate && (
 								<>
 									<FormField
@@ -278,7 +338,20 @@ export default function SignupPage() {
 								</>
 							)}
 
-							{/* GitHub ID */}
+							<FormField
+								control={form.control}
+								name="phone"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>전화번호 (선택)</FormLabel>
+										<FormControl>
+											<Input placeholder="010-1234-5678" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
 							<FormField
 								control={form.control}
 								name="githubId"
@@ -293,7 +366,6 @@ export default function SignupPage() {
 								)}
 							/>
 
-							{/* 개인정보 수집 및 이용 동의 */}
 							<FormField
 								control={form.control}
 								name="termsPersonalInfo"
@@ -310,7 +382,6 @@ export default function SignupPage() {
 								)}
 							/>
 
-							{/* 와플스튜디오 이용약관 동의 */}
 							<FormField
 								control={form.control}
 								name="termsWaffleStudio"
@@ -327,7 +398,6 @@ export default function SignupPage() {
 								)}
 							/>
 
-							{/* 이메일/SMS 수신 동의 */}
 							<FormField
 								control={form.control}
 								name="termsEmailSms"
@@ -344,8 +414,8 @@ export default function SignupPage() {
 								)}
 							/>
 
-							<Button type="submit" className="w-full">
-								가입하기
+							<Button type="submit" className="w-full" disabled={isSubmitting}>
+								{isSubmitting ? "가입 처리 중..." : "가입하기"}
 							</Button>
 
 							<Button
@@ -353,6 +423,7 @@ export default function SignupPage() {
 								variant="ghost"
 								className="w-full"
 								onClick={() => router.push("/login")}
+								disabled={isSubmitting}
 							>
 								로그인 페이지로 돌아가기
 							</Button>

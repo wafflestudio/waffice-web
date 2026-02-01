@@ -1,10 +1,16 @@
 import type {
+	ApiResponse,
+	AuthResult,
+	AuthStatus,
+	GoogleTokenRequest,
 	Member,
 	MemberCreate,
 	MemberUpdate,
 	Project,
 	ProjectCreate,
 	ProjectUpdate,
+	SigninRequest,
+	SignupRequest,
 	User,
 	UserHistory,
 	UserHistoryCreate,
@@ -22,19 +28,98 @@ class ApiClient {
 
 	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
 		const url = `${this.baseUrl}${endpoint}`
-		const response = await fetch(url, {
-			headers: {
-				"Content-Type": "application/json",
-				...options.headers,
-			},
-			...options,
-		})
+
+		let response: Response
+		try {
+			response = await fetch(url, {
+				headers: {
+					"Content-Type": "application/json",
+					...options.headers,
+				},
+				credentials: "include", // Include cookies for auth
+				...options,
+			})
+		} catch (err) {
+			// Network error or CORS issue
+			console.error("Network error:", err)
+			const errorMsg = err instanceof Error ? err.message : "Unknown error"
+			throw new Error(
+				`네트워크 오류: 서버에 연결할 수 없습니다. CORS 설정을 확인해주세요. (${errorMsg})`,
+			)
+		}
 
 		if (!response.ok) {
-			throw new Error(`API Error: ${response.status} ${response.statusText}`)
+			const errorData = await response.json().catch(() => ({}))
+			throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`)
 		}
 
 		return response.json()
+	}
+
+	// ============================================================================
+	// Auth API
+	// ============================================================================
+
+	/**
+	 * Initiates Google OAuth login by redirecting to Google's consent page
+	 * @param redirectUri - The callback URL where Google will send the authorization code
+	 */
+	getGoogleAuthUrl(redirectUri: string): string {
+		const params = new URLSearchParams({ redirect_uri: redirectUri })
+		return `${this.baseUrl}/auth/google?${params.toString()}`
+	}
+
+	/**
+	 * Exchanges Google authorization code for auth_token
+	 * @param request - Contains the authorization code and redirect_uri
+	 * @returns AuthStatus with status ("new" | "pending" | "active") and auth_token
+	 */
+	async exchangeGoogleToken(request: GoogleTokenRequest): Promise<ApiResponse<AuthStatus>> {
+		return this.request<ApiResponse<AuthStatus>>("/auth/google/token", {
+			method: "POST",
+			body: JSON.stringify(request),
+		})
+	}
+
+	/**
+	 * Sign in existing user with auth_token (for status: "active")
+	 * @param request - Contains the auth_token
+	 * @returns AuthResult with user details and sets HttpOnly cookie
+	 */
+	async signin(request: SigninRequest): Promise<ApiResponse<AuthResult>> {
+		return this.request<ApiResponse<AuthResult>>("/auth/signin", {
+			method: "POST",
+			body: JSON.stringify(request),
+		})
+	}
+
+	/**
+	 * Complete signup for new user (for status: "new")
+	 * @param request - Contains auth_token and user details
+	 * @returns AuthResult with user details and sets HttpOnly cookie
+	 */
+	async signup(request: SignupRequest): Promise<ApiResponse<AuthResult>> {
+		return this.request<ApiResponse<AuthResult>>("/auth/signup", {
+			method: "POST",
+			body: JSON.stringify(request),
+		})
+	}
+
+	/**
+	 * Get current authentication status
+	 * @returns Current user's profile and status
+	 */
+	async getAuthStatus(): Promise<ApiResponse<AuthResult>> {
+		return this.request<ApiResponse<AuthResult>>("/auth/me")
+	}
+
+	/**
+	 * Logout current user
+	 */
+	async logout(): Promise<ApiResponse<null>> {
+		return this.request<ApiResponse<null>>("/auth/logout", {
+			method: "POST",
+		})
 	}
 
 	// User API (from OpenAPI spec)

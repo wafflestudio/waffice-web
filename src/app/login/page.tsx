@@ -5,6 +5,7 @@ import { GoogleButton } from "@/components/auth/google-button"
 import { Logo } from "@/components/auth/logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { apiClient } from "@/lib/api"
 
 /**
  * 로그인 페이지
@@ -13,8 +14,12 @@ export default function LoginPage() {
 	const router = useRouter()
 
 	const handleGoogleLogin = () => {
-		// TODO: Google OAuth 로그인 로직 구현
-		console.log("Google 로그인 클릭")
+		// Google OAuth URL 생성
+		const redirectUri = `${window.location.origin}/auth/callback`
+		const googleAuthUrl = apiClient.getGoogleAuthUrl(redirectUri)
+
+		// Google 인증 페이지로 리다이렉트
+		window.location.href = googleAuthUrl
 	}
 
 	const handleSignup = () => {
