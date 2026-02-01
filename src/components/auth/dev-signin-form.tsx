@@ -29,35 +29,35 @@ interface PresetUser {
 const PRESET_USERS: PresetUser[] = [
 	{
 		label: "Admin User",
-		email: "admin@dev.local",
+		email: "admin@example.com",
 		name: "Admin User",
 		is_admin: true,
 		qualification: "active",
 	},
 	{
 		label: "Active User",
-		email: "active@dev.local",
+		email: "active@example.com",
 		name: "Active User",
 		is_admin: false,
 		qualification: "active",
 	},
 	{
 		label: "Regular User",
-		email: "regular@dev.local",
+		email: "regular@example.com",
 		name: "Regular User",
 		is_admin: false,
 		qualification: "regular",
 	},
 	{
 		label: "Associate User",
-		email: "associate@dev.local",
+		email: "associate@example.com",
 		name: "Associate User",
 		is_admin: false,
 		qualification: "associate",
 	},
 	{
 		label: "Pending User",
-		email: "pending@dev.local",
+		email: "pending@example.com",
 		name: "Pending User",
 		is_admin: false,
 		qualification: "pending",
@@ -178,7 +178,7 @@ export function DevSigninForm({ onSuccess, onError }: DevSigninFormProps) {
 							<Input
 								id={emailId}
 								type="email"
-								placeholder="user@dev.local"
+								placeholder="user@example.com"
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
 								disabled={isLoading}
