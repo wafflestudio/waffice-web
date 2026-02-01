@@ -15,7 +15,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Toast } from "@/components/ui/toast"
 import { apiClient } from "@/lib/api"
-import type { Qualification, UserDetail } from "@/types"
+import type { ApproveRequest, Qualification, UserDetail } from "@/types"
+
+// 타입 가드: pending이 아닌 qualification인지 확인
+function isApprovableQualification(
+	q: Qualification,
+): q is ApproveRequest["qualification"] {
+	return q !== "pending"
+}
 
 // 자격(role) 매핑 함수
 const roleToQualification = (role: string): Qualification => {
@@ -131,6 +138,13 @@ export default function MemberApplicationsPage() {
 
 		const qualification = roleToQualification(selectedRole)
 
+		// ApproveRequest는 pending을 허용하지 않음
+		if (!isApprovableQualification(qualification)) {
+			setToastMessage("유효하지 않은 자격입니다.")
+			setShowToast(true)
+			return
+		}
+
 		try {
 			// 선택된 모든 신청을 승인
 			const approvePromises = selectedApplications.map((userId) =>
@@ -192,6 +206,13 @@ export default function MemberApplicationsPage() {
 	// 개별 승인/반려 핸들러 (이름 클릭 시 모달에서 사용)
 	const handleApproveSingle = async (id: number, role: string) => {
 		const qualification = roleToQualification(role)
+
+		// ApproveRequest는 pending을 허용하지 않음
+		if (!isApprovableQualification(qualification)) {
+			setToastMessage("유효하지 않은 자격입니다.")
+			setShowToast(true)
+			return
+		}
 
 		try {
 			const response = await apiClient.approveUser(id, { qualification })
