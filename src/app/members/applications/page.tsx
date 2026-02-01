@@ -18,9 +18,7 @@ import { apiClient } from "@/lib/api"
 import type { ApproveRequest, Qualification, UserDetail } from "@/types"
 
 // 타입 가드: pending이 아닌 qualification인지 확인
-function isApprovableQualification(
-	q: Qualification,
-): q is ApproveRequest["qualification"] {
+function isApprovableQualification(q: Qualification): q is ApproveRequest["qualification"] {
 	return q !== "pending"
 }
 
