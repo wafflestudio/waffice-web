@@ -1,4 +1,8 @@
 import type {
+	ApiResponse,
+	ApproveRequest,
+	CursorPage,
+	HistoryDetail,
 	Member,
 	MemberCreate,
 	MemberUpdate,
@@ -6,9 +10,11 @@ import type {
 	ProjectCreate,
 	ProjectUpdate,
 	User,
+	UserDetail,
 	UserHistory,
 	UserHistoryCreate,
 	UserPendingCreate,
+	UserUpdateRequest,
 } from "@/types"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
@@ -33,13 +39,83 @@ class ApiClient {
 		})
 
 		if (!response.ok) {
-			throw new Error(`API Error: ${response.status} ${response.statusText}`)
+			const errorData = await response.json().catch(() => ({}))
+			throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`)
 		}
 
 		return response.json()
 	}
 
-	// User API (from OpenAPI spec)
+	// ============================================================================
+	// User Management API (Admin)
+	// ============================================================================
+
+	/**
+	 * Get list of pending users awaiting approval (Admin only)
+	 */
+	async getPendingUsers(): Promise<ApiResponse<UserDetail[]>> {
+		return this.request<ApiResponse<UserDetail[]>>("/users/pending")
+	}
+
+	/**
+	 * Get all users with pagination (Admin only)
+	 */
+	async getUsers(cursor?: number, limit = 20): Promise<ApiResponse<CursorPage<UserDetail>>> {
+		const params = new URLSearchParams()
+		if (cursor) params.append("cursor", cursor.toString())
+		params.append("limit", limit.toString())
+		return this.request<ApiResponse<CursorPage<UserDetail>>>(`/users?${params.toString()}`)
+	}
+
+	/**
+	 * Get specific user details (Admin only)
+	 */
+	async getUser(userId: number): Promise<ApiResponse<UserDetail>> {
+		return this.request<ApiResponse<UserDetail>>(`/users/${userId}`)
+	}
+
+	/**
+	 * Approve a pending user and set their qualification level (Admin only)
+	 */
+	async approveUser(userId: number, request: ApproveRequest): Promise<ApiResponse<UserDetail>> {
+		return this.request<ApiResponse<UserDetail>>(`/users/${userId}/approve`, {
+			method: "POST",
+			body: JSON.stringify(request),
+		})
+	}
+
+	/**
+	 * Update user information (Admin only)
+	 */
+	async updateUserAdmin(
+		userId: number,
+		request: UserUpdateRequest,
+	): Promise<ApiResponse<UserDetail>> {
+		return this.request<ApiResponse<UserDetail>>(`/users/${userId}`, {
+			method: "PATCH",
+			body: JSON.stringify(request),
+		})
+	}
+
+	/**
+	 * Delete user (soft delete, Admin only)
+	 */
+	async deleteUser(userId: number): Promise<ApiResponse<null>> {
+		return this.request<ApiResponse<null>>(`/users/${userId}`, {
+			method: "DELETE",
+		})
+	}
+
+	/**
+	 * Get user's activity history (Admin only)
+	 */
+	async getUserHistory(userId: number): Promise<ApiResponse<HistoryDetail[]>> {
+		return this.request<ApiResponse<HistoryDetail[]>>(`/users/${userId}/history`)
+	}
+
+	// ============================================================================
+	// Legacy User API (Deprecated - use above methods instead)
+	// ============================================================================
 	async createPendingUser(user: UserPendingCreate): Promise<void> {
 		return this.request<void>("/api/user/create", {
 			method: "POST",

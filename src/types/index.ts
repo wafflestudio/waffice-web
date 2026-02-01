@@ -1,4 +1,25 @@
-// Auth types (from OpenAPI)
+// ============================================================================
+// Common Types
+// ============================================================================
+
+export type Qualification = "pending" | "associate" | "regular" | "active"
+
+export interface CursorPage<T> {
+	items: T[]
+	next_cursor?: number | null
+}
+
+export interface ApiResponse<T> {
+	ok: boolean
+	data?: T | null
+	error?: string | null
+	message?: string | null
+}
+
+// ============================================================================
+// Auth Types
+// ============================================================================
+
 export type AuthStatus = "new" | "pending" | "active"
 
 export interface GoogleTokenRequest {
@@ -43,14 +64,17 @@ export interface UserDetail {
 	id: number
 	email: string
 	name: string
-	profile_picture?: string | null
-	phone?: string
-	affiliation?: string
-	bio?: string
-	github_username?: string
-	status: AuthStatus
-	created_at: string
-	updated_at: string
+	generation: string
+	qualification: Qualification
+	is_admin: boolean
+	phone: string | null
+	affiliation: string | null
+	bio: string | null
+	avatar_url: string | null
+	github_username: string | null
+	slack_id: string | null
+	websites: Website[] | null
+	created_at: number // Unix timestamp
 }
 
 export interface AuthResult {
@@ -63,7 +87,43 @@ export interface AuthResponse {
 	data: AuthResult
 }
 
-// User types (from OpenAPI)
+// ============================================================================
+// User Types
+// ============================================================================
+
+export interface Website {
+	url: string
+	type: string // e.g., "github", "linkedin", "portfolio", "blog"
+	description?: string | null
+}
+
+export interface UserBrief {
+	id: number
+	name: string
+	email: string
+	avatar_url: string | null
+}
+
+export interface ApproveRequest {
+	qualification: "associate" | "regular" | "active" // Cannot be "pending"
+}
+
+export interface ProfileUpdateRequest {
+	phone?: string | null
+	affiliation?: string | null
+	bio?: string | null
+	avatar_url?: string | null
+	github_username?: string | null
+	slack_id?: string | null
+	websites?: Website[] | null
+}
+
+export interface UserUpdateRequest extends ProfileUpdateRequest {
+	name?: string | null
+	qualification?: Qualification | null
+	is_admin?: boolean | null
+}
+
 export interface UserPendingCreate {
 	google_id: string
 	email: string
@@ -82,6 +142,27 @@ export interface User {
 	updated_at?: string
 }
 
+// ============================================================================
+// History Types
+// ============================================================================
+
+export type HistoryAction =
+	| "qualification_changed"
+	| "admin_granted"
+	| "admin_revoked"
+	| "project_joined"
+	| "project_left"
+	| "project_role_changed"
+
+export interface HistoryDetail {
+	id: number
+	action: HistoryAction
+	payload: Record<string, unknown>
+	actor: UserBrief | null
+	created_at: number // Unix timestamp
+}
+
+// Legacy History types (deprecated)
 export type UserHistoryType = "join" | "left" | "discipline" | "project_join" | "project_left"
 
 export interface UserHistoryCreate {

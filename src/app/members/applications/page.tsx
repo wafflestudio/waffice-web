@@ -1,7 +1,7 @@
 "use client"
 
-import { Search } from "lucide-react"
-import { useState } from "react"
+import { Loader2, Search } from "lucide-react"
+import { useEffect, useState } from "react"
 import { ApplicationTable } from "@/components/members/application-table"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,7 +14,44 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Toast } from "@/components/ui/toast"
+import { apiClient } from "@/lib/api"
+import type { ApproveRequest, Qualification, UserDetail } from "@/types"
 
+// 타입 가드: pending이 아닌 qualification인지 확인
+function isApprovableQualification(q: Qualification): q is ApproveRequest["qualification"] {
+	return q !== "pending"
+}
+
+// 자격(role) 매핑 함수
+const roleToQualification = (role: string): Qualification => {
+	switch (role) {
+		case "활동회원":
+			return "active"
+		case "정회원":
+			return "regular"
+		case "준회원":
+			return "associate"
+		default:
+			return "pending"
+	}
+}
+
+const qualificationToRole = (qualification: Qualification): string => {
+	switch (qualification) {
+		case "active":
+			return "활동회원"
+		case "regular":
+			return "정회원"
+		case "associate":
+			return "준회원"
+		case "pending":
+			return "미가입"
+		default:
+			return "미가입"
+	}
+}
+
+// UserDetail을 Application 형식으로 변환
 interface Application {
 	id: number
 	name: string
@@ -26,109 +63,16 @@ interface Application {
 	status: string
 }
 
-// 임시 목 데이터 - API 연결 전까지 사용
-const mockApplications = [
-	{
-		id: 1,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		role: "활동회원",
-		status: "승인",
-	},
-	{
-		id: 2,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		role: "정회원",
-		status: "승인",
-	},
-	{
-		id: 3,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		role: "준회원",
-		status: "승인",
-	},
-	{
-		id: 4,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		role: "미가입",
-		status: "승인",
-	},
-	{
-		id: 5,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		role: "활동회원",
-		status: "승인",
-	},
-	{
-		id: 6,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		role: "정회원",
-		status: "승인",
-	},
-	{
-		id: 7,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		role: "준회원",
-		status: "승인",
-	},
-	{
-		id: 8,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		role: "미가입",
-		status: "반려",
-	},
-	{
-		id: 9,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		role: "활동회원",
-		status: "반려",
-	},
-	{
-		id: 10,
-		name: "홍길동",
-		generation: "23.5기",
-		email: "waffice@gmail.com",
-		github_username: "wafflestudio",
-		application_date: "2025-10-01T00:00:00Z",
-		role: "정회원",
-		status: "반려",
-	},
-]
+const userDetailToApplication = (user: UserDetail): Application => ({
+	id: user.id,
+	name: user.name,
+	generation: user.generation,
+	email: user.email,
+	github_username: user.github_username || "",
+	application_date: new Date(user.created_at * 1000).toISOString(),
+	role: qualificationToRole(user.qualification),
+	status: user.qualification === "pending" ? "대기" : "승인",
+})
 
 export default function MemberApplicationsPage() {
 	const [searchQuery, setSearchQuery] = useState("")
@@ -139,14 +83,31 @@ export default function MemberApplicationsPage() {
 	const [selectedRole, setSelectedRole] = useState<string>("")
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState("")
-	const [applications, _setApplications] = useState<Application[]>(mockApplications)
+	const [applications, setApplications] = useState<Application[]>([])
+	const [isLoading, setIsLoading] = useState(true)
+	const [error, setError] = useState<string | null>(null)
 
-	// TODO: API 연결 시 아래 코드로 교체
-	// const {
-	//  data: applications = [],
-	//  isLoading,
-	//  error,
-	// } = useQuery(...)
+	// Pending 유저 목록 가져오기
+	useEffect(() => {
+		const fetchPendingUsers = async () => {
+			try {
+				setIsLoading(true)
+				const response = await apiClient.getPendingUsers()
+				if (response.ok && response.data) {
+					const apps = response.data.map(userDetailToApplication)
+					setApplications(apps)
+				} else {
+					setError(response.message || "유저 목록을 불러오는데 실패했습니다.")
+				}
+			} catch (err) {
+				setError(err instanceof Error ? err.message : "유저 목록을 불러오는데 실패했습니다.")
+			} finally {
+				setIsLoading(false)
+			}
+		}
+
+		fetchPendingUsers()
+	}, [])
 
 	const handleApproveClick = () => {
 		if (selectedApplications.length === 0) {
@@ -166,44 +127,141 @@ export default function MemberApplicationsPage() {
 		setIsRejectDialogOpen(true)
 	}
 
-	const handleApproveSubmit = () => {
+	const handleApproveSubmit = async () => {
 		if (!selectedRole) {
 			setToastMessage("자격을 선택해주세요.")
 			setShowToast(true)
 			return
 		}
-		// TODO: API 호출하여 승인 처리
-		console.log("승인할 신청:", selectedApplications)
-		console.log("선택한 자격:", selectedRole)
 
-		setIsApproveDialogOpen(false)
-		setSelectedRole("")
-		setToastMessage("선택한 회원 가입이 승인되었습니다.")
-		setShowToast(true)
+		const qualification = roleToQualification(selectedRole)
+
+		// ApproveRequest는 pending을 허용하지 않음
+		if (!isApprovableQualification(qualification)) {
+			setToastMessage("유효하지 않은 자격입니다.")
+			setShowToast(true)
+			return
+		}
+
+		try {
+			// 선택된 모든 신청을 승인
+			const approvePromises = selectedApplications.map((userId) =>
+				apiClient.approveUser(userId, { qualification }),
+			)
+
+			const results = await Promise.all(approvePromises)
+
+			// 실패한 승인이 있는지 확인
+			const failedApprovals = results.filter((r) => !r.ok)
+			if (failedApprovals.length > 0) {
+				setToastMessage(`${failedApprovals.length}명의 승인에 실패했습니다. 다시 시도해주세요.`)
+			} else {
+				setToastMessage(`${selectedApplications.length}명의 회원 가입이 승인되었습니다.`)
+
+				// 승인된 유저들을 목록에서 제거
+				setApplications((prev) => prev.filter((app) => !selectedApplications.includes(app.id)))
+				setSelectedApplications([])
+			}
+
+			setShowToast(true)
+		} catch (err) {
+			setToastMessage(err instanceof Error ? err.message : "승인 처리 중 오류가 발생했습니다.")
+			setShowToast(true)
+		} finally {
+			setIsApproveDialogOpen(false)
+			setSelectedRole("")
+		}
 	}
 
-	const handleRejectSubmit = () => {
-		// TODO: API 호출하여 반려 처리
-		console.log("반려할 신청:", selectedApplications)
+	const handleRejectSubmit = async () => {
+		try {
+			// 선택된 모든 신청을 삭제 (반려)
+			const rejectPromises = selectedApplications.map((userId) => apiClient.deleteUser(userId))
 
-		setIsRejectDialogOpen(false)
-		setToastMessage("선택한 회원 가입이 반려되었습니다.")
-		setShowToast(true)
+			const results = await Promise.all(rejectPromises)
+
+			// 실패한 반려가 있는지 확인
+			const failedRejections = results.filter((r) => !r.ok)
+			if (failedRejections.length > 0) {
+				setToastMessage(`${failedRejections.length}명의 반려에 실패했습니다. 다시 시도해주세요.`)
+			} else {
+				setToastMessage(`${selectedApplications.length}명의 회원 가입이 반려되었습니다.`)
+
+				// 반려된 유저들을 목록에서 제거
+				setApplications((prev) => prev.filter((app) => !selectedApplications.includes(app.id)))
+				setSelectedApplications([])
+			}
+
+			setShowToast(true)
+		} catch (err) {
+			setToastMessage(err instanceof Error ? err.message : "반려 처리 중 오류가 발생했습니다.")
+			setShowToast(true)
+		} finally {
+			setIsRejectDialogOpen(false)
+		}
 	}
 
 	// 개별 승인/반려 핸들러 (이름 클릭 시 모달에서 사용)
-	const handleApproveSingle = (id: number, role: string) => {
-		console.log(`개별 승인: ${id}, 자격: ${role}`)
-		// TODO: API 호출
-		setToastMessage("해당 회원 가입이 승인되었습니다.")
-		setShowToast(true)
+	const handleApproveSingle = async (id: number, role: string) => {
+		const qualification = roleToQualification(role)
+
+		// ApproveRequest는 pending을 허용하지 않음
+		if (!isApprovableQualification(qualification)) {
+			setToastMessage("유효하지 않은 자격입니다.")
+			setShowToast(true)
+			return
+		}
+
+		try {
+			const response = await apiClient.approveUser(id, { qualification })
+
+			if (response.ok) {
+				setToastMessage("해당 회원 가입이 승인되었습니다.")
+				// 승인된 유저를 목록에서 제거
+				setApplications((prev) => prev.filter((app) => app.id !== id))
+			} else {
+				setToastMessage(response.message || "승인에 실패했습니다.")
+			}
+		} catch (err) {
+			setToastMessage(err instanceof Error ? err.message : "승인 처리 중 오류가 발생했습니다.")
+		} finally {
+			setShowToast(true)
+		}
 	}
 
-	const handleRejectSingle = (id: number) => {
-		console.log(`개별 반려: ${id}`)
-		// TODO: API 호출
-		setToastMessage("해당 회원 가입이 반려되었습니다.")
-		setShowToast(true)
+	const handleRejectSingle = async (id: number) => {
+		try {
+			const response = await apiClient.deleteUser(id)
+
+			if (response.ok) {
+				setToastMessage("해당 회원 가입이 반려되었습니다.")
+				// 반려된 유저를 목록에서 제거
+				setApplications((prev) => prev.filter((app) => app.id !== id))
+			} else {
+				setToastMessage(response.message || "반려에 실패했습니다.")
+			}
+		} catch (err) {
+			setToastMessage(err instanceof Error ? err.message : "반려 처리 중 오류가 발생했습니다.")
+		} finally {
+			setShowToast(true)
+		}
+	}
+
+	if (isLoading) {
+		return (
+			<div className="flex items-center justify-center min-h-screen">
+				<Loader2 className="h-8 w-8 animate-spin text-primary" />
+			</div>
+		)
+	}
+
+	if (error) {
+		return (
+			<div className="flex flex-col items-center justify-center min-h-screen space-y-4">
+				<p className="text-destructive">{error}</p>
+				<Button onClick={() => window.location.reload()}>다시 시도</Button>
+			</div>
+		)
 	}
 
 	return (

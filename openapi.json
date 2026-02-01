@@ -2,102 +2,21 @@
 	"openapi": "3.1.0",
 	"info": { "title": "FastAPI", "version": "0.1.0" },
 	"paths": {
-		"/api/user/create": {
-			"post": {
-				"tags": ["user"],
-				"summary": "Create Pending User",
-				"operationId": "create_pending_user_api_user_create_post",
-				"requestBody": {
-					"content": {
-						"application/json": { "schema": { "$ref": "#/components/schemas/UserPendingCreate" } }
-					},
-					"required": true
-				},
-				"responses": {
-					"201": {
-						"description": "Successful Response",
-						"content": { "application/json": { "schema": {} } }
-					},
-					"422": {
-						"description": "Validation Error",
-						"content": {
-							"application/json": {
-								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/user/enroll": {
-			"post": {
-				"tags": ["user"],
-				"summary": "Enroll User",
-				"operationId": "enroll_user_api_user_enroll_post",
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": { "additionalProperties": true, "type": "object", "title": "Payload" }
-						}
-					},
-					"required": true
-				},
-				"responses": {
-					"201": {
-						"description": "Successful Response",
-						"content": { "application/json": { "schema": {} } }
-					},
-					"422": {
-						"description": "Validation Error",
-						"content": {
-							"application/json": {
-								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/user/deny": {
-			"post": {
-				"tags": ["user"],
-				"summary": "Deny User",
-				"operationId": "deny_user_api_user_deny_post",
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": { "additionalProperties": true, "type": "object", "title": "Payload" }
-						}
-					},
-					"required": true
-				},
-				"responses": {
-					"200": {
-						"description": "Successful Response",
-						"content": { "application/json": { "schema": {} } }
-					},
-					"422": {
-						"description": "Validation Error",
-						"content": {
-							"application/json": {
-								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/user/info": {
+		"/auth/google": {
 			"get": {
-				"tags": ["user"],
-				"summary": "User Info",
-				"operationId": "user_info_api_user_info_get",
+				"tags": ["Auth"],
+				"summary": "Initiate Google OAuth login",
+				"description": "Redirects the user to Google's OAuth consent page. After authentication, Google redirects to the specified redirect_uri.",
+				"operationId": "google_login_auth_google_get",
 				"parameters": [
 					{
-						"name": "userid",
+						"name": "redirect_uri",
 						"in": "query",
-						"required": true,
-						"schema": { "type": "integer", "title": "Userid" }
+						"required": false,
+						"schema": {
+							"anyOf": [{ "type": "string" }, { "type": "null" }],
+							"title": "Redirect Uri"
+						}
 					}
 				],
 				"responses": {
@@ -105,6 +24,8 @@
 						"description": "Successful Response",
 						"content": { "application/json": { "schema": {} } }
 					},
+					"302": { "description": "Redirect to Google OAuth consent page" },
+					"400": { "description": "Invalid redirect_uri" },
 					"422": {
 						"description": "Validation Error",
 						"content": {
@@ -116,37 +37,196 @@
 				}
 			}
 		},
-		"/api/user/all": {
-			"get": {
-				"tags": ["user"],
-				"summary": "User All",
-				"operationId": "user_all_api_user_all_get",
+		"/auth/google/token": {
+			"post": {
+				"tags": ["Auth"],
+				"summary": "Exchange Google authorization code for auth token",
+				"description": "Frontend calls this endpoint with the authorization code received from Google OAuth callback.",
+				"operationId": "google_token_exchange_auth_google_token_post",
+				"requestBody": {
+					"content": {
+						"application/json": { "schema": { "$ref": "#/components/schemas/GoogleTokenRequest" } }
+					},
+					"required": true
+				},
 				"responses": {
 					"200": {
-						"description": "Successful Response",
-						"content": { "application/json": { "schema": {} } }
+						"description": "Code exchange successful",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_AuthStatus_" },
+								"examples": {
+									"new_user": {
+										"summary": "New user (needs signup)",
+										"value": { "ok": true, "data": { "status": "new", "auth_token": "eyJ..." } }
+									},
+									"existing_user": {
+										"summary": "Existing user (use signin)",
+										"value": { "ok": true, "data": { "status": "active", "auth_token": "eyJ..." } }
+									}
+								}
+							}
+						}
+					},
+					"400": { "description": "Invalid authorization code or OAuth error" },
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
 					}
 				}
 			}
 		},
-		"/api/user/update": {
+		"/auth/signin": {
 			"post": {
-				"tags": ["user"],
-				"summary": "User Update",
-				"operationId": "user_update_api_user_update_post",
+				"tags": ["Auth"],
+				"summary": "Sign in existing user",
+				"description": "Exchange auth token for JWT access token (existing users only).",
+				"operationId": "signin_auth_signin_post",
+				"requestBody": {
+					"content": {
+						"application/json": { "schema": { "$ref": "#/components/schemas/SigninRequest" } }
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "Signin successful, returns access token and user",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_AuthResult_" }
+							}
+						}
+					},
+					"400": { "description": "Invalid auth token or user not registered" },
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/signup": {
+			"post": {
+				"tags": ["Auth"],
+				"summary": "Complete user signup",
+				"description": "Complete registration with auth token and user details.",
+				"operationId": "signup_auth_signup_post",
+				"requestBody": {
+					"content": {
+						"application/json": { "schema": { "$ref": "#/components/schemas/SignupRequest" } }
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "Signup successful, returns access token and user",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_AuthResult_" }
+							}
+						}
+					},
+					"400": { "description": "Invalid auth token" },
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/me": {
+			"get": {
+				"tags": ["Auth"],
+				"summary": "Get current auth status",
+				"description": "Returns the current user's authentication status and profile.",
+				"operationId": "get_auth_status_auth_me_get",
+				"responses": {
+					"200": {
+						"description": "Current authentication status",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_AuthResult_" }
+							}
+						}
+					},
+					"401": { "description": "Not authenticated - invalid or missing token" }
+				},
+				"security": [{ "OAuth2PasswordBearer": [] }]
+			}
+		},
+		"/auth/logout": {
+			"post": {
+				"tags": ["Auth"],
+				"summary": "Logout user",
+				"description": "Clear authentication cookie to logout user.",
+				"operationId": "logout_auth_logout_post",
+				"responses": {
+					"200": {
+						"description": "Logout successful",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_NoneType_" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/users/me": {
+			"get": {
+				"tags": ["Users"],
+				"summary": "Get my profile",
+				"description": "Returns the current authenticated user's complete profile.",
+				"operationId": "get_my_profile_users_me_get",
+				"responses": {
+					"200": {
+						"description": "User profile retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_UserDetail_" }
+							}
+						}
+					},
+					"401": { "description": "Not authenticated" }
+				},
+				"security": [{ "OAuth2PasswordBearer": [] }]
+			},
+			"patch": {
+				"tags": ["Users"],
+				"summary": "Update my profile",
+				"description": "Update the current user's profile information.",
+				"operationId": "update_my_profile_users_me_patch",
 				"requestBody": {
 					"content": {
 						"application/json": {
-							"schema": { "additionalProperties": true, "type": "object", "title": "Payload" }
+							"schema": { "$ref": "#/components/schemas/ProfileUpdateRequest" }
 						}
 					},
 					"required": true
 				},
 				"responses": {
 					"200": {
-						"description": "Successful Response",
-						"content": { "application/json": { "schema": {} } }
+						"description": "Profile updated successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_UserDetail_" }
+							}
+						}
 					},
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Pending users cannot update profile" },
 					"422": {
 						"description": "Validation Error",
 						"content": {
@@ -155,83 +235,96 @@
 							}
 						}
 					}
-				}
-			}
-		},
-		"/api/user/access": {
-			"post": {
-				"tags": ["user"],
-				"summary": "User Access",
-				"operationId": "user_access_api_user_access_post",
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": { "additionalProperties": true, "type": "object", "title": "Payload" }
-						}
-					},
-					"required": true
 				},
-				"responses": {
-					"200": {
-						"description": "Successful Response",
-						"content": { "application/json": { "schema": {} } }
-					},
-					"422": {
-						"description": "Validation Error",
-						"content": {
-							"application/json": {
-								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
-							}
-						}
-					}
-				}
+				"security": [{ "OAuth2PasswordBearer": [] }]
 			}
 		},
-		"/api/userhist/create": {
-			"post": {
-				"tags": ["user_history"],
-				"summary": "Userhist Create",
-				"operationId": "userhist_create_api_userhist_create_post",
-				"requestBody": {
-					"content": {
-						"application/json": { "schema": { "$ref": "#/components/schemas/UserHistoryCreate" } }
-					},
-					"required": true
-				},
-				"responses": {
-					"201": {
-						"description": "Successful Response",
-						"content": { "application/json": { "schema": {} } }
-					},
-					"422": {
-						"description": "Validation Error",
-						"content": {
-							"application/json": {
-								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/userhist/info": {
+		"/users/me/history": {
 			"get": {
-				"tags": ["user_history"],
-				"summary": "Userhist Info",
-				"operationId": "userhist_info_api_userhist_info_get",
+				"tags": ["Users"],
+				"summary": "Get my activity history",
+				"description": "Returns the current user's audit log entries.",
+				"operationId": "get_my_history_users_me_history_get",
+				"responses": {
+					"200": {
+						"description": "History retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_list_HistoryDetail__" }
+							}
+						}
+					},
+					"401": { "description": "Not authenticated" }
+				},
+				"security": [{ "OAuth2PasswordBearer": [] }]
+			}
+		},
+		"/users/me/projects": {
+			"get": {
+				"tags": ["Users"],
+				"summary": "Get my projects",
+				"description": "Returns projects where the current user is a member.",
+				"operationId": "get_my_projects_users_me_projects_get",
+				"responses": {
+					"200": {
+						"description": "Projects retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_list_ProjectBrief__" }
+							}
+						}
+					},
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Requires REGULAR qualification or higher" }
+				},
+				"security": [{ "OAuth2PasswordBearer": [] }]
+			}
+		},
+		"/users": {
+			"get": {
+				"tags": ["Users"],
+				"summary": "List all users",
+				"description": "Returns paginated list of all users. Admin only.",
+				"operationId": "list_users_users_get",
+				"security": [{ "OAuth2PasswordBearer": [] }],
 				"parameters": [
 					{
-						"name": "id",
+						"name": "cursor",
 						"in": "query",
-						"required": true,
-						"schema": { "type": "integer", "title": "Id" }
+						"required": false,
+						"schema": {
+							"anyOf": [{ "type": "integer" }, { "type": "null" }],
+							"description": "Pagination cursor (user ID). Omit for first page.",
+							"title": "Cursor"
+						},
+						"description": "Pagination cursor (user ID). Omit for first page."
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"maximum": 100,
+							"minimum": 1,
+							"description": "Number of users per page (1-100)",
+							"default": 20,
+							"title": "Limit"
+						},
+						"description": "Number of users per page (1-100)"
 					}
 				],
 				"responses": {
 					"200": {
-						"description": "Successful Response",
-						"content": { "application/json": { "schema": {} } }
+						"description": "Users retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_CursorPage_UserDetail__" }
+							}
+						}
 					},
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Admin access required" },
 					"422": {
 						"description": "Validation Error",
 						"content": {
@@ -243,11 +336,624 @@
 				}
 			}
 		},
-		"/api/userhist/all": {
+		"/users/pending": {
 			"get": {
-				"tags": ["user_history"],
-				"summary": "Userhist All",
-				"operationId": "userhist_all_api_userhist_all_get",
+				"tags": ["Users"],
+				"summary": "List pending users",
+				"description": "Returns all users awaiting approval. Admin only.",
+				"operationId": "list_pending_users_users_pending_get",
+				"responses": {
+					"200": {
+						"description": "Pending users retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_list_UserDetail__" }
+							}
+						}
+					},
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Admin access required" }
+				},
+				"security": [{ "OAuth2PasswordBearer": [] }]
+			}
+		},
+		"/users/{user_id}": {
+			"get": {
+				"tags": ["Users"],
+				"summary": "Get user by ID",
+				"description": "Returns detailed information for a specific user. Admin only.",
+				"operationId": "get_user_users__user_id__get",
+				"security": [{ "OAuth2PasswordBearer": [] }],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "title": "User Id" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "User retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_UserDetail_" }
+							}
+						}
+					},
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Admin access required" },
+					"404": { "description": "User not found" },
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			},
+			"patch": {
+				"tags": ["Users"],
+				"summary": "Update user",
+				"description": "Update any user's profile and status. Admin only.",
+				"operationId": "update_user_users__user_id__patch",
+				"security": [{ "OAuth2PasswordBearer": [] }],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "title": "User Id" }
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": { "schema": { "$ref": "#/components/schemas/UserUpdateRequest" } }
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "User updated successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_UserDetail_" }
+							}
+						}
+					},
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Admin access required" },
+					"404": { "description": "User not found" },
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"tags": ["Users"],
+				"summary": "Delete user",
+				"description": "Soft-delete a user. Admin only.",
+				"operationId": "delete_user_users__user_id__delete",
+				"security": [{ "OAuth2PasswordBearer": [] }],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "title": "User Id" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "User deleted successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_NoneType_" }
+							}
+						}
+					},
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Admin access required" },
+					"404": { "description": "User not found" },
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/users/{user_id}/approve": {
+			"post": {
+				"tags": ["Users"],
+				"summary": "Approve pending user",
+				"description": "Approve a pending user and set their qualification level. Admin only.",
+				"operationId": "approve_user_users__user_id__approve_post",
+				"security": [{ "OAuth2PasswordBearer": [] }],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "title": "User Id" }
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": { "schema": { "$ref": "#/components/schemas/ApproveRequest" } }
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "User approved successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_UserDetail_" }
+							}
+						}
+					},
+					"400": { "description": "Cannot approve to PENDING status" },
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Admin access required" },
+					"404": { "description": "User not found" },
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/users/{user_id}/history": {
+			"get": {
+				"tags": ["Users"],
+				"summary": "Get user's activity history",
+				"description": "Returns a user's audit log entries. Admin only.",
+				"operationId": "get_user_history_users__user_id__history_get",
+				"security": [{ "OAuth2PasswordBearer": [] }],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "title": "User Id" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "History retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_list_HistoryDetail__" }
+							}
+						}
+					},
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Admin access required" },
+					"404": { "description": "User not found" },
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/projects": {
+			"get": {
+				"tags": ["Projects"],
+				"summary": "List all projects",
+				"description": "Returns paginated list of all projects.",
+				"operationId": "list_projects_projects_get",
+				"security": [{ "OAuth2PasswordBearer": [] }],
+				"parameters": [
+					{
+						"name": "cursor",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"anyOf": [{ "type": "integer" }, { "type": "null" }],
+							"description": "Pagination cursor (project ID). Omit for first page.",
+							"title": "Cursor"
+						},
+						"description": "Pagination cursor (project ID). Omit for first page."
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"maximum": 100,
+							"minimum": 1,
+							"description": "Number of projects per page (1-100)",
+							"default": 20,
+							"title": "Limit"
+						},
+						"description": "Number of projects per page (1-100)"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Projects retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_CursorPage_ProjectBrief__" }
+							}
+						}
+					},
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Requires REGULAR qualification or higher" },
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			},
+			"post": {
+				"tags": ["Projects"],
+				"summary": "Create a new project",
+				"description": "Create a new project with initial members. Admin only.",
+				"operationId": "create_project_projects_post",
+				"security": [{ "OAuth2PasswordBearer": [] }],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": { "$ref": "#/components/schemas/ProjectCreateRequest" }
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Project created successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_ProjectDetail_" }
+							}
+						}
+					},
+					"400": { "description": "Validation error (e.g., no leader specified)" },
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Admin access required" },
+					"404": { "description": "One or more member user IDs not found" },
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/projects/{project_id}": {
+			"get": {
+				"tags": ["Projects"],
+				"summary": "Get project details",
+				"description": "Returns complete project information including active members.",
+				"operationId": "get_project_projects__project_id__get",
+				"security": [{ "OAuth2PasswordBearer": [] }],
+				"parameters": [
+					{
+						"name": "project_id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "title": "Project Id" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Project retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_ProjectDetail_" }
+							}
+						}
+					},
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Requires REGULAR qualification or higher" },
+					"404": { "description": "Project not found" },
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			},
+			"patch": {
+				"tags": ["Projects"],
+				"summary": "Update project",
+				"description": "Update project details. Requires leader or admin.",
+				"operationId": "update_project_projects__project_id__patch",
+				"security": [{ "OAuth2PasswordBearer": [] }],
+				"parameters": [
+					{
+						"name": "project_id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "title": "Project Id" }
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": { "$ref": "#/components/schemas/ProjectUpdateRequest" }
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Project updated successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_ProjectDetail_" }
+							}
+						}
+					},
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Must be project leader or admin" },
+					"404": { "description": "Project not found" },
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"tags": ["Projects"],
+				"summary": "Delete project",
+				"description": "Soft-delete a project. Admin only.",
+				"operationId": "delete_project_projects__project_id__delete",
+				"security": [{ "OAuth2PasswordBearer": [] }],
+				"parameters": [
+					{
+						"name": "project_id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "title": "Project Id" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Project deleted successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_NoneType_" }
+							}
+						}
+					},
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Admin access required" },
+					"404": { "description": "Project not found" },
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/projects/{project_id}/members": {
+			"post": {
+				"tags": ["Projects"],
+				"summary": "Add project member",
+				"description": "Add a user to the project. Requires leader or admin.",
+				"operationId": "add_project_member_projects__project_id__members_post",
+				"security": [{ "OAuth2PasswordBearer": [] }],
+				"parameters": [
+					{
+						"name": "project_id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "title": "Project Id" }
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": { "schema": { "$ref": "#/components/schemas/MemberInput" } }
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Member added successfully (or already exists)",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_ProjectDetail_" }
+							}
+						}
+					},
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Must be project leader or admin" },
+					"404": { "description": "Project or user not found" },
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/projects/{project_id}/members/{user_id}": {
+			"patch": {
+				"tags": ["Projects"],
+				"summary": "Update project member",
+				"description": "Update a member's role or position. Requires leader or admin.",
+				"operationId": "update_project_member_projects__project_id__members__user_id__patch",
+				"security": [{ "OAuth2PasswordBearer": [] }],
+				"parameters": [
+					{
+						"name": "project_id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "title": "Project Id" }
+					},
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "title": "User Id" }
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": { "schema": { "$ref": "#/components/schemas/MemberUpdateRequest" } }
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Member updated successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_ProjectDetail_" }
+							}
+						}
+					},
+					"400": { "description": "Cannot demote the last leader" },
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Must be project leader or admin" },
+					"404": { "description": "Project or member not found" },
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"tags": ["Projects"],
+				"summary": "Remove project member",
+				"description": "Remove a member from the project. Requires leader or admin.",
+				"operationId": "remove_project_member_projects__project_id__members__user_id__delete",
+				"security": [{ "OAuth2PasswordBearer": [] }],
+				"parameters": [
+					{
+						"name": "project_id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "title": "Project Id" }
+					},
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer", "title": "User Id" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Member removed successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_ProjectDetail_" }
+							}
+						}
+					},
+					"400": { "description": "Cannot remove the last leader, or cannot remove yourself" },
+					"401": { "description": "Not authenticated" },
+					"403": { "description": "Must be project leader or admin" },
+					"404": { "description": "Project or member not found" },
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/upload/presigned-url": {
+			"post": {
+				"tags": ["Upload"],
+				"summary": "Get Presigned Url",
+				"description": "Get presigned URL for S3 upload (requires associate or higher).\nCurrently returns mock URLs - actual S3 integration pending.",
+				"operationId": "get_presigned_url_upload_presigned_url_post",
+				"requestBody": {
+					"content": {
+						"application/json": { "schema": { "$ref": "#/components/schemas/PresignedUrlRequest" } }
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "Successful Response",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Response_PresignedUrlResponse_" }
+							}
+						}
+					},
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+							}
+						}
+					}
+				},
+				"security": [{ "OAuth2PasswordBearer": [] }]
+			}
+		},
+		"/health-check": {
+			"get": {
+				"summary": "Health Check",
+				"operationId": "health_check_health_check_get",
+				"responses": {
+					"200": {
+						"description": "Successful Response",
+						"content": { "application/json": { "schema": {} } }
+					}
+				}
+			}
+		},
+		"/health": {
+			"get": {
+				"summary": "Health",
+				"operationId": "health_health_get",
 				"responses": {
 					"200": {
 						"description": "Successful Response",
@@ -259,6 +965,109 @@
 	},
 	"components": {
 		"schemas": {
+			"ApproveRequest": {
+				"properties": {
+					"qualification": {
+						"$ref": "#/components/schemas/Qualification",
+						"description": "Target qualification level (cannot be PENDING). ASSOCIATE: basic member, REGULAR: standard member, ACTIVE: fully active member"
+					}
+				},
+				"type": "object",
+				"required": ["qualification"],
+				"title": "ApproveRequest",
+				"description": "Request body for approving a pending user."
+			},
+			"AuthResult": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": ["pending", "active"],
+						"title": "Status",
+						"description": "User status: 'pending' (awaiting approval), 'active' (approved)"
+					},
+					"user": { "$ref": "#/components/schemas/UserDetail", "description": "User details" }
+				},
+				"type": "object",
+				"required": ["status", "user"],
+				"title": "AuthResult",
+				"description": "Authentication result after signin/signup.\n\nToken is set via HttpOnly cookie, not returned in response body."
+			},
+			"AuthStatus": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": ["new", "pending", "active"],
+						"title": "Status",
+						"description": "Current authentication state: 'new' (needs signup), 'pending' (awaiting approval), 'active' (approved)"
+					},
+					"auth_token": {
+						"type": "string",
+						"title": "Auth Token",
+						"description": "Temporary auth token for signin/signup. Valid for 10 minutes.",
+						"examples": ["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."]
+					}
+				},
+				"type": "object",
+				"required": ["status", "auth_token"],
+				"title": "AuthStatus",
+				"description": "Authentication status after OAuth callback.\n\nStatus meanings:\n- `new`: User not registered. Frontend should redirect to signup flow.\n- `pending`: User registered but awaiting admin approval. Limited access.\n- `active`: User fully approved. Full access based on qualification level."
+			},
+			"CursorPage_ProjectBrief_": {
+				"properties": {
+					"items": {
+						"items": { "$ref": "#/components/schemas/ProjectBrief" },
+						"type": "array",
+						"title": "Items",
+						"description": "List of items in the current page"
+					},
+					"next_cursor": {
+						"anyOf": [{ "type": "integer" }, { "type": "null" }],
+						"title": "Next Cursor",
+						"description": "Cursor for the next page. Pass this as the 'cursor' query parameter. Null if no more items."
+					}
+				},
+				"type": "object",
+				"required": ["items"],
+				"title": "CursorPage[ProjectBrief]"
+			},
+			"CursorPage_UserDetail_": {
+				"properties": {
+					"items": {
+						"items": { "$ref": "#/components/schemas/UserDetail" },
+						"type": "array",
+						"title": "Items",
+						"description": "List of items in the current page"
+					},
+					"next_cursor": {
+						"anyOf": [{ "type": "integer" }, { "type": "null" }],
+						"title": "Next Cursor",
+						"description": "Cursor for the next page. Pass this as the 'cursor' query parameter. Null if no more items."
+					}
+				},
+				"type": "object",
+				"required": ["items"],
+				"title": "CursorPage[UserDetail]"
+			},
+			"GoogleTokenRequest": {
+				"properties": {
+					"code": {
+						"type": "string",
+						"title": "Code",
+						"description": "Authorization code received from Google OAuth callback",
+						"examples": ["4/0AX4XfWh..."]
+					},
+					"redirect_uri": {
+						"type": "string",
+						"title": "Redirect Uri",
+						"description": "The redirect URI used in the OAuth flow (must match the one used to get the code)",
+						"examples": ["https://myapp.com/auth/callback"]
+					}
+				},
+				"type": "object",
+				"required": ["code", "redirect_uri"],
+				"title": "GoogleTokenRequest",
+				"description": "Request body for exchanging Google authorization code for auth token."
+			},
 			"HTTPValidationError": {
 				"properties": {
 					"detail": {
@@ -270,53 +1079,926 @@
 				"type": "object",
 				"title": "HTTPValidationError"
 			},
-			"UserHistoryCreate": {
+			"HistoryAction": {
+				"type": "string",
+				"enum": [
+					"qualification_changed",
+					"admin_granted",
+					"admin_revoked",
+					"project_joined",
+					"project_left",
+					"project_role_changed"
+				],
+				"title": "HistoryAction"
+			},
+			"HistoryDetail": {
 				"properties": {
-					"userid": { "type": "integer", "title": "Userid" },
-					"type": { "$ref": "#/components/schemas/UserHistoryType" },
+					"id": {
+						"type": "integer",
+						"title": "Id",
+						"description": "Unique history entry identifier"
+					},
+					"action": {
+						"$ref": "#/components/schemas/HistoryAction",
+						"description": "Type of action recorded. Values: 'qualification_changed' (membership level changed), 'admin_granted' (admin privileges given), 'admin_revoked' (admin privileges removed), 'project_joined' (added to project), 'project_left' (removed from project), 'project_role_changed' (role changed within project)"
+					},
+					"payload": {
+						"additionalProperties": true,
+						"type": "object",
+						"title": "Payload",
+						"description": "Additional action-specific data. Structure varies by action type.",
+						"examples": [
+							{ "from": "pending", "to": "associate" },
+							{ "project_id": 1, "role": "member" }
+						]
+					},
+					"actor": {
+						"anyOf": [{ "$ref": "#/components/schemas/UserBrief" }, { "type": "null" }],
+						"description": "User who performed the action. Null for system actions."
+					},
+					"created_at": {
+						"type": "integer",
+						"title": "Created At",
+						"description": "Unix timestamp when the action occurred",
+						"examples": [1706745600]
+					}
+				},
+				"type": "object",
+				"required": ["id", "action", "payload", "actor", "created_at"],
+				"title": "HistoryDetail",
+				"description": "Audit log entry tracking user events.\n\nHistory actions include qualification changes, admin grants/revokes,\nand project membership changes."
+			},
+			"MemberDetail": {
+				"properties": {
+					"id": {
+						"type": "integer",
+						"title": "Id",
+						"description": "Unique membership record identifier"
+					},
+					"user": {
+						"$ref": "#/components/schemas/UserBrief",
+						"description": "Member's user information"
+					},
+					"role": {
+						"$ref": "#/components/schemas/MemberRole",
+						"description": "Member's role: 'leader' (project manager) or 'member' (participant)"
+					},
+					"position": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Position",
+						"description": "Member's position or responsibility in the project"
+					},
+					"joined_at": {
+						"anyOf": [{ "type": "string", "format": "date" }, { "type": "null" }],
+						"title": "Joined At",
+						"description": "Date when member joined the project"
+					},
+					"left_at": {
+						"anyOf": [{ "type": "string", "format": "date" }, { "type": "null" }],
+						"title": "Left At",
+						"description": "Date when member left the project. Null for active members."
+					}
+				},
+				"type": "object",
+				"required": ["id", "user", "role", "position", "joined_at", "left_at"],
+				"title": "MemberDetail",
+				"description": "Project member information including user details and role."
+			},
+			"MemberInput": {
+				"properties": {
+					"user_id": {
+						"type": "integer",
+						"title": "User Id",
+						"description": "ID of the user to add as member"
+					},
+					"role": {
+						"$ref": "#/components/schemas/MemberRole",
+						"description": "Member's role: 'leader' (can manage project) or 'member' (regular participant)"
+					},
+					"position": {
+						"anyOf": [{ "type": "string", "maxLength": 100 }, { "type": "null" }],
+						"title": "Position",
+						"description": "Member's position or responsibility in the project",
+						"examples": ["Backend Developer", "Project Manager", "Designer"]
+					}
+				},
+				"type": "object",
+				"required": ["user_id", "role"],
+				"title": "MemberInput",
+				"description": "Input for adding or specifying a project member."
+			},
+			"MemberRole": { "type": "string", "enum": ["leader", "member"], "title": "MemberRole" },
+			"MemberUpdateRequest": {
+				"properties": {
+					"role": {
+						"anyOf": [{ "$ref": "#/components/schemas/MemberRole" }, { "type": "null" }],
+						"description": "New role: 'leader' or 'member'. Cannot demote the last leader."
+					},
+					"position": {
+						"anyOf": [{ "type": "string", "maxLength": 100 }, { "type": "null" }],
+						"title": "Position",
+						"description": "New position or responsibility"
+					}
+				},
+				"type": "object",
+				"title": "MemberUpdateRequest",
+				"description": "Request body for updating a project member's role or position."
+			},
+			"PresignedUrlRequest": {
+				"properties": {
+					"filename": { "type": "string", "title": "Filename" },
+					"content_type": { "type": "string", "title": "Content Type" }
+				},
+				"type": "object",
+				"required": ["filename", "content_type"],
+				"title": "PresignedUrlRequest"
+			},
+			"PresignedUrlResponse": {
+				"properties": {
+					"upload_url": { "type": "string", "title": "Upload Url" },
+					"file_url": { "type": "string", "title": "File Url" }
+				},
+				"type": "object",
+				"required": ["upload_url", "file_url"],
+				"title": "PresignedUrlResponse"
+			},
+			"ProfileUpdateRequest": {
+				"properties": {
+					"phone": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Phone",
+						"description": "Contact phone number",
+						"examples": ["010-1234-5678"]
+					},
+					"affiliation": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Affiliation",
+						"description": "Current organization or company",
+						"examples": ["Waffle Studio"]
+					},
+					"bio": {
+						"anyOf": [{ "type": "string", "maxLength": 500 }, { "type": "null" }],
+						"title": "Bio",
+						"description": "Short self-introduction"
+					},
+					"avatar_url": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Avatar Url",
+						"description": "URL to profile image",
+						"examples": ["https://example.com/avatar.jpg"]
+					},
+					"github_username": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Github Username",
+						"description": "GitHub username (without @)",
+						"examples": ["octocat"]
+					},
+					"slack_id": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Slack Id",
+						"description": "Slack member ID for mentions",
+						"examples": ["U01ABC123DE"]
+					},
+					"websites": {
+						"anyOf": [
+							{ "items": { "$ref": "#/components/schemas/Website" }, "type": "array" },
+							{ "type": "null" }
+						],
+						"title": "Websites",
+						"description": "List of external websites or social links"
+					}
+				},
+				"type": "object",
+				"title": "ProfileUpdateRequest",
+				"description": "Request body for updating own profile. All fields are optional."
+			},
+			"ProjectBrief": {
+				"properties": {
+					"id": { "type": "integer", "title": "Id", "description": "Unique project identifier" },
+					"name": { "type": "string", "title": "Name", "description": "Project name" },
+					"status": {
+						"$ref": "#/components/schemas/ProjectStatus",
+						"description": "Current status: 'active', 'maintenance', or 'ended'"
+					},
+					"started_at": {
+						"type": "string",
+						"format": "date",
+						"title": "Started At",
+						"description": "Project start date"
+					},
+					"created_at": {
+						"type": "integer",
+						"title": "Created At",
+						"description": "Unix timestamp when project record was created"
+					}
+				},
+				"type": "object",
+				"required": ["id", "name", "status", "started_at", "created_at"],
+				"title": "ProjectBrief",
+				"description": "Summary project information for list views."
+			},
+			"ProjectCreateRequest": {
+				"properties": {
+					"name": {
+						"type": "string",
+						"maxLength": 200,
+						"minLength": 1,
+						"title": "Name",
+						"description": "Project name",
+						"examples": ["Waffle App", "Internal Dashboard"]
+					},
+					"description": {
+						"anyOf": [{ "type": "string", "maxLength": 5000 }, { "type": "null" }],
+						"title": "Description",
+						"description": "Detailed project description. Supports markdown.",
+						"examples": ["A mobile app for ordering waffles with real-time tracking."]
+					},
+					"status": {
+						"$ref": "#/components/schemas/ProjectStatus",
+						"description": "Project status: 'active' (ongoing development), 'maintenance' (stable, minimal updates), 'ended' (completed or discontinued)",
+						"default": "active"
+					},
+					"started_at": {
+						"type": "string",
+						"format": "date",
+						"title": "Started At",
+						"description": "Project start date",
+						"examples": ["2024-01-15"]
+					},
+					"ended_at": {
+						"anyOf": [{ "type": "string", "format": "date" }, { "type": "null" }],
+						"title": "Ended At",
+						"description": "Project end date. Null for ongoing projects.",
+						"examples": ["2024-06-30"]
+					},
+					"websites": {
+						"anyOf": [
+							{ "items": { "$ref": "#/components/schemas/Website" }, "type": "array" },
+							{ "type": "null" }
+						],
+						"title": "Websites",
+						"description": "Project-related links (repository, demo, documentation)"
+					},
+					"members": {
+						"items": { "$ref": "#/components/schemas/MemberInput" },
+						"type": "array",
+						"minItems": 1,
+						"title": "Members",
+						"description": "Initial project members. Must include at least one leader."
+					}
+				},
+				"type": "object",
+				"required": ["name", "started_at", "members"],
+				"title": "ProjectCreateRequest",
+				"description": "Request body for creating a new project."
+			},
+			"ProjectDetail": {
+				"properties": {
+					"id": { "type": "integer", "title": "Id", "description": "Unique project identifier" },
+					"name": { "type": "string", "title": "Name", "description": "Project name" },
+					"status": {
+						"$ref": "#/components/schemas/ProjectStatus",
+						"description": "Current status: 'active', 'maintenance', or 'ended'"
+					},
+					"started_at": {
+						"type": "string",
+						"format": "date",
+						"title": "Started At",
+						"description": "Project start date"
+					},
+					"created_at": {
+						"type": "integer",
+						"title": "Created At",
+						"description": "Unix timestamp when project record was created"
+					},
 					"description": {
 						"anyOf": [{ "type": "string" }, { "type": "null" }],
-						"title": "Description"
+						"title": "Description",
+						"description": "Detailed project description"
 					},
-					"curr_privilege": {
-						"anyOf": [{ "type": "string" }, { "type": "null" }],
-						"title": "Curr Privilege"
+					"ended_at": {
+						"anyOf": [{ "type": "string", "format": "date" }, { "type": "null" }],
+						"title": "Ended At",
+						"description": "Project end date. Null for ongoing projects."
 					},
-					"curr_time_stop": {
-						"anyOf": [{ "type": "integer" }, { "type": "null" }],
-						"title": "Curr Time Stop"
+					"websites": {
+						"anyOf": [
+							{ "items": { "$ref": "#/components/schemas/Website" }, "type": "array" },
+							{ "type": "null" }
+						],
+						"title": "Websites",
+						"description": "Project-related links"
 					},
-					"prev_privilege": {
-						"anyOf": [{ "type": "string" }, { "type": "null" }],
-						"title": "Prev Privilege"
-					},
-					"prev_time_stop": {
-						"anyOf": [{ "type": "integer" }, { "type": "null" }],
-						"title": "Prev Time Stop"
+					"members": {
+						"items": { "$ref": "#/components/schemas/MemberDetail" },
+						"type": "array",
+						"title": "Members",
+						"description": "Active project members (excludes members who have left)"
 					}
 				},
 				"type": "object",
-				"required": ["userid", "type"],
-				"title": "UserHistoryCreate"
+				"required": [
+					"id",
+					"name",
+					"status",
+					"started_at",
+					"created_at",
+					"description",
+					"ended_at",
+					"websites",
+					"members"
+				],
+				"title": "ProjectDetail",
+				"description": "Complete project information including members."
 			},
-			"UserHistoryType": {
+			"ProjectStatus": {
 				"type": "string",
-				"enum": ["join", "left", "discipline", "project_join", "project_left"],
-				"title": "UserHistoryType"
+				"enum": ["active", "maintenance", "ended"],
+				"title": "ProjectStatus"
 			},
-			"UserPendingCreate": {
+			"ProjectUpdateRequest": {
 				"properties": {
-					"google_id": { "type": "string", "title": "Google Id" },
-					"email": { "type": "string", "format": "email", "title": "Email" },
-					"name": { "type": "string", "title": "Name" },
-					"profile_picture": {
-						"anyOf": [{ "type": "string" }, { "type": "null" }],
-						"title": "Profile Picture"
+					"name": {
+						"anyOf": [{ "type": "string", "maxLength": 200, "minLength": 1 }, { "type": "null" }],
+						"title": "Name",
+						"description": "Project name"
+					},
+					"description": {
+						"anyOf": [{ "type": "string", "maxLength": 5000 }, { "type": "null" }],
+						"title": "Description",
+						"description": "Detailed project description"
+					},
+					"status": {
+						"anyOf": [{ "$ref": "#/components/schemas/ProjectStatus" }, { "type": "null" }],
+						"description": "Project status: 'active', 'maintenance', or 'ended'"
+					},
+					"started_at": {
+						"anyOf": [{ "type": "string", "format": "date" }, { "type": "null" }],
+						"title": "Started At",
+						"description": "Project start date"
+					},
+					"ended_at": {
+						"anyOf": [{ "type": "string", "format": "date" }, { "type": "null" }],
+						"title": "Ended At",
+						"description": "Project end date"
+					},
+					"websites": {
+						"anyOf": [
+							{ "items": { "$ref": "#/components/schemas/Website" }, "type": "array" },
+							{ "type": "null" }
+						],
+						"title": "Websites",
+						"description": "Project-related links"
 					}
 				},
 				"type": "object",
-				"required": ["google_id", "email", "name"],
-				"title": "UserPendingCreate"
+				"title": "ProjectUpdateRequest",
+				"description": "Request body for updating project details. All fields are optional."
+			},
+			"Qualification": {
+				"type": "string",
+				"enum": ["pending", "associate", "regular", "active"],
+				"title": "Qualification"
+			},
+			"Response_AuthResult_": {
+				"properties": {
+					"ok": {
+						"type": "boolean",
+						"title": "Ok",
+						"description": "Indicates whether the request was successful",
+						"default": true
+					},
+					"data": {
+						"anyOf": [{ "$ref": "#/components/schemas/AuthResult" }, { "type": "null" }],
+						"description": "Response payload. Contains the requested data on success."
+					},
+					"error": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Error",
+						"description": "Error code for programmatic error handling (e.g., 'NOT_FOUND', 'FORBIDDEN')"
+					},
+					"message": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Message",
+						"description": "Human-readable message providing additional context"
+					}
+				},
+				"type": "object",
+				"title": "Response[AuthResult]"
+			},
+			"Response_AuthStatus_": {
+				"properties": {
+					"ok": {
+						"type": "boolean",
+						"title": "Ok",
+						"description": "Indicates whether the request was successful",
+						"default": true
+					},
+					"data": {
+						"anyOf": [{ "$ref": "#/components/schemas/AuthStatus" }, { "type": "null" }],
+						"description": "Response payload. Contains the requested data on success."
+					},
+					"error": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Error",
+						"description": "Error code for programmatic error handling (e.g., 'NOT_FOUND', 'FORBIDDEN')"
+					},
+					"message": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Message",
+						"description": "Human-readable message providing additional context"
+					}
+				},
+				"type": "object",
+				"title": "Response[AuthStatus]"
+			},
+			"Response_CursorPage_ProjectBrief__": {
+				"properties": {
+					"ok": {
+						"type": "boolean",
+						"title": "Ok",
+						"description": "Indicates whether the request was successful",
+						"default": true
+					},
+					"data": {
+						"anyOf": [
+							{ "$ref": "#/components/schemas/CursorPage_ProjectBrief_" },
+							{ "type": "null" }
+						],
+						"description": "Response payload. Contains the requested data on success."
+					},
+					"error": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Error",
+						"description": "Error code for programmatic error handling (e.g., 'NOT_FOUND', 'FORBIDDEN')"
+					},
+					"message": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Message",
+						"description": "Human-readable message providing additional context"
+					}
+				},
+				"type": "object",
+				"title": "Response[CursorPage[ProjectBrief]]"
+			},
+			"Response_CursorPage_UserDetail__": {
+				"properties": {
+					"ok": {
+						"type": "boolean",
+						"title": "Ok",
+						"description": "Indicates whether the request was successful",
+						"default": true
+					},
+					"data": {
+						"anyOf": [
+							{ "$ref": "#/components/schemas/CursorPage_UserDetail_" },
+							{ "type": "null" }
+						],
+						"description": "Response payload. Contains the requested data on success."
+					},
+					"error": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Error",
+						"description": "Error code for programmatic error handling (e.g., 'NOT_FOUND', 'FORBIDDEN')"
+					},
+					"message": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Message",
+						"description": "Human-readable message providing additional context"
+					}
+				},
+				"type": "object",
+				"title": "Response[CursorPage[UserDetail]]"
+			},
+			"Response_NoneType_": {
+				"properties": {
+					"ok": {
+						"type": "boolean",
+						"title": "Ok",
+						"description": "Indicates whether the request was successful",
+						"default": true
+					},
+					"data": {
+						"type": "null",
+						"title": "Data",
+						"description": "Response payload. Contains the requested data on success."
+					},
+					"error": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Error",
+						"description": "Error code for programmatic error handling (e.g., 'NOT_FOUND', 'FORBIDDEN')"
+					},
+					"message": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Message",
+						"description": "Human-readable message providing additional context"
+					}
+				},
+				"type": "object",
+				"title": "Response[NoneType]"
+			},
+			"Response_PresignedUrlResponse_": {
+				"properties": {
+					"ok": {
+						"type": "boolean",
+						"title": "Ok",
+						"description": "Indicates whether the request was successful",
+						"default": true
+					},
+					"data": {
+						"anyOf": [{ "$ref": "#/components/schemas/PresignedUrlResponse" }, { "type": "null" }],
+						"description": "Response payload. Contains the requested data on success."
+					},
+					"error": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Error",
+						"description": "Error code for programmatic error handling (e.g., 'NOT_FOUND', 'FORBIDDEN')"
+					},
+					"message": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Message",
+						"description": "Human-readable message providing additional context"
+					}
+				},
+				"type": "object",
+				"title": "Response[PresignedUrlResponse]"
+			},
+			"Response_ProjectDetail_": {
+				"properties": {
+					"ok": {
+						"type": "boolean",
+						"title": "Ok",
+						"description": "Indicates whether the request was successful",
+						"default": true
+					},
+					"data": {
+						"anyOf": [{ "$ref": "#/components/schemas/ProjectDetail" }, { "type": "null" }],
+						"description": "Response payload. Contains the requested data on success."
+					},
+					"error": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Error",
+						"description": "Error code for programmatic error handling (e.g., 'NOT_FOUND', 'FORBIDDEN')"
+					},
+					"message": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Message",
+						"description": "Human-readable message providing additional context"
+					}
+				},
+				"type": "object",
+				"title": "Response[ProjectDetail]"
+			},
+			"Response_UserDetail_": {
+				"properties": {
+					"ok": {
+						"type": "boolean",
+						"title": "Ok",
+						"description": "Indicates whether the request was successful",
+						"default": true
+					},
+					"data": {
+						"anyOf": [{ "$ref": "#/components/schemas/UserDetail" }, { "type": "null" }],
+						"description": "Response payload. Contains the requested data on success."
+					},
+					"error": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Error",
+						"description": "Error code for programmatic error handling (e.g., 'NOT_FOUND', 'FORBIDDEN')"
+					},
+					"message": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Message",
+						"description": "Human-readable message providing additional context"
+					}
+				},
+				"type": "object",
+				"title": "Response[UserDetail]"
+			},
+			"Response_list_HistoryDetail__": {
+				"properties": {
+					"ok": {
+						"type": "boolean",
+						"title": "Ok",
+						"description": "Indicates whether the request was successful",
+						"default": true
+					},
+					"data": {
+						"anyOf": [
+							{ "items": { "$ref": "#/components/schemas/HistoryDetail" }, "type": "array" },
+							{ "type": "null" }
+						],
+						"title": "Data",
+						"description": "Response payload. Contains the requested data on success."
+					},
+					"error": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Error",
+						"description": "Error code for programmatic error handling (e.g., 'NOT_FOUND', 'FORBIDDEN')"
+					},
+					"message": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Message",
+						"description": "Human-readable message providing additional context"
+					}
+				},
+				"type": "object",
+				"title": "Response[list[HistoryDetail]]"
+			},
+			"Response_list_ProjectBrief__": {
+				"properties": {
+					"ok": {
+						"type": "boolean",
+						"title": "Ok",
+						"description": "Indicates whether the request was successful",
+						"default": true
+					},
+					"data": {
+						"anyOf": [
+							{ "items": { "$ref": "#/components/schemas/ProjectBrief" }, "type": "array" },
+							{ "type": "null" }
+						],
+						"title": "Data",
+						"description": "Response payload. Contains the requested data on success."
+					},
+					"error": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Error",
+						"description": "Error code for programmatic error handling (e.g., 'NOT_FOUND', 'FORBIDDEN')"
+					},
+					"message": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Message",
+						"description": "Human-readable message providing additional context"
+					}
+				},
+				"type": "object",
+				"title": "Response[list[ProjectBrief]]"
+			},
+			"Response_list_UserDetail__": {
+				"properties": {
+					"ok": {
+						"type": "boolean",
+						"title": "Ok",
+						"description": "Indicates whether the request was successful",
+						"default": true
+					},
+					"data": {
+						"anyOf": [
+							{ "items": { "$ref": "#/components/schemas/UserDetail" }, "type": "array" },
+							{ "type": "null" }
+						],
+						"title": "Data",
+						"description": "Response payload. Contains the requested data on success."
+					},
+					"error": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Error",
+						"description": "Error code for programmatic error handling (e.g., 'NOT_FOUND', 'FORBIDDEN')"
+					},
+					"message": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Message",
+						"description": "Human-readable message providing additional context"
+					}
+				},
+				"type": "object",
+				"title": "Response[list[UserDetail]]"
+			},
+			"SigninRequest": {
+				"properties": {
+					"auth_token": {
+						"type": "string",
+						"title": "Auth Token",
+						"description": "Temporary auth token received from OAuth callback",
+						"examples": ["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."]
+					}
+				},
+				"type": "object",
+				"required": ["auth_token"],
+				"title": "SigninRequest",
+				"description": "Request body for signing in with an auth token."
+			},
+			"SignupRequest": {
+				"properties": {
+					"auth_token": {
+						"type": "string",
+						"title": "Auth Token",
+						"description": "Temporary auth token received from OAuth callback",
+						"examples": ["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."]
+					},
+					"name": {
+						"type": "string",
+						"maxLength": 100,
+						"minLength": 1,
+						"title": "Name",
+						"description": "User's display name",
+						"examples": ["John Doe"]
+					},
+					"phone": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Phone",
+						"description": "Contact phone number",
+						"examples": ["010-1234-5678"]
+					},
+					"affiliation": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Affiliation",
+						"description": "Current organization or company",
+						"examples": ["Waffle Studio", "Seoul National University"]
+					},
+					"bio": {
+						"anyOf": [{ "type": "string", "maxLength": 500 }, { "type": "null" }],
+						"title": "Bio",
+						"description": "Short self-introduction",
+						"examples": ["Backend developer interested in distributed systems"]
+					},
+					"github_username": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Github Username",
+						"description": "GitHub username (without @)",
+						"examples": ["octocat"]
+					}
+				},
+				"type": "object",
+				"required": ["auth_token", "name"],
+				"title": "SignupRequest",
+				"description": "Request body for completing user registration after OAuth."
+			},
+			"UserBrief": {
+				"properties": {
+					"id": { "type": "integer", "title": "Id", "description": "Unique user identifier" },
+					"name": { "type": "string", "title": "Name", "description": "User's display name" },
+					"email": { "type": "string", "title": "Email", "description": "User's email address" },
+					"avatar_url": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Avatar Url",
+						"description": "URL to profile image"
+					}
+				},
+				"type": "object",
+				"required": ["id", "name", "email", "avatar_url"],
+				"title": "UserBrief",
+				"description": "Minimal user information for references in other objects."
+			},
+			"UserDetail": {
+				"properties": {
+					"id": { "type": "integer", "title": "Id", "description": "Unique user identifier" },
+					"email": {
+						"type": "string",
+						"title": "Email",
+						"description": "User's email address (from OAuth provider)",
+						"examples": ["user@example.com"]
+					},
+					"name": {
+						"type": "string",
+						"title": "Name",
+						"description": "User's display name",
+						"examples": ["John Doe"]
+					},
+					"generation": {
+						"type": "string",
+						"title": "Generation",
+						"description": "Generation/cohort identifier",
+						"examples": ["24.5", "25.0"]
+					},
+					"qualification": {
+						"$ref": "#/components/schemas/Qualification",
+						"description": "Membership level determining access. PENDING < ASSOCIATE < REGULAR < ACTIVE"
+					},
+					"is_admin": {
+						"type": "boolean",
+						"title": "Is Admin",
+						"description": "Whether user has admin privileges for user/project management"
+					},
+					"phone": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Phone",
+						"description": "Contact phone number"
+					},
+					"affiliation": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Affiliation",
+						"description": "Current organization or company"
+					},
+					"bio": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Bio",
+						"description": "Short self-introduction"
+					},
+					"avatar_url": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Avatar Url",
+						"description": "URL to profile image"
+					},
+					"github_username": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Github Username",
+						"description": "GitHub username"
+					},
+					"slack_id": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Slack Id",
+						"description": "Slack member ID"
+					},
+					"websites": {
+						"anyOf": [
+							{ "items": { "$ref": "#/components/schemas/Website" }, "type": "array" },
+							{ "type": "null" }
+						],
+						"title": "Websites",
+						"description": "External websites or links"
+					},
+					"created_at": {
+						"type": "integer",
+						"title": "Created At",
+						"description": "Unix timestamp when user was created",
+						"examples": [1706745600]
+					}
+				},
+				"type": "object",
+				"required": [
+					"id",
+					"email",
+					"name",
+					"generation",
+					"qualification",
+					"is_admin",
+					"phone",
+					"affiliation",
+					"bio",
+					"avatar_url",
+					"github_username",
+					"slack_id",
+					"websites",
+					"created_at"
+				],
+				"title": "UserDetail",
+				"description": "Complete user profile information."
+			},
+			"UserUpdateRequest": {
+				"properties": {
+					"phone": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Phone",
+						"description": "Contact phone number",
+						"examples": ["010-1234-5678"]
+					},
+					"affiliation": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Affiliation",
+						"description": "Current organization or company",
+						"examples": ["Waffle Studio"]
+					},
+					"bio": {
+						"anyOf": [{ "type": "string", "maxLength": 500 }, { "type": "null" }],
+						"title": "Bio",
+						"description": "Short self-introduction"
+					},
+					"avatar_url": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Avatar Url",
+						"description": "URL to profile image",
+						"examples": ["https://example.com/avatar.jpg"]
+					},
+					"github_username": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Github Username",
+						"description": "GitHub username (without @)",
+						"examples": ["octocat"]
+					},
+					"slack_id": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Slack Id",
+						"description": "Slack member ID for mentions",
+						"examples": ["U01ABC123DE"]
+					},
+					"websites": {
+						"anyOf": [
+							{ "items": { "$ref": "#/components/schemas/Website" }, "type": "array" },
+							{ "type": "null" }
+						],
+						"title": "Websites",
+						"description": "List of external websites or social links"
+					},
+					"name": {
+						"anyOf": [{ "type": "string", "maxLength": 100, "minLength": 1 }, { "type": "null" }],
+						"title": "Name",
+						"description": "User's display name"
+					},
+					"qualification": {
+						"anyOf": [{ "$ref": "#/components/schemas/Qualification" }, { "type": "null" }],
+						"description": "Membership qualification level. PENDING: awaiting approval, ASSOCIATE: approved but limited access, REGULAR: standard member, ACTIVE: fully active member with all privileges"
+					},
+					"is_admin": {
+						"anyOf": [{ "type": "boolean" }, { "type": "null" }],
+						"title": "Is Admin",
+						"description": "Whether user has admin privileges"
+					}
+				},
+				"type": "object",
+				"title": "UserUpdateRequest",
+				"description": "Request body for admin to update any user.\nExtends ProfileUpdateRequest with admin-only fields."
 			},
 			"ValidationError": {
 				"properties": {
@@ -331,6 +2013,38 @@
 				"type": "object",
 				"required": ["loc", "msg", "type"],
 				"title": "ValidationError"
+			},
+			"Website": {
+				"properties": {
+					"url": {
+						"type": "string",
+						"title": "Url",
+						"description": "Full URL including protocol",
+						"examples": ["https://github.com/username", "https://linkedin.com/in/username"]
+					},
+					"type": {
+						"type": "string",
+						"title": "Type",
+						"description": "Type of website",
+						"examples": ["github", "linkedin", "portfolio", "blog", "other"]
+					},
+					"description": {
+						"anyOf": [{ "type": "string" }, { "type": "null" }],
+						"title": "Description",
+						"description": "Optional description of the website",
+						"examples": ["My personal blog about tech"]
+					}
+				},
+				"type": "object",
+				"required": ["url", "type"],
+				"title": "Website",
+				"description": "External website or link associated with a user or project."
+			}
+		},
+		"securitySchemes": {
+			"OAuth2PasswordBearer": {
+				"type": "oauth2",
+				"flows": { "password": { "scopes": {}, "tokenUrl": "auth/google" } }
 			}
 		}
 	}

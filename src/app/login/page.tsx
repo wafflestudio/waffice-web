@@ -48,8 +48,24 @@ export default function LoginPage() {
 		setAuthError(error)
 	}
 
-	const handleDevSigninSuccess = (result: AuthResult) => {
+	const handleDevSigninSuccess = async (result: AuthResult) => {
 		setAuthError(null)
+
+		// 로그인 성공 후 인증 상태 확인
+		try {
+			const authStatus = await authClient.getMe()
+			console.log("Auth status after dev signin:", authStatus)
+
+			if (!authStatus.ok) {
+				setAuthError("로그인 후 인증 확인 실패. 쿠키가 설정되지 않았을 수 있습니다.")
+				return
+			}
+		} catch (error) {
+			console.error("Failed to verify auth status:", error)
+			setAuthError("인증 확인 실패. 브라우저 콘솔을 확인하세요.")
+			return
+		}
+
 		if (result.status === "pending") {
 			router.push("/signup/pending")
 		} else {
