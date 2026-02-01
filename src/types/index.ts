@@ -212,6 +212,8 @@ export interface MemberCreate {
 	name: string
 	email: string
 	phone?: string
+	github_username?: string
+	slack_id?: string
 	status?: "active" | "inactive" | "suspended"
 	affiliation?: EnrollmentStatus
 	access_rights?: AccessRight[]
