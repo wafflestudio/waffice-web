@@ -3,12 +3,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
 import { useState } from "react"
+import { Forbidden } from "@/components/error/forbidden"
 import { ProjectForm } from "@/components/projects/project-form"
 import { ProjectTable } from "@/components/projects/project-table"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { apiClient } from "@/lib/api"
-import type { ProjectCreate, ProjectUpdate } from "@/types"
+import type { Project, ProjectCreate, ProjectUpdate } from "@/types"
 
 export default function ProjectsPage() {
 	const queryClient = useQueryClient()
@@ -18,9 +19,16 @@ export default function ProjectsPage() {
 		data: projects = [],
 		isLoading,
 		error,
-	} = useQuery({
+	} = useQuery<Project[], Error>({
 		queryKey: ["projects"],
-		queryFn: () => apiClient.getProjects(),
+		queryFn: async () => {
+			const response = await apiClient.getProjects()
+			// API가 배열을 직접 반환하거나 ApiResponse 형태일 수 있음
+			if (Array.isArray(response)) {
+				return response
+			}
+			return []
+		},
 	})
 
 	const createProjectMutation = useMutation({
@@ -69,6 +77,13 @@ export default function ProjectsPage() {
 	}
 
 	if (error) {
+		// 403 에러 처리
+		if (error.message?.includes("403")) {
+			return (
+				<Forbidden message="프로젝트 관리 페이지에 접근할 권한이 없습니다. 관리자 권한이 필요합니다." />
+			)
+		}
+
 		return (
 			<div className="flex items-center justify-center h-64">
 				<div className="text-lg text-destructive">

@@ -6,6 +6,7 @@ import type {
 	Member,
 	MemberCreate,
 	MemberUpdate,
+	MyPageProfileUpdateRequest,
 	Project,
 	ProjectCreate,
 	ProjectUpdate,
@@ -17,7 +18,12 @@ import type {
 	UserUpdateRequest,
 } from "@/types"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+// Use proxy in development to avoid CORS/cookie issues
+const API_BASE_URL =
+	typeof window !== "undefined" && window.location.hostname === "localhost"
+		? "/api/proxy"
+		: EXTERNAL_API_URL
 
 class ApiClient {
 	private baseUrl: string
@@ -44,6 +50,20 @@ class ApiClient {
 		}
 
 		return response.json()
+	}
+
+	// ============================================================================
+	// Current User API (MyPage)
+	// ============================================================================
+
+	/**
+	 * Update current user's profile
+	 */
+	async updateMyProfile(request: MyPageProfileUpdateRequest): Promise<ApiResponse<UserDetail>> {
+		return this.request<ApiResponse<UserDetail>>("/users/me", {
+			method: "PATCH",
+			body: JSON.stringify(request),
+		})
 	}
 
 	// ============================================================================

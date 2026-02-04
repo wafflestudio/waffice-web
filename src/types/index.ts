@@ -118,6 +118,19 @@ export interface ProfileUpdateRequest {
 	websites?: Website[] | null
 }
 
+// Extended profile for mypage (includes additional UI fields)
+export interface MyPageProfileUpdateRequest extends ProfileUpdateRequest {
+	name?: string | null
+	generation?: string | null
+	enrollment_status?: EnrollmentStatus | null
+	student_id?: string | null
+	major?: string | null
+	school_email?: string | null
+	position?: string | null
+	sms_notification?: boolean | null
+	email_notification?: boolean | null
+}
+
 export interface UserUpdateRequest extends ProfileUpdateRequest {
 	name?: string | null
 	qualification?: Qualification | null
