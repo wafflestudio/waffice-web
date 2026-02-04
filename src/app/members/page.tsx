@@ -99,6 +99,7 @@ export default function MembersPage() {
 				} else {
 					setError(message)
 				}
+				setError(err instanceof Error ? err.message : "회원 목록을 불러오는데 실패했습니다.")
 			} finally {
 				setIsLoading(false)
 			}

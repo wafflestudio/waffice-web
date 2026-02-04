@@ -109,6 +109,7 @@ export default function MemberApplicationsPage() {
 				} else {
 					setError(message)
 				}
+				setError(err instanceof Error ? err.message : "유저 목록을 불러오는데 실패했습니다.")
 			} finally {
 				setIsLoading(false)
 			}
