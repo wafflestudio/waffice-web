@@ -7,13 +7,20 @@ import type {
 	SignupRequest,
 } from "@/types"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+// Use proxy in development to avoid CORS/cookie issues
+const API_BASE_URL =
+	typeof window !== "undefined" && window.location.hostname === "localhost"
+		? "/api/proxy"
+		: EXTERNAL_API_URL
 
 class AuthClient {
 	private baseUrl: string
+	private externalUrl: string
 
-	constructor(baseUrl: string) {
+	constructor(baseUrl: string, externalUrl: string) {
 		this.baseUrl = baseUrl
+		this.externalUrl = externalUrl
 	}
 
 	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -36,9 +43,10 @@ class AuthClient {
 		return response.json()
 	}
 
+	// Google OAuth URL needs the external URL (browser redirect, not fetch)
 	getGoogleAuthUrl(redirectUri: string): string {
 		const params = new URLSearchParams({ redirect_uri: redirectUri })
-		return `${this.baseUrl}/auth/google?${params.toString()}`
+		return `${this.externalUrl}/auth/google?${params.toString()}`
 	}
 
 	async exchangeCodeForToken(request: GoogleTokenRequest): Promise<GoogleTokenResponse> {
@@ -78,4 +86,4 @@ class AuthClient {
 	}
 }
 
-export const authClient = new AuthClient(API_BASE_URL)
+export const authClient = new AuthClient(API_BASE_URL, EXTERNAL_API_URL)

@@ -2,6 +2,7 @@
 
 import { Loader2, Search } from "lucide-react"
 import { useEffect, useId, useState } from "react"
+import { Forbidden } from "@/components/error/forbidden"
 import { MemberTable } from "@/components/members/member-table"
 import { Button } from "@/components/ui/button"
 import {
@@ -75,6 +76,7 @@ export default function MembersPage() {
 	const [members, setMembers] = useState<Member[]>([])
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
+	const [isForbidden, setIsForbidden] = useState(false)
 	const reasonId = useId()
 
 	// 회원 목록 불러오기
@@ -82,6 +84,7 @@ export default function MembersPage() {
 		const fetchMembers = async () => {
 			try {
 				setIsLoading(true)
+				setIsForbidden(false)
 				const response = await apiClient.getUsers(undefined, 100)
 				if (response.ok && response.data) {
 					const memberList = response.data.items.map(userDetailToMember)
@@ -90,6 +93,12 @@ export default function MembersPage() {
 					setError(response.message || "회원 목록을 불러오는데 실패했습니다.")
 				}
 			} catch (err) {
+				const message = err instanceof Error ? err.message : "회원 목록을 불러오는데 실패했습니다."
+				if (message.includes("403")) {
+					setIsForbidden(true)
+				} else {
+					setError(message)
+				}
 				setError(err instanceof Error ? err.message : "회원 목록을 불러오는데 실패했습니다.")
 			} finally {
 				setIsLoading(false)
@@ -213,6 +222,12 @@ export default function MembersPage() {
 			<div className="flex items-center justify-center min-h-screen">
 				<Loader2 className="h-8 w-8 animate-spin text-primary" />
 			</div>
+		)
+	}
+
+	if (isForbidden) {
+		return (
+			<Forbidden message="회원 관리 페이지에 접근할 권한이 없습니다. 관리자 권한이 필요합니다." />
 		)
 	}
 
