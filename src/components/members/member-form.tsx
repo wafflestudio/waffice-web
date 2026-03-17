@@ -13,6 +13,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { AccessRight, Member, MemberCreate, MemberUpdate } from "@/types"
 
@@ -21,11 +22,11 @@ const memberSchema = z.object({
 	name: z.string().min(1),
 	role: z.enum(["활동회원", "준회원", "정회원"]),
 	generation: z.string().optional(),
-	email: z.string().email().optional(),
+	email: z.string().email().or(z.literal("")).optional(),
 	github_username: z.string().optional(),
 	slack_id: z.string().optional(),
 	phone: z.string().optional(),
-	affiliation: z.enum(["학부생", "휴학생", "졸업생"]).optional(),
+	affiliation: z.enum(["학부생", "휴학생", "졸업생"]).or(z.literal("")).optional(),
 	access_rights: z.array(z.enum(["운영진", "팀장"])).optional(),
 	created_at: z.string().optional(),
 })
@@ -35,12 +36,14 @@ type MemberFormData = z.infer<typeof memberSchema>
 interface MemberFormProps {
 	member?: Member
 	onSubmit: (data: MemberCreate | MemberUpdate) => Promise<void>
+	onCancel?: () => void
 	trigger?: React.ReactNode
 }
 
-export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
+export function MemberForm({ member, onSubmit, onCancel, trigger }: MemberFormProps) {
 	const [open, setOpen] = useState(false)
 	const isEdit = !!member
+	const isCreateMode = !member
 
 	const {
 		register,
@@ -105,15 +108,37 @@ export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
 
 	const handleFormSubmit = async (data: MemberFormData) => {
 		try {
-			// 사용자가 변경 가능한 필드(role, affiliation, access_rights)만 부모로 전달
-			const payload: MemberUpdate = {
-				role: data.role,
-				affiliation: data.affiliation,
-				access_rights: data.access_rights,
+			// 새 회원 생성은 name/email/기본 메타만 전송하고,
+			// 회원 정보 수정은 변경 가능한 필드만 전송한다.
+			if (isCreateMode) {
+				const payload: MemberCreate = {
+					name: data.name,
+					email: data.email || "",
+				}
+				if (data.email) {
+					payload.email = data.email
+				}
+				if (data.affiliation) {
+					payload.affiliation = data.affiliation as Member["affiliation"]
+				}
+				if (data.access_rights?.length) {
+					payload.access_rights = data.access_rights
+				}
+				await onSubmit(payload)
+			} else {
+				const payload: MemberUpdate = {
+					role: data.role,
+					access_rights: data.access_rights,
+				}
+				if (data.affiliation) {
+					payload.affiliation = data.affiliation
+				}
+				await onSubmit(payload)
 			}
 
-			await onSubmit(payload)
-			setOpen(false)
+			if (isEdit) {
+				setOpen(false)
+			}
 			reset()
 		} catch (error) {
 			console.error("Error submitting form:", error)
@@ -125,7 +150,11 @@ export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
 			<div className="grid grid-cols-3 gap-4 items-center">
 				<Label className="col-span-1">이름</Label>
 				<div className="col-span-2">
-					<div className="text-sm text-gray-700">{member?.name ?? ""}</div>
+					{isCreateMode ? (
+						<Input {...register("name")} placeholder="이름을 입력해 주세요" />
+					) : (
+						<div className="text-sm text-gray-700">{member?.name ?? ""}</div>
+					)}
 				</div>
 
 				<Label className="col-span-1">자격</Label>
@@ -147,7 +176,12 @@ export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
 
 				<Label className="col-span-1">이메일</Label>
 				<div className="col-span-2">
-					<div className="text-sm text-gray-700">{member?.email ?? ""}</div>
+					{isCreateMode ? (
+						<Input {...register("email")} placeholder="이메일을 입력해 주세요" />
+					) : null}
+					{!isCreateMode ? (
+						<div className="text-sm text-gray-700">{member?.email ?? ""}</div>
+					) : null}
 				</div>
 
 				<Label className="col-span-1">Github 아이디</Label>
@@ -208,7 +242,17 @@ export function MemberForm({ member, onSubmit, trigger }: MemberFormProps) {
 			</div>
 
 			<div className="flex justify-end space-x-2">
-				<Button type="button" variant="outline" onClick={() => setOpen(false)}>
+				<Button
+					type="button"
+					variant="outline"
+					onClick={() => {
+						if (onCancel) {
+							onCancel()
+							return
+						}
+						setOpen(false)
+					}}
+				>
 					취소
 				</Button>
 				<Button type="submit" disabled={isSubmitting} className="bg-[#FF6B6B] text-white">

@@ -1,8 +1,10 @@
 "use client"
 
-import { Loader2, Search } from "lucide-react"
-import { useEffect, useId, useState } from "react"
+import { Loader2, Plus, Search } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useCallback, useEffect, useId, useState } from "react"
 import { Forbidden } from "@/components/error/forbidden"
+import { MemberForm } from "@/components/members/member-form"
 import { MemberTable } from "@/components/members/member-table"
 import { Button } from "@/components/ui/button"
 import {
@@ -65,10 +67,13 @@ const userDetailToMember = (user: UserDetail): Member => ({
 })
 
 export default function MembersPage() {
+	const router = useRouter()
+
 	const [searchQuery, setSearchQuery] = useState("")
 	const [currentPage, setCurrentPage] = useState(1)
 	const [selectedMembers, setSelectedMembers] = useState<number[]>([])
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
+	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 	const [newRole, setNewRole] = useState<string>("")
 	const [changeReason, setChangeReason] = useState("")
 	const [showToast, setShowToast] = useState(false)
@@ -80,33 +85,60 @@ export default function MembersPage() {
 	const reasonId = useId()
 
 	// 회원 목록 불러오기
-	useEffect(() => {
-		const fetchMembers = async () => {
-			try {
-				setIsLoading(true)
-				setIsForbidden(false)
-				const response = await apiClient.getUsers(undefined, 100)
-				if (response.ok && response.data) {
-					const memberList = response.data.items.map(userDetailToMember)
-					setMembers(memberList)
-				} else {
-					setError(response.message || "회원 목록을 불러오는데 실패했습니다.")
-				}
-			} catch (err) {
-				const message = err instanceof Error ? err.message : "회원 목록을 불러오는데 실패했습니다."
-				if (message.includes("403")) {
-					setIsForbidden(true)
-				} else {
-					setError(message)
-				}
-				setError(err instanceof Error ? err.message : "회원 목록을 불러오는데 실패했습니다.")
-			} finally {
-				setIsLoading(false)
+	const fetchMembers = useCallback(async () => {
+		try {
+			setIsLoading(true)
+			setIsForbidden(false)
+			const response = await apiClient.getUsers(undefined, 100)
+			if (response.ok && response.data) {
+				const memberList = response.data.items.map(userDetailToMember)
+				setMembers(memberList)
+			} else {
+				setError(response.message || "회원 목록을 불러오는데 실패했습니다.")
 			}
+		} catch (err) {
+			const message = err instanceof Error ? err.message : "회원 목록을 불러오는데 실패했습니다."
+			if (message.includes("403")) {
+				setIsForbidden(true)
+			} else {
+				setError(message)
+			}
+			setError(err instanceof Error ? err.message : "회원 목록을 불러오는데 실패했습니다.")
+		} finally {
+			setIsLoading(false)
 		}
-
-		fetchMembers()
 	}, [])
+
+	useEffect(() => {
+		fetchMembers()
+	}, [fetchMembers])
+
+	useEffect(() => {
+		if (window.location.search.includes("quick=add")) {
+			setIsCreateDialogOpen(true)
+		}
+	}, [])
+
+	const closeCreateDialog = () => {
+		setIsCreateDialogOpen(false)
+		if (window.location.search.includes("quick=add")) {
+			router.replace("/members")
+		}
+	}
+
+	const handleCreateMember = async (data: MemberCreate | MemberUpdate) => {
+		const createData = data as MemberCreate
+		try {
+			const response = await apiClient.createMember(createData)
+			setMembers((prev) => [response, ...prev])
+			setToastMessage("새 회원이 추가되었습니다.")
+			setShowToast(true)
+			closeCreateDialog()
+		} catch (err) {
+			setToastMessage(err instanceof Error ? err.message : "회원 추가에 실패했습니다.")
+			setShowToast(true)
+		}
+	}
 
 	// 회원 정보 수정 핸들러
 	const handleMemberUpdate = async (id: number, data: MemberCreate | MemberUpdate) => {
@@ -253,6 +285,14 @@ export default function MembersPage() {
 					<h2 className="text-lg font-medium">
 						전체 회원 ({members.length.toString().padStart(2, "0")})
 					</h2>
+					<Button
+						variant="default"
+						className="bg-[#FF6B6B] hover:bg-[#FF5252] text-white"
+						onClick={() => setIsCreateDialogOpen(true)}
+					>
+						<Plus className="mr-2 h-4 w-4" />
+						회원 추가
+					</Button>
 				</div>
 
 				<div className="flex items-center gap-3">
@@ -350,6 +390,15 @@ export default function MembersPage() {
 							변경
 						</Button>
 					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			<Dialog open={isCreateDialogOpen} onOpenChange={closeCreateDialog}>
+				<DialogContent className="sm:max-w-lg">
+					<DialogHeader>
+						<DialogTitle>새 회원 추가</DialogTitle>
+					</DialogHeader>
+					<MemberForm onSubmit={handleCreateMember} onCancel={closeCreateDialog} />
 				</DialogContent>
 			</Dialog>
 

@@ -2,7 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
-import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 import { Forbidden } from "@/components/error/forbidden"
 import { ProjectForm } from "@/components/projects/project-form"
 import { ProjectTable } from "@/components/projects/project-table"
@@ -13,6 +14,7 @@ import type { Project, ProjectCreate, ProjectUpdate } from "@/types"
 
 export default function ProjectsPage() {
 	const queryClient = useQueryClient()
+	const router = useRouter()
 	const [showAddForm, setShowAddForm] = useState(false)
 
 	const {
@@ -36,6 +38,9 @@ export default function ProjectsPage() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["projects"] })
 			setShowAddForm(false)
+			if (window.location.search.includes("quick=add")) {
+				router.replace("/projects")
+			}
 		},
 	})
 
@@ -68,6 +73,23 @@ export default function ProjectsPage() {
 		}
 	}
 
+	const openQuickCreate = () => {
+		setShowAddForm(true)
+	}
+
+	const closeQuickCreate = () => {
+		setShowAddForm(false)
+		if (window.location.search.includes("quick=add")) {
+			router.replace("/projects")
+		}
+	}
+
+	useEffect(() => {
+		if (window.location.search.includes("quick=add")) {
+			setShowAddForm(true)
+		}
+	}, [])
+
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center h-64">
@@ -97,7 +119,7 @@ export default function ProjectsPage() {
 		<div className="space-y-6">
 			<div className="flex items-center justify-between">
 				<h1 className="text-3xl font-bold">프로젝트 관리</h1>
-				<Button onClick={() => setShowAddForm(true)}>
+				<Button onClick={openQuickCreate}>
 					<Plus className="mr-2 h-4 w-4" />
 					프로젝트 추가
 				</Button>
@@ -121,7 +143,7 @@ export default function ProjectsPage() {
 					<div className="bg-background p-6 rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
 						<h2 className="text-lg font-semibold mb-4">새 프로젝트 추가</h2>
 						<ProjectForm onSubmit={handleCreateProject} />
-						<Button variant="outline" onClick={() => setShowAddForm(false)} className="mt-4 w-full">
+						<Button variant="outline" onClick={closeQuickCreate} className="mt-4 w-full">
 							취소
 						</Button>
 					</div>

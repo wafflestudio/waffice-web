@@ -1,6 +1,7 @@
 "use client"
 
 import { FolderOpen, Users } from "lucide-react"
+import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -19,7 +20,7 @@ export default function DashboardPage() {
 		<div className="space-y-6">
 			<div>
 				<h1 className="text-3xl font-bold">대시보드</h1>
-				<p className="text-muted-foreground">와플 스튜디오 관리 시스템에 오신 것을 환영합니다</p>
+				<p className="text-muted-foreground">도메인 주도 설계(DDD) 기반 와플 스튜디오 운영 대시보드에 오신 것을 환영합니다</p>
 			</div>
 
 			{/* Stats Cards */}
@@ -80,18 +81,24 @@ export default function DashboardPage() {
 					</CardHeader>
 					<CardContent>
 						<div className="space-y-2">
-							<div className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+							<Link
+								href="/members?quick=add"
+								className="block p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+							>
 								<div className="flex items-center space-x-2">
 									<Users className="h-4 w-4" />
 									<span className="text-sm font-medium">새 회원 추가</span>
 								</div>
-							</div>
-							<div className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+							</Link>
+							<Link
+								href="/projects?quick=add"
+								className="block p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+							>
 								<div className="flex items-center space-x-2">
 									<FolderOpen className="h-4 w-4" />
 									<span className="text-sm font-medium">프로젝트 생성</span>
 								</div>
-							</div>
+							</Link>
 						</div>
 					</CardContent>
 				</Card>
