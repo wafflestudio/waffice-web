@@ -308,7 +308,10 @@ export default function MembersPage() {
 							className="pl-9"
 						/>
 					</div>
-					<Button className="bg-[#f77153] hover:bg-[#f77153]/90 text-white" onClick={handleRoleChange}>
+					<Button
+						className="bg-[#f77153] hover:bg-[#f77153]/90 text-white"
+						onClick={handleRoleChange}
+					>
 						회원 자격 변경
 					</Button>
 				</div>
@@ -327,7 +330,10 @@ export default function MembersPage() {
 
 			{/* 회원 자격 변경 다이얼로그 */}
 			<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-				<DialogContent className="w-[460px] max-w-[460px] h-[650px] rounded-[12px] p-0 gap-0 overflow-hidden" showCloseButton={false}>
+				<DialogContent
+					className="w-[460px] max-w-[460px] h-[650px] rounded-[12px] p-0 gap-0 overflow-hidden"
+					showCloseButton={false}
+				>
 					<div className="flex flex-col items-end gap-[10px] w-full h-full pt-[10px] px-[10px] pb-[40px]">
 						{/* X 버튼 — flex 레이아웃의 첫 번째 레이어 */}
 						<DialogClose className="shrink-0 size-[35px] flex items-center justify-center rounded-sm opacity-70 hover:opacity-100 transition-opacity">

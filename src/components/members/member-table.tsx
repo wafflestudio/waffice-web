@@ -36,6 +36,14 @@ import { MemberForm } from "@/components/members/member-form"
 
 const ITEMS_PER_PAGE = 10
 
+// 멤버 테이블 드롭다운 공통 스타일
+const DROPDOWN_CONTENT_CLASS =
+	"min-w-0 rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
+const DROPDOWN_RADIO_ITEM_CLASS =
+	"text-[14px] font-medium text-[#777] data-[state=checked]:text-[#e75010] cursor-pointer"
+const DROPDOWN_CHECKBOX_ITEM_CLASS =
+	"text-[14px] font-medium text-[#777] data-[state=checked]:text-[#e75010] cursor-pointer"
+
 export function MemberTable({
 	members,
 	searchQuery,
@@ -128,18 +136,29 @@ export function MemberTable({
 							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
-										<Button variant="ghost" size="sm" className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3">
+										<Button
+											variant="ghost"
+											size="sm"
+											className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3"
+										>
 											자격
 											<Settings2 className="h-4 w-4 text-gray-400" />
 										</Button>
 									</DropdownMenuTrigger>
-									<DropdownMenuContent align="start" className="w-[140px]">
+									<DropdownMenuContent
+										align="start"
+										className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}
+									>
 										<DropdownMenuRadioGroup
 											value={roleFilter}
 											onValueChange={(v) => setRoleFilter(v === roleFilter ? "전체" : v)}
 										>
 											{ROLE_OPTIONS.map((role) => (
-												<DropdownMenuRadioItem key={role} value={role}>
+												<DropdownMenuRadioItem
+													key={role}
+													value={role}
+													className={DROPDOWN_RADIO_ITEM_CLASS}
+												>
 													{role}
 												</DropdownMenuRadioItem>
 											))}
@@ -150,18 +169,31 @@ export function MemberTable({
 							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
-										<Button variant="ghost" size="sm" className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3">
+										<Button
+											variant="ghost"
+											size="sm"
+											className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3"
+										>
 											재학여부
 											<Settings2 className="h-4 w-4 text-gray-400" />
 										</Button>
 									</DropdownMenuTrigger>
-									<DropdownMenuContent align="start" className="w-[140px]">
+									<DropdownMenuContent
+										align="start"
+										className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}
+									>
 										<DropdownMenuRadioGroup
 											value={enrollmentFilter}
-											onValueChange={(v) => setEnrollmentFilter(v === enrollmentFilter ? "전체" : v)}
+											onValueChange={(v) =>
+												setEnrollmentFilter(v === enrollmentFilter ? "전체" : v)
+											}
 										>
 											{ENROLLMENT_OPTIONS.map((status) => (
-												<DropdownMenuRadioItem key={status} value={status}>
+												<DropdownMenuRadioItem
+													key={status}
+													value={status}
+													className={DROPDOWN_RADIO_ITEM_CLASS}
+												>
 													{status}
 												</DropdownMenuRadioItem>
 											))}
@@ -172,16 +204,24 @@ export function MemberTable({
 							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
-										<Button variant="ghost" size="sm" className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3">
+										<Button
+											variant="ghost"
+											size="sm"
+											className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3"
+										>
 											접근 권한
 											<Settings2 className="h-4 w-4 text-gray-400" />
 										</Button>
 									</DropdownMenuTrigger>
-									<DropdownMenuContent align="start" className="w-[140px]">
+									<DropdownMenuContent
+										align="start"
+										className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}
+									>
 										{ACCESS_RIGHT_OPTIONS.map((right) => (
 											<DropdownMenuCheckboxItem
 												key={right}
 												checked={accessRightsFilter.includes(right)}
+												className={DROPDOWN_CHECKBOX_ITEM_CLASS}
 												onCheckedChange={(checked) =>
 													setAccessRightsFilter((prev) =>
 														checked ? [...prev, right] : prev.filter((r) => r !== right),
@@ -339,13 +379,17 @@ function GenerationSortHeader({
 					<Settings2 className="h-4 w-4 text-gray-400" />
 				</Button>
 			</DropdownMenuTrigger>
-			<DropdownMenuContent align="start" className="w-[140px]">
+			<DropdownMenuContent align="start" className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}>
 				<DropdownMenuRadioGroup
 					value={sort ?? ""}
 					onValueChange={(v) => onSortChange(v === sort ? null : (v as "desc" | "asc"))}
 				>
-					<DropdownMenuRadioItem value="desc">내림차순</DropdownMenuRadioItem>
-					<DropdownMenuRadioItem value="asc">오름차순</DropdownMenuRadioItem>
+					<DropdownMenuRadioItem value="desc" className={DROPDOWN_RADIO_ITEM_CLASS}>
+						내림차순
+					</DropdownMenuRadioItem>
+					<DropdownMenuRadioItem value="asc" className={DROPDOWN_RADIO_ITEM_CLASS}>
+						오름차순
+					</DropdownMenuRadioItem>
 				</DropdownMenuRadioGroup>
 			</DropdownMenuContent>
 		</DropdownMenu>

@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronDown } from "lucide-react"
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Settings2 } from "lucide-react"
 import { useState } from "react"
 import { ApplicationForm } from "@/components/members/application-form"
 import { Button } from "@/components/ui/button"
@@ -8,7 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
-	DropdownMenuItem,
 	DropdownMenuRadioGroup,
 	DropdownMenuRadioItem,
 	DropdownMenuTrigger,
@@ -45,56 +44,42 @@ interface ApplicationTableProps {
 }
 
 const ITEMS_PER_PAGE = 10
+const DROPDOWN_CONTENT_CLASS =
+	"min-w-0 rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
+const DROPDOWN_RADIO_ITEM_CLASS =
+	"text-[14px] font-medium text-[#777] data-[state=checked]:text-[#e75010] cursor-pointer"
 
 type SortOrder = "asc" | "desc" | null
 
-// 기수 정렬 헤더 (파일 상단에 위치하여 재생성 방지)
-function GenerationSortHeader({
-	generationSort,
+function SortHeader({
+	label,
+	sort,
 	onChange,
 }: {
-	generationSort: SortOrder
+	label: string
+	sort: SortOrder
 	onChange: (s: SortOrder) => void
 }) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<button type="button" className="flex items-center gap-1 hover:text-foreground">
-					기수
-					<span className="sr-only">
-						{generationSort ? `정렬: ${generationSort}` : "정렬 없음"}
-					</span>
-					<ChevronDown className="h-4 w-4" />
-				</button>
+				<Button variant="ghost" size="sm" className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3">
+					{label}
+					<Settings2 className="h-4 w-4 text-gray-400" />
+				</Button>
 			</DropdownMenuTrigger>
-			<DropdownMenuContent align="start">
-				<DropdownMenuItem onClick={() => onChange("desc")}>내림차순</DropdownMenuItem>
-				<DropdownMenuItem onClick={() => onChange("asc")}>오름차순</DropdownMenuItem>
-			</DropdownMenuContent>
-		</DropdownMenu>
-	)
-}
-
-// 가입 신청일 정렬 헤더
-function DateSortHeader({
-	dateSort,
-	onChange,
-}: {
-	dateSort: SortOrder
-	onChange: (s: SortOrder) => void
-}) {
-	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<button type="button" className="flex items-center gap-1 hover:text-foreground">
-					가입 신청일
-					<span className="sr-only">{dateSort ? `정렬: ${dateSort}` : "정렬 없음"}</span>
-					<ChevronDown className="h-4 w-4" />
-				</button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent align="start">
-				<DropdownMenuItem onClick={() => onChange("desc")}>오래된 순</DropdownMenuItem>
-				<DropdownMenuItem onClick={() => onChange("asc")}>최신 순</DropdownMenuItem>
+			<DropdownMenuContent align="start" className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}>
+				<DropdownMenuRadioGroup
+					value={sort ?? ""}
+					onValueChange={(v) => onChange(v === sort ? null : (v as SortOrder))}
+				>
+					<DropdownMenuRadioItem value="desc" className={DROPDOWN_RADIO_ITEM_CLASS}>
+						내림차순
+					</DropdownMenuRadioItem>
+					<DropdownMenuRadioItem value="asc" className={DROPDOWN_RADIO_ITEM_CLASS}>
+						오름차순
+					</DropdownMenuRadioItem>
+				</DropdownMenuRadioGroup>
 			</DropdownMenuContent>
 		</DropdownMenu>
 	)
@@ -113,31 +98,28 @@ export function ApplicationTable({
 	const [generationSort, setGenerationSort] = useState<SortOrder>(null)
 	const [dateSort, setDateSort] = useState<SortOrder>(null)
 	const [roleFilter, setRoleFilter] = useState<string>("전체")
-	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "미가입"]
+	const [statusFilter, setStatusFilter] = useState<string>("전체")
 
-	// 검색 필터링
+	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "미가입"]
+	const STATUS_OPTIONS = ["대기", "승인"]
+
 	const filteredApplications = applications
 		.filter((app) => app.name.toLowerCase().includes(searchQuery.toLowerCase()))
 		.filter((app) => roleFilter === "전체" || app.role === roleFilter)
+		.filter((app) => statusFilter === "전체" || app.status === statusFilter)
 
-	// 정렬 (mutual exclusion: 한 번에 하나의 정렬만 활성화)
 	const sortedApplications = [...filteredApplications].sort((a, b) => {
-		// 두 정렬이 모두 설정된 경우, 기수로 먼저 정렬 후 날짜로 정렬
 		if (generationSort && dateSort) {
 			const genComp = a.generation.localeCompare(b.generation)
-			if (genComp !== 0) {
-				return generationSort === "asc" ? genComp : -genComp
-			}
+			if (genComp !== 0) return generationSort === "asc" ? genComp : -genComp
 			const dateComp =
 				new Date(a.application_date).getTime() - new Date(b.application_date).getTime()
 			return dateSort === "asc" ? dateComp : -dateComp
 		}
-		// 기수 정렬만
 		if (generationSort) {
 			const genComp = a.generation.localeCompare(b.generation)
 			return generationSort === "asc" ? genComp : -genComp
 		}
-		// 날짜 정렬만
 		if (dateSort) {
 			const dateComp =
 				new Date(a.application_date).getTime() - new Date(b.application_date).getTime()
@@ -146,7 +128,6 @@ export function ApplicationTable({
 		return 0
 	})
 
-	// 페이지네이션
 	const totalPages = Math.ceil(sortedApplications.length / ITEMS_PER_PAGE)
 	const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
 	const paginatedApplications = sortedApplications.slice(startIndex, startIndex + ITEMS_PER_PAGE)
@@ -173,42 +154,54 @@ export function ApplicationTable({
 
 	return (
 		<div className="space-y-4">
-			{/* 테이블 */}
-			<div className="rounded-lg border bg-white">
+			<div className="bg-white border-[#dbdfe0] border-t border-b overflow-hidden">
 				<Table>
 					<TableHeader>
-						<TableRow className="bg-gray-50">
+						<TableRow className="bg-[#f7f7f7]">
 							<TableHead className="w-12">
 								<Checkbox checked={isAllSelected} onCheckedChange={handleSelectAll} />
 							</TableHead>
-							<TableHead>이름</TableHead>
-							<TableHead>
-								<GenerationSortHeader
-									generationSort={generationSort}
-									onChange={setGenerationSort}
-								/>
+							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+								이름
 							</TableHead>
-							<TableHead>이메일</TableHead>
-							<TableHead>Github 아이디</TableHead>
-							<TableHead>
-								<DateSortHeader dateSort={dateSort} onChange={setDateSort} />
+							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+								<SortHeader label="기수" sort={generationSort} onChange={setGenerationSort} />
 							</TableHead>
-							<TableHead>
+							<TableHead className="text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+								이메일
+							</TableHead>
+							<TableHead className="text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+								Github 아이디
+							</TableHead>
+							<TableHead className="w-[180px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+								<SortHeader label="가입 신청일" sort={dateSort} onChange={setDateSort} />
+							</TableHead>
+							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
-										<button type="button" className="flex items-center gap-1 hover:text-foreground">
+										<Button
+											variant="ghost"
+											size="sm"
+											className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3"
+										>
 											자격
-											<ChevronDown className="h-4 w-4" />
-											<span className="sr-only">
-												{roleFilter === "전체" ? "전체" : `필터: ${roleFilter}`}
-											</span>
-										</button>
+											<Settings2 className="h-4 w-4 text-gray-400" />
+										</Button>
 									</DropdownMenuTrigger>
-									<DropdownMenuContent align="start" className="w-32">
-										<DropdownMenuRadioGroup value={roleFilter} onValueChange={setRoleFilter}>
-											<DropdownMenuRadioItem value="전체">전체</DropdownMenuRadioItem>
+									<DropdownMenuContent
+										align="start"
+										className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}
+									>
+										<DropdownMenuRadioGroup
+											value={roleFilter}
+											onValueChange={(v) => setRoleFilter(v === roleFilter ? "전체" : v)}
+										>
 											{ROLE_OPTIONS.map((role) => (
-												<DropdownMenuRadioItem key={role} value={role}>
+												<DropdownMenuRadioItem
+													key={role}
+													value={role}
+													className={DROPDOWN_RADIO_ITEM_CLASS}
+												>
 													{role}
 												</DropdownMenuRadioItem>
 											))}
@@ -216,65 +209,122 @@ export function ApplicationTable({
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</TableHead>
-							<TableHead>승인여부</TableHead>
+							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button
+											variant="ghost"
+											size="sm"
+											className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3"
+										>
+											승인여부
+											<Settings2 className="h-4 w-4 text-gray-400" />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent
+										align="start"
+										className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}
+									>
+										<DropdownMenuRadioGroup
+											value={statusFilter}
+											onValueChange={(v) => setStatusFilter(v === statusFilter ? "전체" : v)}
+										>
+											{STATUS_OPTIONS.map((s) => (
+												<DropdownMenuRadioItem
+													key={s}
+													value={s}
+													className={DROPDOWN_RADIO_ITEM_CLASS}
+												>
+													{s}
+												</DropdownMenuRadioItem>
+											))}
+										</DropdownMenuRadioGroup>
+									</DropdownMenuContent>
+								</DropdownMenu>
+							</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{paginatedApplications.map((application) => (
-							<TableRow key={application.id}>
-								<TableCell>
-									<Checkbox
-										checked={selectedApplications.includes(application.id)}
-										onCheckedChange={(checked) =>
-											handleSelectApplication(application.id, checked as boolean)
-										}
-									/>
-								</TableCell>
-								<TableCell>
-									{onApprove || onReject ? (
-										<ApplicationForm
-											application={application}
-											trigger={
-												<button type="button" className="text-left hover:underline">
-													{application.name}
-												</button>
+						{paginatedApplications.map((application) => {
+							const d = new Date(application.application_date)
+							const formattedDate = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`
+							const isPending = application.status === "대기" || application.status === "pending"
+
+							return (
+								<TableRow key={application.id} className="h-[60px]">
+									<TableCell>
+										<Checkbox
+											checked={selectedApplications.includes(application.id)}
+											onCheckedChange={(checked) =>
+												handleSelectApplication(application.id, checked as boolean)
 											}
-											onApprove={(id, role) => onApprove?.(id, role)}
-											onReject={(id) => onReject?.(id)}
 										/>
-									) : (
-										application.name
-									)}
-								</TableCell>
-								<TableCell>{application.generation}</TableCell>
-								<TableCell>{application.email}</TableCell>
-								<TableCell>{application.github_username}</TableCell>
-								<TableCell>{new Date(application.application_date).toLocaleDateString()}</TableCell>
-								<TableCell>{application.role || "미가입"}</TableCell>
-								<TableCell>{application.status}</TableCell>
-							</TableRow>
-						))}
+									</TableCell>
+									<TableCell className="w-[140px] text-[15px] font-normal text-[#121212]">
+										{onApprove || onReject ? (
+											<ApplicationForm
+												application={application}
+												trigger={
+													<button type="button" className="text-left hover:underline">
+														{application.name}
+													</button>
+												}
+												onApprove={(id, role) => onApprove?.(id, role)}
+												onReject={(id) => onReject?.(id)}
+											/>
+										) : (
+											application.name
+										)}
+									</TableCell>
+									<TableCell className="w-[140px] text-[15px] font-normal text-[#121212]">
+										{application.generation || "-"}
+									</TableCell>
+									<TableCell className="text-[15px] font-normal text-[#121212]">
+										{application.email}
+									</TableCell>
+									<TableCell className="text-[15px] font-normal text-[#121212]">
+										{application.github_username || "-"}
+									</TableCell>
+									<TableCell className="w-[180px] text-[15px] font-normal text-[#121212]">
+										{formattedDate}
+									</TableCell>
+									<TableCell className="w-[140px] text-[15px] font-normal text-[#121212]">
+										{application.role || "미가입"}
+									</TableCell>
+									<TableCell className="w-[140px]">
+										<div className="flex items-center gap-[6px]">
+											<span
+												className={`size-[8px] rounded-full shrink-0 ${isPending ? "bg-[#ffd21f]" : "bg-[#84aef1]"}`}
+											/>
+											<span className="text-[15px] font-normal text-[#121212]">
+												{isPending ? "대기" : "승인"}
+											</span>
+										</div>
+									</TableCell>
+								</TableRow>
+							)
+						})}
 					</TableBody>
 				</Table>
 			</div>
 
 			{/* 페이지네이션 */}
-			<div className="flex items-center justify-center gap-2">
+			<div className="flex items-center justify-center gap-[30px]">
 				<Button
-					variant="outline"
+					variant="ghost"
 					size="sm"
 					onClick={() => onPageChange(1)}
 					disabled={currentPage === 1}
 				>
-					«
+					<ChevronsLeft className="h-4 w-4" />
 				</Button>
 				<Button
-					variant="outline"
+					variant="ghost"
 					size="sm"
-					onClick={() => onPageChange(currentPage - 1)}
+					onClick={() => onPageChange(Math.max(1, currentPage - 1))}
 					disabled={currentPage === 1}
 				>
-					‹
+					<ChevronLeft className="h-4 w-4" />
 				</Button>
 
 				{Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -288,15 +338,16 @@ export function ApplicationTable({
 					} else {
 						pageNum = currentPage - 2 + i
 					}
-
 					return (
 						<Button
 							key={pageNum}
-							variant={currentPage === pageNum ? "default" : "outline"}
+							variant="ghost"
 							size="sm"
 							onClick={() => onPageChange(pageNum)}
 							className={
-								currentPage === pageNum ? "bg-[#FF6B6B] hover:bg-[#FF5252] text-white" : ""
+								currentPage === pageNum
+									? "text-[#f77153] font-medium"
+									: "text-[#b4b4b4] font-medium"
 							}
 						>
 							{pageNum}
@@ -305,20 +356,20 @@ export function ApplicationTable({
 				})}
 
 				<Button
-					variant="outline"
+					variant="ghost"
 					size="sm"
-					onClick={() => onPageChange(currentPage + 1)}
+					onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
 					disabled={currentPage === totalPages}
 				>
-					›
+					<ChevronRight className="h-4 w-4" />
 				</Button>
 				<Button
-					variant="outline"
+					variant="ghost"
 					size="sm"
 					onClick={() => onPageChange(totalPages)}
 					disabled={currentPage === totalPages}
 				>
-					»
+					<ChevronsRight className="h-4 w-4" />
 				</Button>
 			</div>
 		</div>

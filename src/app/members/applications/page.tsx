@@ -52,6 +52,17 @@ const qualificationToRole = (qualification: Qualification): string => {
 	}
 }
 
+const userDetailToApplication = (user: UserDetail): Application => ({
+	id: user.id,
+	name: user.name,
+	generation: user.generation,
+	email: user.email,
+	github_username: user.github_username || "",
+	application_date: new Date(user.created_at * 1000).toISOString(),
+	role: qualificationToRole(user.qualification),
+	status: user.qualification === "pending" ? "대기" : "승인",
+})
+
 // UserDetail을 Application 형식으로 변환
 interface Application {
 	id: number
@@ -63,17 +74,6 @@ interface Application {
 	role: string
 	status: string
 }
-
-const userDetailToApplication = (user: UserDetail): Application => ({
-	id: user.id,
-	name: user.name,
-	generation: user.generation,
-	email: user.email,
-	github_username: user.github_username || "",
-	application_date: new Date(user.created_at * 1000).toISOString(),
-	role: qualificationToRole(user.qualification),
-	status: user.qualification === "pending" ? "대기" : "승인",
-})
 
 export default function MemberApplicationsPage() {
 	const [searchQuery, setSearchQuery] = useState("")
@@ -89,16 +89,13 @@ export default function MemberApplicationsPage() {
 	const [error, setError] = useState<string | null>(null)
 	const [isForbidden, setIsForbidden] = useState(false)
 
-	// Pending 유저 목록 가져오기
 	useEffect(() => {
 		const fetchPendingUsers = async () => {
 			try {
 				setIsLoading(true)
-				setIsForbidden(false)
 				const response = await apiClient.getPendingUsers()
 				if (response.ok && response.data) {
-					const apps = response.data.map(userDetailToApplication)
-					setApplications(apps)
+					setApplications(response.data.map(userDetailToApplication))
 				} else {
 					setError(response.message || "유저 목록을 불러오는데 실패했습니다.")
 				}
@@ -109,12 +106,10 @@ export default function MemberApplicationsPage() {
 				} else {
 					setError(message)
 				}
-				setError(err instanceof Error ? err.message : "유저 목록을 불러오는데 실패했습니다.")
 			} finally {
 				setIsLoading(false)
 			}
 		}
-
 		fetchPendingUsers()
 	}, [])
 
@@ -153,25 +148,18 @@ export default function MemberApplicationsPage() {
 		}
 
 		try {
-			// 선택된 모든 신청을 승인
 			const approvePromises = selectedApplications.map((userId) =>
 				apiClient.approveUser(userId, { qualification }),
 			)
-
 			const results = await Promise.all(approvePromises)
-
-			// 실패한 승인이 있는지 확인
 			const failedApprovals = results.filter((r) => !r.ok)
 			if (failedApprovals.length > 0) {
 				setToastMessage(`${failedApprovals.length}명의 승인에 실패했습니다. 다시 시도해주세요.`)
 			} else {
 				setToastMessage(`${selectedApplications.length}명의 회원 가입이 승인되었습니다.`)
-
-				// 승인된 유저들을 목록에서 제거
 				setApplications((prev) => prev.filter((app) => !selectedApplications.includes(app.id)))
 				setSelectedApplications([])
 			}
-
 			setShowToast(true)
 		} catch (err) {
 			setToastMessage(err instanceof Error ? err.message : "승인 처리 중 오류가 발생했습니다.")
@@ -184,23 +172,16 @@ export default function MemberApplicationsPage() {
 
 	const handleRejectSubmit = async () => {
 		try {
-			// 선택된 모든 신청을 삭제 (반려)
 			const rejectPromises = selectedApplications.map((userId) => apiClient.deleteUser(userId))
-
 			const results = await Promise.all(rejectPromises)
-
-			// 실패한 반려가 있는지 확인
 			const failedRejections = results.filter((r) => !r.ok)
 			if (failedRejections.length > 0) {
 				setToastMessage(`${failedRejections.length}명의 반려에 실패했습니다. 다시 시도해주세요.`)
 			} else {
 				setToastMessage(`${selectedApplications.length}명의 회원 가입이 반려되었습니다.`)
-
-				// 반려된 유저들을 목록에서 제거
 				setApplications((prev) => prev.filter((app) => !selectedApplications.includes(app.id)))
 				setSelectedApplications([])
 			}
-
 			setShowToast(true)
 		} catch (err) {
 			setToastMessage(err instanceof Error ? err.message : "반려 처리 중 오류가 발생했습니다.")
@@ -223,10 +204,8 @@ export default function MemberApplicationsPage() {
 
 		try {
 			const response = await apiClient.approveUser(id, { qualification })
-
 			if (response.ok) {
 				setToastMessage("해당 회원 가입이 승인되었습니다.")
-				// 승인된 유저를 목록에서 제거
 				setApplications((prev) => prev.filter((app) => app.id !== id))
 			} else {
 				setToastMessage(response.message || "승인에 실패했습니다.")
@@ -241,10 +220,8 @@ export default function MemberApplicationsPage() {
 	const handleRejectSingle = async (id: number) => {
 		try {
 			const response = await apiClient.deleteUser(id)
-
 			if (response.ok) {
 				setToastMessage("해당 회원 가입이 반려되었습니다.")
-				// 반려된 유저를 목록에서 제거
 				setApplications((prev) => prev.filter((app) => app.id !== id))
 			} else {
 				setToastMessage(response.message || "반려에 실패했습니다.")
