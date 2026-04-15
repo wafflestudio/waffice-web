@@ -116,7 +116,9 @@ export function Navigation() {
 															variant="ghost"
 															className={cn(
 																"w-full justify-start text-sm",
-																isSubActive ? "text-[#FF6B6B] font-medium" : "hover:bg-accent hover:text-[#FF9AA9]",
+																isSubActive
+																	? "text-[#FF6B6B] font-medium"
+																	: "hover:bg-accent hover:text-[#FF9AA9]",
 															)}
 														>
 															{subItem.name}
@@ -133,7 +135,9 @@ export function Navigation() {
 										variant="ghost"
 										className={cn(
 											"w-full justify-start",
-											isActive ? "text-[#FF6B6B] font-semibold" : "hover:bg-accent hover:text-[#FF9AA9]",
+											isActive
+												? "text-[#FF6B6B] font-semibold"
+												: "hover:bg-accent hover:text-[#FF9AA9]",
 										)}
 									>
 										<item.icon className="mr-2 h-4 w-4" />

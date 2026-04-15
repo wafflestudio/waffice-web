@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, ChevronDown } from "lucide-react"
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Settings2 } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -8,10 +8,8 @@ import {
 	DropdownMenu,
 	DropdownMenuCheckboxItem,
 	DropdownMenuContent,
-	DropdownMenuItem,
 	DropdownMenuRadioGroup,
 	DropdownMenuRadioItem,
-	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -37,6 +35,14 @@ interface MemberTableProps {
 import { MemberForm } from "@/components/members/member-form"
 
 const ITEMS_PER_PAGE = 10
+
+// 멤버 테이블 드롭다운 공통 스타일
+const DROPDOWN_CONTENT_CLASS =
+	"min-w-0 rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
+const DROPDOWN_RADIO_ITEM_CLASS =
+	"text-[14px] font-medium text-[#777] data-[state=checked]:text-[#e75010] cursor-pointer"
+const DROPDOWN_CHECKBOX_ITEM_CLASS =
+	"text-[14px] font-medium text-[#777] data-[state=checked]:text-[#e75010] cursor-pointer"
 
 export function MemberTable({
 	members,
@@ -105,149 +111,198 @@ export function MemberTable({
 	return (
 		<div className="space-y-4">
 			{/* 테이블 */}
-			<div className="rounded-lg border bg-white">
+			<div className="bg-white border-[#dbdfe0] border-t border-b overflow-hidden">
 				<Table>
 					<TableHeader>
-						<TableRow className="bg-gray-50">
+						<TableRow className="bg-[#f7f7f7]">
 							<TableHead className="w-12">
 								<Checkbox checked={isAllSelected} onCheckedChange={handleSelectAll} />
 							</TableHead>
-							<TableHead>이름</TableHead>
-							<TableHead>
+							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+								이름
+							</TableHead>
+							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
 								<GenerationSortHeader sort={generationSort} onSortChange={setGenerationSort} />
 							</TableHead>
-							<TableHead>이메일</TableHead>
-							<TableHead>Github 아이디</TableHead>
-							<TableHead>계정 생성일</TableHead>
-							<TableHead>
-								<FilterHeader
-									label="자격"
-									buttonLabel={roleFilter === "전체" ? "전체" : roleFilter}
-									renderContent={() => (
+							<TableHead className="text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+								이메일
+							</TableHead>
+							<TableHead className="text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+								Github 아이디
+							</TableHead>
+							<TableHead className="w-[180px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+								계정 생성일
+							</TableHead>
+							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button
+											variant="ghost"
+											size="sm"
+											className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3"
+										>
+											자격
+											<Settings2 className="h-4 w-4 text-gray-400" />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent
+										align="start"
+										className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}
+									>
 										<DropdownMenuRadioGroup
 											value={roleFilter}
-											onValueChange={(value) => setRoleFilter(value)}
+											onValueChange={(v) => setRoleFilter(v === roleFilter ? "전체" : v)}
 										>
-											<DropdownMenuRadioItem value="전체">전체</DropdownMenuRadioItem>
 											{ROLE_OPTIONS.map((role) => (
-												<DropdownMenuRadioItem key={role} value={role}>
+												<DropdownMenuRadioItem
+													key={role}
+													value={role}
+													className={DROPDOWN_RADIO_ITEM_CLASS}
+												>
 													{role}
 												</DropdownMenuRadioItem>
 											))}
 										</DropdownMenuRadioGroup>
-									)}
-								/>
+									</DropdownMenuContent>
+								</DropdownMenu>
 							</TableHead>
-							<TableHead>
-								<FilterHeader
-									label="재학여부"
-									buttonLabel={enrollmentFilter === "전체" ? "전체" : enrollmentFilter}
-									renderContent={() => (
+							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button
+											variant="ghost"
+											size="sm"
+											className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3"
+										>
+											재학여부
+											<Settings2 className="h-4 w-4 text-gray-400" />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent
+										align="start"
+										className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}
+									>
 										<DropdownMenuRadioGroup
 											value={enrollmentFilter}
-											onValueChange={(value) => setEnrollmentFilter(value)}
+											onValueChange={(v) =>
+												setEnrollmentFilter(v === enrollmentFilter ? "전체" : v)
+											}
 										>
-											<DropdownMenuRadioItem value="전체">전체</DropdownMenuRadioItem>
 											{ENROLLMENT_OPTIONS.map((status) => (
-												<DropdownMenuRadioItem key={status} value={status}>
+												<DropdownMenuRadioItem
+													key={status}
+													value={status}
+													className={DROPDOWN_RADIO_ITEM_CLASS}
+												>
 													{status}
 												</DropdownMenuRadioItem>
 											))}
 										</DropdownMenuRadioGroup>
-									)}
-								/>
+									</DropdownMenuContent>
+								</DropdownMenu>
 							</TableHead>
-							<TableHead>
-								<FilterHeader
-									label="접근 권한"
-									buttonLabel={
-										accessRightsFilter.length === 0 ? "전체" : accessRightsFilter.join(", ")
-									}
-									renderContent={() => (
-										<div className="space-y-1">
+							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button
+											variant="ghost"
+											size="sm"
+											className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3"
+										>
+											접근 권한
+											<Settings2 className="h-4 w-4 text-gray-400" />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent
+										align="start"
+										className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}
+									>
+										{ACCESS_RIGHT_OPTIONS.map((right) => (
 											<DropdownMenuCheckboxItem
-												checked={accessRightsFilter.length === 0}
-												onCheckedChange={() => setAccessRightsFilter([])}
+												key={right}
+												checked={accessRightsFilter.includes(right)}
+												className={DROPDOWN_CHECKBOX_ITEM_CLASS}
+												onCheckedChange={(checked) =>
+													setAccessRightsFilter((prev) =>
+														checked ? [...prev, right] : prev.filter((r) => r !== right),
+													)
+												}
 											>
-												전체
+												{right}
 											</DropdownMenuCheckboxItem>
-											<DropdownMenuSeparator />
-											{ACCESS_RIGHT_OPTIONS.map((right) => (
-												<DropdownMenuCheckboxItem
-													key={right}
-													checked={accessRightsFilter.includes(right)}
-													onCheckedChange={(checked) => {
-														setAccessRightsFilter((prev) => {
-															if (checked) {
-																return [...prev.filter(Boolean), right]
-															}
-															return prev.filter((r) => r !== right)
-														})
-													}}
-												>
-													{right}
-												</DropdownMenuCheckboxItem>
-											))}
-										</div>
-									)}
-								/>
+										))}
+									</DropdownMenuContent>
+								</DropdownMenu>
 							</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{paginatedMembers.map((member) => (
-							<TableRow key={member.id}>
-								<TableCell>
-									<Checkbox
-										checked={selectedMembers.includes(member.id)}
-										onCheckedChange={(checked) => handleSelectMember(member.id, checked as boolean)}
-									/>
-								</TableCell>
-								<TableCell className="font-medium">
-									{onMemberUpdate ? (
-										<MemberForm
-											member={member}
-											onSubmit={(data) => onMemberUpdate(member.id, data)}
-											trigger={
-												<button type="button" className="text-left font-medium hover:underline">
-													{member.name}
-												</button>
+						{paginatedMembers.map((member) => {
+							const d = new Date(member.join_date)
+							const formattedDate = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`
+
+							return (
+								<TableRow key={member.id} className="h-[60px]">
+									<TableCell>
+										<Checkbox
+											checked={selectedMembers.includes(member.id)}
+											onCheckedChange={(checked) =>
+												handleSelectMember(member.id, checked as boolean)
 											}
 										/>
-									) : (
-										member.name
-									)}
-								</TableCell>
-								<TableCell className="text-gray-600">{member.generation || "-"}</TableCell>
-								<TableCell className="text-gray-600">{member.email}</TableCell>
-								<TableCell className="text-gray-600">{member.github_username || "-"}</TableCell>
-								<TableCell className="text-gray-600">
-									{new Date(member.join_date).toLocaleDateString("ko-KR", {
-										year: "numeric",
-										month: "2-digit",
-										day: "2-digit",
-									})}
-								</TableCell>
-								<TableCell className="text-gray-600">{member.role || "활동회원"}</TableCell>
-								<TableCell className="text-gray-600">{member.affiliation || "학부생"}</TableCell>
-								<TableCell className="text-gray-600">
-									{member.access_rights?.length ? member.access_rights.join(", ") : "없음"}
-								</TableCell>
-							</TableRow>
-						))}
+									</TableCell>
+									<TableCell className="w-[140px] text-[15px] font-normal text-[#121212]">
+										{onMemberUpdate ? (
+											<MemberForm
+												member={member}
+												onSubmit={(data) => onMemberUpdate(member.id, data)}
+												trigger={
+													<button type="button" className="text-left font-medium hover:underline">
+														{member.name}
+													</button>
+												}
+											/>
+										) : (
+											member.name
+										)}
+									</TableCell>
+									<TableCell className="w-[140px] text-[15px] font-normal text-[#121212]">
+										{member.generation || "-"}
+									</TableCell>
+									<TableCell className="text-[15px] font-normal text-[#121212]">
+										{member.email}
+									</TableCell>
+									<TableCell className="text-[15px] font-normal text-[#121212]">
+										{member.github_username || "-"}
+									</TableCell>
+									<TableCell className="w-[180px] text-[15px] font-normal text-[#121212]">
+										{formattedDate}
+									</TableCell>
+									<TableCell className="w-[140px] text-[15px] font-normal text-[#121212]">
+										{member.role || "활동회원"}
+									</TableCell>
+									<TableCell className="w-[140px] text-[15px] font-normal text-[#121212]">
+										{member.affiliation || "학부생"}
+									</TableCell>
+									<TableCell className="w-[140px] text-[15px] font-normal text-[#121212]">
+										{member.access_rights?.length ? member.access_rights.join(", ") : "없음"}
+									</TableCell>
+								</TableRow>
+							)
+						})}
 					</TableBody>
 				</Table>
 			</div>
 
 			{/* 페이지네이션 */}
-			<div className="flex items-center justify-center gap-2">
+			<div className="flex items-center justify-center gap-[30px]">
 				<Button
 					variant="ghost"
 					size="sm"
-					onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+					onClick={() => onPageChange(1)}
 					disabled={currentPage === 1}
 				>
-					{"<<"}
+					<ChevronsLeft className="h-4 w-4" />
 				</Button>
 				<Button
 					variant="ghost"
@@ -255,7 +310,7 @@ export function MemberTable({
 					onClick={() => onPageChange(Math.max(1, currentPage - 1))}
 					disabled={currentPage === 1}
 				>
-					{"<"}
+					<ChevronLeft className="h-4 w-4" />
 				</Button>
 
 				{Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -273,11 +328,13 @@ export function MemberTable({
 					return (
 						<Button
 							key={pageNum}
-							variant={currentPage === pageNum ? "default" : "ghost"}
+							variant="ghost"
 							size="sm"
 							onClick={() => onPageChange(pageNum)}
 							className={
-								currentPage === pageNum ? "bg-[#FF6B6B] hover:bg-[#FF5252] text-white" : ""
+								currentPage === pageNum
+									? "text-[#f77153] font-medium"
+									: "text-[#b4b4b4] font-medium"
 							}
 						>
 							{pageNum}
@@ -291,7 +348,7 @@ export function MemberTable({
 					onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
 					disabled={currentPage === totalPages}
 				>
-					{">"}
+					<ChevronRight className="h-4 w-4" />
 				</Button>
 				<Button
 					variant="ghost"
@@ -299,7 +356,7 @@ export function MemberTable({
 					onClick={() => onPageChange(totalPages)}
 					disabled={currentPage === totalPages}
 				>
-					{">>"}
+					<ChevronsRight className="h-4 w-4" />
 				</Button>
 			</div>
 		</div>
@@ -319,43 +376,21 @@ function GenerationSortHeader({
 			<DropdownMenuTrigger asChild>
 				<Button variant="ghost" size="sm" className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3">
 					기수
-					<ChevronDown className="h-4 w-4 text-gray-400" />
+					<Settings2 className="h-4 w-4 text-gray-400" />
 				</Button>
 			</DropdownMenuTrigger>
-			<DropdownMenuContent align="start" className="w-32">
-				<DropdownMenuItem onClick={() => onSortChange("desc")} className="flex items-center gap-2">
-					{sort === "desc" && <Check className="h-4 w-4 text-[#FF6B6B]" />}
-					내림차순
-				</DropdownMenuItem>
-				<DropdownMenuItem onClick={() => onSortChange("asc")} className="flex items-center gap-2">
-					{sort === "asc" && <Check className="h-4 w-4 text-[#FF6B6B]" />}
-					오름차순
-				</DropdownMenuItem>
-			</DropdownMenuContent>
-		</DropdownMenu>
-	)
-}
-
-function FilterHeader({
-	label,
-	buttonLabel,
-	renderContent,
-}: {
-	label: string
-	buttonLabel: string
-	renderContent: () => React.ReactNode
-}) {
-	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<Button variant="ghost" size="sm" className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3">
-					{label}
-					<ChevronDown className="h-4 w-4 text-gray-400" />
-					<span className="sr-only">{buttonLabel}</span>
-				</Button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent align="start" className="w-40">
-				{renderContent()}
+			<DropdownMenuContent align="start" className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}>
+				<DropdownMenuRadioGroup
+					value={sort ?? ""}
+					onValueChange={(v) => onSortChange(v === sort ? null : (v as "desc" | "asc"))}
+				>
+					<DropdownMenuRadioItem value="desc" className={DROPDOWN_RADIO_ITEM_CLASS}>
+						내림차순
+					</DropdownMenuRadioItem>
+					<DropdownMenuRadioItem value="asc" className={DROPDOWN_RADIO_ITEM_CLASS}>
+						오름차순
+					</DropdownMenuRadioItem>
+				</DropdownMenuRadioGroup>
 			</DropdownMenuContent>
 		</DropdownMenu>
 	)

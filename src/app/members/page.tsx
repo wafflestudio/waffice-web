@@ -1,6 +1,6 @@
 "use client"
 
-import { Loader2, Plus, Search } from "lucide-react"
+import { Check, Loader2, Plus, Search, X as XIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useId, useState } from "react"
 import { Forbidden } from "@/components/error/forbidden"
@@ -9,8 +9,8 @@ import { MemberTable } from "@/components/members/member-table"
 import { Button } from "@/components/ui/button"
 import {
 	Dialog,
+	DialogClose,
 	DialogContent,
-	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog"
@@ -276,18 +276,21 @@ export default function MembersPage() {
 		<div className="space-y-6 p-8">
 			{/* 헤더 */}
 			<div>
-				<h1 className="text-3xl font-bold">회원 관리</h1>
+				<h1 className="text-[36px] font-medium text-[#121212]">회원 관리</h1>
 			</div>
 
 			{/* 검색 영역 */}
 			<div className="space-y-4">
 				<div className="flex items-center justify-between">
-					<h2 className="text-lg font-medium">
-						전체 회원 ({members.length.toString().padStart(2, "0")})
+					<h2 className="flex items-baseline gap-[4px]">
+						<span className="text-[20px] font-medium text-[#121212]">전체 회원</span>
+						<span className="text-[14px] font-medium text-[#121212]">
+							({members.length.toString().padStart(2, "0")})
+						</span>
 					</h2>
 					<Button
 						variant="default"
-						className="bg-[#FF6B6B] hover:bg-[#FF5252] text-white"
+						className="bg-[#f77153] hover:bg-[#f77153]/90 text-white"
 						onClick={() => setIsCreateDialogOpen(true)}
 					>
 						<Plus className="mr-2 h-4 w-4" />
@@ -295,17 +298,20 @@ export default function MembersPage() {
 					</Button>
 				</div>
 
-				<div className="flex items-center gap-3">
+				<div className="flex items-center gap-[15px]">
 					<div className="relative flex-1 max-w-md">
 						<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 						<Input
-							placeholder="회원명을 입력해 주세요"
+							placeholder="검색어를 입력해 주세요"
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
 							className="pl-9"
 						/>
 					</div>
-					<Button className="bg-[#FF6B6B] hover:bg-[#FF5252] text-white" onClick={handleRoleChange}>
+					<Button
+						className="bg-[#f77153] hover:bg-[#f77153]/90 text-white"
+						onClick={handleRoleChange}
+					>
 						회원 자격 변경
 					</Button>
 				</div>
@@ -324,72 +330,83 @@ export default function MembersPage() {
 
 			{/* 회원 자격 변경 다이얼로그 */}
 			<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-				<DialogContent className="sm:max-w-md">
-					<DialogHeader>
-						<DialogTitle>회원 자격 변경</DialogTitle>
-					</DialogHeader>
-					<div className="space-y-4 py-4">
-						{/* 자격 선택 */}
-						<div className="space-y-3">
-							<Label>자격</Label>
-							<div className="flex flex-col items-start gap-3 px-4 py-3 border rounded-lg">
-								{["활동회원", "정회원", "준회원"].map((role) => (
+				<DialogContent
+					className="w-[460px] max-w-[460px] h-[650px] rounded-[12px] p-0 gap-0 overflow-hidden"
+					showCloseButton={false}
+				>
+					<div className="flex flex-col items-end gap-[10px] w-full h-full pt-[10px] px-[10px] pb-[40px]">
+						{/* X 버튼 — flex 레이아웃의 첫 번째 레이어 */}
+						<DialogClose className="shrink-0 size-[35px] flex items-center justify-center rounded-sm opacity-70 hover:opacity-100 transition-opacity">
+							<XIcon className="size-5" />
+							<span className="sr-only">Close</span>
+						</DialogClose>
+						<div className="flex flex-col gap-[50px] items-start px-[40px] w-full">
+							<DialogTitle className="text-[24px] font-medium text-[#121212]">
+								회원 자격 변경
+							</DialogTitle>
+							<div className="flex flex-col gap-[40px] items-end w-full">
+								<div className="flex flex-col gap-[40px] items-start w-full">
+									{/* 자격 선택 */}
+									<div className="flex flex-col gap-[10px] items-start">
+										<Label className="text-[15px] font-medium text-[#121212]">자격</Label>
+										<div className="border border-[#dbdfe0] rounded-[5px] w-[360px]">
+											{["활동회원", "정회원", "준회원", "가입대기"].map((role) => (
+												<button
+													key={role}
+													type="button"
+													onClick={() => setNewRole(role)}
+													className="flex h-[50px] w-full items-center justify-between p-[16px] hover:bg-gray-50"
+												>
+													<span
+														className={`text-[15px] font-medium leading-[20px] ${
+															newRole === role ? "text-[#e75010]" : "text-[#505050]"
+														}`}
+													>
+														{role}
+													</span>
+													{newRole === role && (
+														<Check className="w-[12px] h-[12px] text-[#e75010]" strokeWidth={2.5} />
+													)}
+												</button>
+											))}
+										</div>
+									</div>
+
+									{/* 변경 사유 */}
+									<div className="flex flex-col gap-[10px] items-start">
+										<Label htmlFor={reasonId} className="text-[15px] font-medium text-[#121212]">
+											변경 사유
+										</Label>
+										<textarea
+											id={reasonId}
+											placeholder="변경 사유를 입력해 주세요."
+											value={changeReason}
+											onChange={(e) => setChangeReason(e.target.value)}
+											className="w-[360px] h-[90px] p-[16px] border border-[#dbdfe0] rounded-[5px] bg-white text-[14px] font-normal text-[#121212] placeholder:text-[#777] placeholder:text-[14px] tracking-[-0.28px] resize-none outline-none"
+										/>
+									</div>
+								</div>
+
+								{/* 버튼 */}
+								<div className="flex gap-[16px] items-center">
 									<button
-										key={role}
 										type="button"
-										onClick={() => setNewRole(role)}
-										className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+										onClick={handleCancelRoleChange}
+										className="w-[126px] h-[50px] border border-[#999] rounded-[4px] text-[15px] font-semibold text-[#121212]"
 									>
-										<span
-											className={`text-sm font-medium ${
-												newRole === role ? "text-[#FF6B6B]" : "text-gray-700"
-											}`}
-										>
-											{role}
-										</span>
-										{newRole === role && (
-											<svg
-												className="w-4 h-4 text-[#FF6B6B]"
-												fill="currentColor"
-												viewBox="0 0 20 20"
-												aria-label="선택됨"
-											>
-												<title>선택됨</title>
-												<path
-													fillRule="evenodd"
-													d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-													clipRule="evenodd"
-												/>
-											</svg>
-										)}
+										취소
 									</button>
-								))}
+									<button
+										type="button"
+										onClick={handleSubmitRoleChange}
+										className="w-[126px] h-[50px] bg-[#f77153] rounded-[4px] text-[15px] font-semibold text-white"
+									>
+										확인
+									</button>
+								</div>
 							</div>
 						</div>
-
-						{/* 변경 사유 */}
-						<div className="space-y-2">
-							<Label htmlFor={reasonId}>변경 사유</Label>
-							<textarea
-								id={reasonId}
-								placeholder="변경 사유를 입력해 주세요"
-								value={changeReason}
-								onChange={(e) => setChangeReason(e.target.value)}
-								className="w-full min-h-[100px] p-2 border border-input rounded-md bg-background text-sm resize-y"
-							/>
-						</div>
 					</div>
-					<DialogFooter className="gap-2 sm:gap-0">
-						<Button variant="outline" onClick={handleCancelRoleChange}>
-							취소
-						</Button>
-						<Button
-							className="bg-[#FF6B6B] hover:bg-[#FF5252] text-white"
-							onClick={handleSubmitRoleChange}
-						>
-							변경
-						</Button>
-					</DialogFooter>
 				</DialogContent>
 			</Dialog>
 
