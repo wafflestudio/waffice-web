@@ -20,7 +20,9 @@ export default function DashboardPage() {
 		<div className="space-y-6">
 			<div>
 				<h1 className="text-3xl font-bold">대시보드</h1>
-				<p className="text-muted-foreground">도메인 주도 설계(DDD) 기반 와플 스튜디오 운영 대시보드에 오신 것을 환영합니다</p>
+				<p className="text-muted-foreground">
+					도메인 주도 설계(DDD) 기반 와플 스튜디오 운영 대시보드에 오신 것을 환영합니다
+				</p>
 			</div>
 
 			{/* Stats Cards */}
