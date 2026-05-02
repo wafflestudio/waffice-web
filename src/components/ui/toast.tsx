@@ -29,7 +29,7 @@ export function Toast({ message, isVisible, onClose }: ToastProps) {
 					<button
 						type="button"
 						onClick={onClose}
-						className="px-6 py-2 bg-[#FF6B6B] hover:bg-[#FF5252] text-white text-sm rounded transition-colors"
+						className="px-6 py-2 bg-peach-300 hover:bg-peach-500 text-white text-sm rounded transition-colors"
 					>
 						확인
 					</button>
