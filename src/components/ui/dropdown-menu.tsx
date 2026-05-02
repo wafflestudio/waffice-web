@@ -205,6 +205,78 @@ function DropdownMenuSubContent({
 	)
 }
 
+// Figma 스타일 — 체크 아이콘이 텍스트 바로 옆에 붙는 라디오/체크박스 아이템
+function DropdownMenuFilterRadioItem({
+	className,
+	children,
+	...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem>) {
+	return (
+		<DropdownMenuPrimitive.RadioItem
+			data-slot="dropdown-menu-filter-radio-item"
+			className={cn(
+				"flex cursor-pointer select-none items-center rounded-sm px-[8px] py-[6px] text-[14px] font-medium text-[#777] outline-none transition-colors hover:bg-[#f7f7f7] data-[state=checked]:text-[#e75010] data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+				className,
+			)}
+			{...props}
+		>
+			{children}
+			<DropdownMenuPrimitive.ItemIndicator>
+				<CheckIcon className="ml-[6px] size-[12px]" strokeWidth={2.5} />
+			</DropdownMenuPrimitive.ItemIndicator>
+		</DropdownMenuPrimitive.RadioItem>
+	)
+}
+
+function DropdownMenuFilterCheckboxItem({
+	className,
+	children,
+	checked,
+	...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.CheckboxItem>) {
+	return (
+		<DropdownMenuPrimitive.CheckboxItem
+			data-slot="dropdown-menu-filter-checkbox-item"
+			className={cn(
+				"flex cursor-pointer select-none items-center h-10 px-2.5 outline-none hover:bg-[#f7f7f7] data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+				className,
+			)}
+			checked={checked}
+			{...props}
+		>
+			{/* 커스텀 체크박스 */}
+			<div
+				className={cn(
+					"flex-shrink-0 flex flex-col items-center justify-center w-4 h-4 overflow-hidden rounded-[3.5px] px-1 py-[5px]",
+					checked ? "bg-[#f77153]" : "bg-white border border-[#999]",
+				)}
+			>
+				{checked && (
+					<svg
+						aria-hidden="true"
+						className="self-stretch flex-grow"
+						viewBox="0 0 10 8"
+						fill="none"
+						xmlns="http://www.w3.org/2000/svg"
+						preserveAspectRatio="none"
+					>
+						<path
+							d="M8.75 0.75L3.25 6.75L0.75 4.02273"
+							stroke="white"
+							strokeWidth="1.5"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						/>
+					</svg>
+				)}
+			</div>
+			<div className="flex items-center flex-grow gap-2 px-2 py-1.5">
+				<span className="text-sm font-medium text-[#777]">{children}</span>
+			</div>
+		</DropdownMenuPrimitive.CheckboxItem>
+	)
+}
+
 export {
 	DropdownMenu,
 	DropdownMenuPortal,
@@ -221,4 +293,6 @@ export {
 	DropdownMenuSub,
 	DropdownMenuSubTrigger,
 	DropdownMenuSubContent,
+	DropdownMenuFilterRadioItem,
+	DropdownMenuFilterCheckboxItem,
 }

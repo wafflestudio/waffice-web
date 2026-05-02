@@ -1,15 +1,14 @@
 "use client"
 
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Settings2 } from "lucide-react"
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
 	DropdownMenu,
-	DropdownMenuCheckboxItem,
 	DropdownMenuContent,
+	DropdownMenuFilterCheckboxItem,
+	DropdownMenuFilterRadioItem,
 	DropdownMenuRadioGroup,
-	DropdownMenuRadioItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -30,19 +29,22 @@ interface MemberTableProps {
 	selectedMembers: number[]
 	onSelectedMembersChange: (members: number[]) => void
 	onMemberUpdate?: (id: number, data: MemberCreate | MemberUpdate) => Promise<void>
+	generationSort: "desc" | "asc" | null
+	onGenerationSortChange: (sort: "desc" | "asc" | null) => void
+	roleFilter: string
+	onRoleFilterChange: (role: string) => void
+	enrollmentFilter: string
+	onEnrollmentFilterChange: (status: string) => void
+	accessRightsFilter: AccessRight[]
+	onAccessRightsFilterChange: (rights: AccessRight[]) => void
 }
 
 import { MemberForm } from "@/components/members/member-form"
 
 const ITEMS_PER_PAGE = 10
 
-// 멤버 테이블 드롭다운 공통 스타일
 const DROPDOWN_CONTENT_CLASS =
 	"min-w-0 rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
-const DROPDOWN_RADIO_ITEM_CLASS =
-	"text-[14px] font-medium text-[#777] data-[state=checked]:text-[#e75010] cursor-pointer"
-const DROPDOWN_CHECKBOX_ITEM_CLASS =
-	"text-[14px] font-medium text-[#777] data-[state=checked]:text-[#e75010] cursor-pointer"
 
 export function MemberTable({
 	members,
@@ -52,12 +54,15 @@ export function MemberTable({
 	selectedMembers,
 	onSelectedMembersChange,
 	onMemberUpdate,
+	generationSort,
+	onGenerationSortChange,
+	roleFilter,
+	onRoleFilterChange,
+	enrollmentFilter,
+	onEnrollmentFilterChange,
+	accessRightsFilter,
+	onAccessRightsFilterChange,
 }: MemberTableProps) {
-	const [generationSort, setGenerationSort] = useState<"desc" | "asc" | null>(null)
-	const [roleFilter, setRoleFilter] = useState<string>("전체")
-	const [enrollmentFilter, setEnrollmentFilter] = useState<string>("전체")
-	const [accessRightsFilter, setAccessRightsFilter] = useState<AccessRight[]>([])
-
 	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "미가입"]
 	const ENROLLMENT_OPTIONS = ["학부생", "휴학생", "졸업생"]
 	const ACCESS_RIGHT_OPTIONS = ["운영진", "팀장"] satisfies AccessRight[]
@@ -70,7 +75,7 @@ export function MemberTable({
 		.filter((member) =>
 			accessRightsFilter.length === 0
 				? true
-				: accessRightsFilter.every((right) => member.access_rights?.includes(right)),
+				: accessRightsFilter.some((right) => member.access_rights?.includes(right)),
 		)
 
 	// 기수 정렬
@@ -122,7 +127,7 @@ export function MemberTable({
 								이름
 							</TableHead>
 							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
-								<GenerationSortHeader sort={generationSort} onSortChange={setGenerationSort} />
+								<GenerationSortHeader sort={generationSort} onSortChange={onGenerationSortChange} />
 							</TableHead>
 							<TableHead className="text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
 								이메일
@@ -151,16 +156,12 @@ export function MemberTable({
 									>
 										<DropdownMenuRadioGroup
 											value={roleFilter}
-											onValueChange={(v) => setRoleFilter(v === roleFilter ? "전체" : v)}
+											onValueChange={(v) => onRoleFilterChange(v === roleFilter ? "전체" : v)}
 										>
 											{ROLE_OPTIONS.map((role) => (
-												<DropdownMenuRadioItem
-													key={role}
-													value={role}
-													className={DROPDOWN_RADIO_ITEM_CLASS}
-												>
+												<DropdownMenuFilterRadioItem key={role} value={role}>
 													{role}
-												</DropdownMenuRadioItem>
+												</DropdownMenuFilterRadioItem>
 											))}
 										</DropdownMenuRadioGroup>
 									</DropdownMenuContent>
@@ -185,17 +186,13 @@ export function MemberTable({
 										<DropdownMenuRadioGroup
 											value={enrollmentFilter}
 											onValueChange={(v) =>
-												setEnrollmentFilter(v === enrollmentFilter ? "전체" : v)
+												onEnrollmentFilterChange(v === enrollmentFilter ? "전체" : v)
 											}
 										>
 											{ENROLLMENT_OPTIONS.map((status) => (
-												<DropdownMenuRadioItem
-													key={status}
-													value={status}
-													className={DROPDOWN_RADIO_ITEM_CLASS}
-												>
+												<DropdownMenuFilterRadioItem key={status} value={status}>
 													{status}
-												</DropdownMenuRadioItem>
+												</DropdownMenuFilterRadioItem>
 											))}
 										</DropdownMenuRadioGroup>
 									</DropdownMenuContent>
@@ -218,18 +215,19 @@ export function MemberTable({
 										className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}
 									>
 										{ACCESS_RIGHT_OPTIONS.map((right) => (
-											<DropdownMenuCheckboxItem
+											<DropdownMenuFilterCheckboxItem
 												key={right}
 												checked={accessRightsFilter.includes(right)}
-												className={DROPDOWN_CHECKBOX_ITEM_CLASS}
-												onCheckedChange={(checked) =>
-													setAccessRightsFilter((prev) =>
-														checked ? [...prev, right] : prev.filter((r) => r !== right),
+												onCheckedChange={(checked: boolean) =>
+													onAccessRightsFilterChange(
+														checked
+															? [...accessRightsFilter, right]
+															: accessRightsFilter.filter((r) => r !== right),
 													)
 												}
 											>
 												{right}
-											</DropdownMenuCheckboxItem>
+											</DropdownMenuFilterCheckboxItem>
 										))}
 									</DropdownMenuContent>
 								</DropdownMenu>
@@ -384,12 +382,8 @@ function GenerationSortHeader({
 					value={sort ?? ""}
 					onValueChange={(v) => onSortChange(v === sort ? null : (v as "desc" | "asc"))}
 				>
-					<DropdownMenuRadioItem value="desc" className={DROPDOWN_RADIO_ITEM_CLASS}>
-						내림차순
-					</DropdownMenuRadioItem>
-					<DropdownMenuRadioItem value="asc" className={DROPDOWN_RADIO_ITEM_CLASS}>
-						오름차순
-					</DropdownMenuRadioItem>
+					<DropdownMenuFilterRadioItem value="desc">내림차순</DropdownMenuFilterRadioItem>
+					<DropdownMenuFilterRadioItem value="asc">오름차순</DropdownMenuFilterRadioItem>
 				</DropdownMenuRadioGroup>
 			</DropdownMenuContent>
 		</DropdownMenu>

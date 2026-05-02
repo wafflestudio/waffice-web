@@ -127,7 +127,7 @@ export default function MemberApplicationsPage() {
 		setIsApproveDialogOpen(true)
 	}
 
-	const handleRejectClick = () => {
+	const _handleRejectClick = () => {
 		if (selectedApplications.length === 0) {
 			setToastMessage("반려할 신청을 선택해주세요.")
 			setShowToast(true)
@@ -305,17 +305,10 @@ export default function MemberApplicationsPage() {
 						/>
 					</div>
 					<Button
-						className="bg-[#FF6B6B] hover:bg-[#FF5252] text-white"
+						className="bg-peach-300 hover:bg-peach-500 text-white"
 						onClick={handleApproveClick}
 					>
 						가입 승인
-					</Button>
-					<Button
-						variant="outline"
-						className="border-[#FF6B6B] text-[#FF6B6B] hover:bg-[#FF6B6B] hover:text-white"
-						onClick={handleRejectClick}
-					>
-						가입 반려
 					</Button>
 				</div>
 			</div>
@@ -352,14 +345,14 @@ export default function MemberApplicationsPage() {
 									>
 										<span
 											className={`text-sm font-medium ${
-												selectedRole === role ? "text-[#FF6B6B]" : "text-gray-700"
+												selectedRole === role ? "text-peach-300" : "text-gray-700"
 											}`}
 										>
 											{role}
 										</span>
 										{selectedRole === role && (
 											<svg
-												className="w-4 h-4 text-[#FF6B6B]"
+												className="w-4 h-4 text-peach-300"
 												fill="currentColor"
 												viewBox="0 0 20 20"
 												aria-label="선택됨"
@@ -382,7 +375,7 @@ export default function MemberApplicationsPage() {
 							취소
 						</Button>
 						<Button
-							className="bg-[#FF6B6B] hover:bg-[#FF5252] text-white"
+							className="bg-peach-300 hover:bg-peach-500 text-white"
 							onClick={handleApproveSubmit}
 						>
 							확인
@@ -407,7 +400,7 @@ export default function MemberApplicationsPage() {
 							취소
 						</Button>
 						<Button
-							className="bg-[#FF6B6B] hover:bg-[#FF5252] text-white"
+							className="bg-peach-300 hover:bg-peach-500 text-white"
 							onClick={handleRejectSubmit}
 						>
 							확인

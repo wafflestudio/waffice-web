@@ -1,24 +1,22 @@
 "use client"
 
-import { Check, Loader2, Plus, Search, X as XIcon } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useCallback, useEffect, useId, useState } from "react"
+import { Loader2, Search, X } from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
 import { Forbidden } from "@/components/error/forbidden"
-import { MemberForm } from "@/components/members/member-form"
 import { MemberTable } from "@/components/members/member-table"
+import { QualificationChangeDialog } from "@/components/members/qualification-change-dialog"
 import { Button } from "@/components/ui/button"
-import {
-	Dialog,
-	DialogClose,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Toast } from "@/components/ui/toast"
 import { apiClient } from "@/lib/api"
-import type { Member, MemberCreate, MemberUpdate, Qualification, UserDetail } from "@/types"
+import type {
+	AccessRight,
+	Member,
+	MemberCreate,
+	MemberUpdate,
+	Qualification,
+	UserDetail,
+} from "@/types"
 
 // UserDetail을 Member로 변환하는 함수
 const qualificationToRole = (qualification: Qualification): string => {
@@ -67,22 +65,20 @@ const userDetailToMember = (user: UserDetail): Member => ({
 })
 
 export default function MembersPage() {
-	const router = useRouter()
-
 	const [searchQuery, setSearchQuery] = useState("")
 	const [currentPage, setCurrentPage] = useState(1)
 	const [selectedMembers, setSelectedMembers] = useState<number[]>([])
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
-	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-	const [newRole, setNewRole] = useState<string>("")
-	const [changeReason, setChangeReason] = useState("")
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState("")
 	const [members, setMembers] = useState<Member[]>([])
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 	const [isForbidden, setIsForbidden] = useState(false)
-	const reasonId = useId()
+	const [generationSort, setGenerationSort] = useState<"desc" | "asc" | null>(null)
+	const [roleFilter, setRoleFilter] = useState("전체")
+	const [enrollmentFilter, setEnrollmentFilter] = useState("전체")
+	const [accessRightsFilter, setAccessRightsFilter] = useState<AccessRight[]>([])
 
 	// 회원 목록 불러오기
 	const fetchMembers = useCallback(async () => {
@@ -91,7 +87,9 @@ export default function MembersPage() {
 			setIsForbidden(false)
 			const response = await apiClient.getUsers(undefined, 100)
 			if (response.ok && response.data) {
-				const memberList = response.data.items.map(userDetailToMember)
+				const memberList = response.data.items
+					.filter((u) => u.qualification !== "pending")
+					.map(userDetailToMember)
 				setMembers(memberList)
 			} else {
 				setError(response.message || "회원 목록을 불러오는데 실패했습니다.")
@@ -112,33 +110,6 @@ export default function MembersPage() {
 	useEffect(() => {
 		fetchMembers()
 	}, [fetchMembers])
-
-	useEffect(() => {
-		if (window.location.search.includes("quick=add")) {
-			setIsCreateDialogOpen(true)
-		}
-	}, [])
-
-	const closeCreateDialog = () => {
-		setIsCreateDialogOpen(false)
-		if (window.location.search.includes("quick=add")) {
-			router.replace("/members")
-		}
-	}
-
-	const handleCreateMember = async (data: MemberCreate | MemberUpdate) => {
-		const createData = data as MemberCreate
-		try {
-			const response = await apiClient.createMember(createData)
-			setMembers((prev) => [response, ...prev])
-			setToastMessage("새 회원이 추가되었습니다.")
-			setShowToast(true)
-			closeCreateDialog()
-		} catch (err) {
-			setToastMessage(err instanceof Error ? err.message : "회원 추가에 실패했습니다.")
-			setShowToast(true)
-		}
-	}
 
 	// 회원 정보 수정 핸들러
 	const handleMemberUpdate = async (id: number, data: MemberCreate | MemberUpdate) => {
@@ -180,6 +151,34 @@ export default function MembersPage() {
 		}
 	}
 
+	const activeFilterTags = [
+		...(generationSort
+			? [
+					{
+						label: `기수 · ${generationSort === "desc" ? "내림차순" : "오름차순"}`,
+						onRemove: () => setGenerationSort(null),
+					},
+				]
+			: []),
+		...(roleFilter !== "전체"
+			? [{ label: roleFilter, onRemove: () => setRoleFilter("전체") }]
+			: []),
+		...(enrollmentFilter !== "전체"
+			? [{ label: enrollmentFilter, onRemove: () => setEnrollmentFilter("전체") }]
+			: []),
+		...accessRightsFilter.map((right) => ({
+			label: right,
+			onRemove: () => setAccessRightsFilter((prev) => prev.filter((r) => r !== right)),
+		})),
+	]
+
+	const handleResetFilters = () => {
+		setGenerationSort(null)
+		setRoleFilter("전체")
+		setEnrollmentFilter("전체")
+		setAccessRightsFilter([])
+	}
+
 	const handleRoleChange = () => {
 		if (selectedMembers.length === 0) {
 			setToastMessage("변경할 회원을 선택해주세요.")
@@ -189,36 +188,30 @@ export default function MembersPage() {
 		setIsDialogOpen(true)
 	}
 
-	const handleSubmitRoleChange = async () => {
-		if (!newRole) {
+	const handleDialogSubmit = async (role: string, reason: string) => {
+		if (!role) {
 			setToastMessage("자격을 선택해주세요.")
 			setShowToast(true)
 			return
 		}
-		if (!changeReason.trim()) {
+		if (!reason.trim()) {
 			setToastMessage("변경 사유를 입력해주세요.")
 			setShowToast(true)
 			return
 		}
 
 		try {
-			const qualification = roleToQualification(newRole)
-
-			// 선택된 모든 회원의 자격 변경
+			const qualification = roleToQualification(role)
 			const updatePromises = selectedMembers.map((userId) =>
 				apiClient.updateUserAdmin(userId, { qualification }),
 			)
-
 			const results = await Promise.all(updatePromises)
 
-			// 실패한 업데이트 확인
 			const failedUpdates = results.filter((r) => !r.ok)
 			if (failedUpdates.length > 0) {
 				setToastMessage(`${failedUpdates.length}명의 자격 변경에 실패했습니다. 다시 시도해주세요.`)
 			} else {
 				setToastMessage(`${selectedMembers.length}명의 회원 자격이 성공적으로 변경되었습니다.`)
-
-				// 로컬 상태 업데이트
 				setMembers((prev) =>
 					prev.map((m) => {
 						if (selectedMembers.includes(m.id)) {
@@ -230,23 +223,13 @@ export default function MembersPage() {
 				)
 				setSelectedMembers([])
 			}
-
 			setShowToast(true)
 		} catch (err) {
 			setToastMessage(err instanceof Error ? err.message : "자격 변경 처리 중 오류가 발생했습니다.")
 			setShowToast(true)
 		} finally {
-			// 다이얼로그 닫고 초기화
 			setIsDialogOpen(false)
-			setNewRole("")
-			setChangeReason("")
 		}
-	}
-
-	const handleCancelRoleChange = () => {
-		setIsDialogOpen(false)
-		setNewRole("")
-		setChangeReason("")
 	}
 
 	if (isLoading) {
@@ -288,32 +271,52 @@ export default function MembersPage() {
 							({members.length.toString().padStart(2, "0")})
 						</span>
 					</h2>
-					<Button
-						variant="default"
-						className="bg-[#f77153] hover:bg-[#f77153]/90 text-white"
-						onClick={() => setIsCreateDialogOpen(true)}
-					>
-						<Plus className="mr-2 h-4 w-4" />
-						회원 추가
-					</Button>
 				</div>
 
-				<div className="flex items-center gap-[15px]">
-					<div className="relative flex-1 max-w-md">
-						<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-						<Input
-							placeholder="검색어를 입력해 주세요"
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							className="pl-9"
-						/>
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-[15px]">
+						<div className="relative w-[320px]">
+							<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+							<Input
+								placeholder="검색어를 입력해 주세요"
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+								className="pl-9"
+							/>
+						</div>
+						<Button
+							className="bg-peach-300 hover:bg-peach-500 text-white"
+							onClick={handleRoleChange}
+						>
+							회원 자격 변경
+						</Button>
 					</div>
-					<Button
-						className="bg-[#f77153] hover:bg-[#f77153]/90 text-white"
-						onClick={handleRoleChange}
-					>
-						회원 자격 변경
-					</Button>
+					{activeFilterTags.length > 0 && (
+						<div className="flex items-center gap-[10px]">
+							{activeFilterTags.map((tag) => (
+								<button
+									key={tag.label}
+									type="button"
+									onClick={tag.onRemove}
+									className="flex justify-center items-center gap-[10px] px-2 py-1.5 bg-peach-100 rounded-[3px]"
+								>
+									<div className="flex justify-start items-center gap-2">
+										<span className="text-sm font-medium text-peach-500">{tag.label}</span>
+										<X className="w-[9px] h-[9px] text-peach-500 shrink-0" />
+									</div>
+								</button>
+							))}
+							<button
+								type="button"
+								onClick={handleResetFilters}
+								className="flex justify-center items-center gap-[10px] px-2 py-1.5 rounded-[3px]"
+							>
+								<div className="flex justify-start items-center gap-2">
+									<span className="text-sm font-medium text-peach-500 underline">초기화</span>
+								</div>
+							</button>
+						</div>
+					)}
 				</div>
 			</div>
 
@@ -326,98 +329,21 @@ export default function MembersPage() {
 				selectedMembers={selectedMembers}
 				onSelectedMembersChange={setSelectedMembers}
 				onMemberUpdate={handleMemberUpdate}
+				generationSort={generationSort}
+				onGenerationSortChange={setGenerationSort}
+				roleFilter={roleFilter}
+				onRoleFilterChange={setRoleFilter}
+				enrollmentFilter={enrollmentFilter}
+				onEnrollmentFilterChange={setEnrollmentFilter}
+				accessRightsFilter={accessRightsFilter}
+				onAccessRightsFilterChange={setAccessRightsFilter}
 			/>
 
-			{/* 회원 자격 변경 다이얼로그 */}
-			<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-				<DialogContent
-					className="w-[460px] max-w-[460px] h-[650px] rounded-[12px] p-0 gap-0 overflow-hidden"
-					showCloseButton={false}
-				>
-					<div className="flex flex-col items-end gap-[10px] w-full h-full pt-[10px] px-[10px] pb-[40px]">
-						{/* X 버튼 — flex 레이아웃의 첫 번째 레이어 */}
-						<DialogClose className="shrink-0 size-[35px] flex items-center justify-center rounded-sm opacity-70 hover:opacity-100 transition-opacity">
-							<XIcon className="size-5" />
-							<span className="sr-only">Close</span>
-						</DialogClose>
-						<div className="flex flex-col gap-[50px] items-start px-[40px] w-full">
-							<DialogTitle className="text-[24px] font-medium text-[#121212]">
-								회원 자격 변경
-							</DialogTitle>
-							<div className="flex flex-col gap-[40px] items-end w-full">
-								<div className="flex flex-col gap-[40px] items-start w-full">
-									{/* 자격 선택 */}
-									<div className="flex flex-col gap-[10px] items-start">
-										<Label className="text-[15px] font-medium text-[#121212]">자격</Label>
-										<div className="border border-[#dbdfe0] rounded-[5px] w-[360px]">
-											{["활동회원", "정회원", "준회원", "가입대기"].map((role) => (
-												<button
-													key={role}
-													type="button"
-													onClick={() => setNewRole(role)}
-													className="flex h-[50px] w-full items-center justify-between p-[16px] hover:bg-gray-50"
-												>
-													<span
-														className={`text-[15px] font-medium leading-[20px] ${
-															newRole === role ? "text-[#e75010]" : "text-[#505050]"
-														}`}
-													>
-														{role}
-													</span>
-													{newRole === role && (
-														<Check className="w-[12px] h-[12px] text-[#e75010]" strokeWidth={2.5} />
-													)}
-												</button>
-											))}
-										</div>
-									</div>
-
-									{/* 변경 사유 */}
-									<div className="flex flex-col gap-[10px] items-start">
-										<Label htmlFor={reasonId} className="text-[15px] font-medium text-[#121212]">
-											변경 사유
-										</Label>
-										<textarea
-											id={reasonId}
-											placeholder="변경 사유를 입력해 주세요."
-											value={changeReason}
-											onChange={(e) => setChangeReason(e.target.value)}
-											className="w-[360px] h-[90px] p-[16px] border border-[#dbdfe0] rounded-[5px] bg-white text-[14px] font-normal text-[#121212] placeholder:text-[#777] placeholder:text-[14px] tracking-[-0.28px] resize-none outline-none"
-										/>
-									</div>
-								</div>
-
-								{/* 버튼 */}
-								<div className="flex gap-[16px] items-center">
-									<button
-										type="button"
-										onClick={handleCancelRoleChange}
-										className="w-[126px] h-[50px] border border-[#999] rounded-[4px] text-[15px] font-semibold text-[#121212]"
-									>
-										취소
-									</button>
-									<button
-										type="button"
-										onClick={handleSubmitRoleChange}
-										className="w-[126px] h-[50px] bg-[#f77153] rounded-[4px] text-[15px] font-semibold text-white"
-									>
-										확인
-									</button>
-								</div>
-							</div>
-						</div>
-					</div>
-				</DialogContent>
-			</Dialog>
-
-			<Dialog open={isCreateDialogOpen} onOpenChange={closeCreateDialog}>
-				<DialogContent className="sm:max-w-lg">
-					<DialogHeader>
-						<DialogTitle>새 회원 추가</DialogTitle>
-					</DialogHeader>
-					<MemberForm onSubmit={handleCreateMember} onCancel={closeCreateDialog} />
-				</DialogContent>
-			</Dialog>
+			<QualificationChangeDialog
+				open={isDialogOpen}
+				onOpenChange={setIsDialogOpen}
+				onSubmit={handleDialogSubmit}
+			/>
 
 			{/* 성공 토스트 알림 */}
 			<Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />
