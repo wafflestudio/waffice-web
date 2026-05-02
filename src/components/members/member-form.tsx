@@ -255,7 +255,11 @@ export function MemberForm({ member, onSubmit, onCancel, trigger }: MemberFormPr
 				>
 					취소
 				</Button>
-				<Button type="submit" disabled={isSubmitting} className="bg-[#FF6B6B] text-white">
+				<Button
+					type="submit"
+					disabled={isSubmitting}
+					className="bg-peach-300 hover:bg-peach-500 text-white"
+				>
 					{isSubmitting ? "저장 중..." : "확인"}
 				</Button>
 			</div>
