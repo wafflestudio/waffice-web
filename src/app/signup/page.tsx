@@ -8,15 +8,10 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { Logo } from "@/components/auth/logo"
+import { SignupErrorToast } from "@/components/auth/signup-error-toast"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormMessage,
-} from "@/components/ui/form"
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import {
 	Select,
@@ -26,6 +21,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select"
 import { authClient } from "@/lib/auth"
+import { cn } from "@/lib/utils"
 
 const signupSchema = z.object({
 	name: z.string().min(1, "이름을 입력해 주세요."),
@@ -35,18 +31,14 @@ const signupSchema = z.object({
 		.regex(/^\d+(\.\d+)?$/, "기수는 숫자 형식으로 입력해 주세요. (예: 22, 22.5)"),
 	email: z.string().min(1, "이메일을 입력해 주세요.").email("이메일을 확인해주세요."),
 	enrollmentStatus: z.enum(["학부생", "대학원생", "졸업생", "기타"], {
-		errorMap: () => ({ message: "재학여부를 선택해 주세요." }),
+		error: "재학여부를 선택해 주세요.",
 	}),
 	qualification: z.enum(["준회원", "정회원", "활동회원"], {
-		errorMap: () => ({ message: "자격을 선택해 주세요." }),
+		error: "자격을 선택해 주세요.",
 	}),
 	githubId: z.string().optional(),
-	termsPersonalInfo: z.boolean().refine((val) => val === true, {
-		message: "필수 항목입니다.",
-	}),
-	termsWaffleStudio: z.boolean().refine((val) => val === true, {
-		message: "필수 항목입니다.",
-	}),
+	termsPersonalInfo: z.boolean(),
+	termsWaffleStudio: z.boolean(),
 	termsEmailSms: z.boolean(),
 })
 
@@ -149,6 +141,14 @@ export default function SignupPage() {
 
 	return (
 		<div className="min-h-screen flex items-center justify-center p-4">
+			<SignupErrorToast
+				message={termsError ?? error ?? ""}
+				isVisible={!!termsError || !!error}
+				onClose={() => {
+					setTermsError(null)
+					setError(null)
+				}}
+			/>
 			<div className="flex justify-start items-center gap-2.5 px-[50px] py-[70px] rounded-[15px] border border-[#dbdfe0] bg-white">
 				<div className="flex flex-col justify-start items-start gap-[50px]">
 					{/* 헤더 */}
@@ -158,12 +158,6 @@ export default function SignupPage() {
 					</div>
 
 					<div className="flex flex-col gap-[30px]">
-						{error && (
-							<div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-								{error}
-							</div>
-						)}
-
 						<Form {...form}>
 							<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-[30px]">
 								{/* 입력 필드 그룹 */}
@@ -172,13 +166,16 @@ export default function SignupPage() {
 									<FormField
 										control={form.control}
 										name="name"
-										render={({ field }) => (
+										render={({ field, fieldState }) => (
 											<FormItem className="gap-1.5">
 												<RequiredLabel label="이름" />
 												<FormControl>
 													<Input
 														placeholder="홍길동"
-														className="w-[360px] h-[50px] rounded-[5px] border-[#777] text-[15px]"
+														className={cn(
+															"w-[360px] h-[50px] rounded-[5px] text-[15px]",
+															fieldState.error ? "border-red-500" : "border-black-600",
+														)}
 														{...field}
 													/>
 												</FormControl>
@@ -191,13 +188,16 @@ export default function SignupPage() {
 									<FormField
 										control={form.control}
 										name="generation"
-										render={({ field }) => (
+										render={({ field, fieldState }) => (
 											<FormItem className="gap-1.5">
 												<RequiredLabel label="기수" />
 												<FormControl>
 													<Input
 														placeholder="23.5"
-														className="w-[360px] h-[50px] rounded-[5px] border-[#777] text-[15px]"
+														className={cn(
+															"w-[360px] h-[50px] rounded-[5px] text-[15px]",
+															fieldState.error ? "border-red-500" : "border-black-600",
+														)}
 														{...field}
 													/>
 												</FormControl>
@@ -210,14 +210,17 @@ export default function SignupPage() {
 									<FormField
 										control={form.control}
 										name="email"
-										render={({ field }) => (
+										render={({ field, fieldState }) => (
 											<FormItem className="gap-1.5">
 												<RequiredLabel label="이메일" />
 												<FormControl>
 													<Input
 														type="email"
 														placeholder="example@gmail.com"
-														className="w-[360px] h-[50px] rounded-[5px] border-[#777] text-[15px]"
+														className={cn(
+															"w-[360px] h-[50px] rounded-[5px] text-[15px]",
+															fieldState.error ? "border-red-500" : "border-black-600",
+														)}
 														{...field}
 													/>
 												</FormControl>
@@ -230,20 +233,48 @@ export default function SignupPage() {
 									<FormField
 										control={form.control}
 										name="enrollmentStatus"
-										render={({ field }) => (
+										render={({ field, fieldState }) => (
 											<FormItem className="gap-1.5">
 												<RequiredLabel label="재학여부" />
 												<Select onValueChange={field.onChange} value={field.value}>
 													<FormControl>
-														<SelectTrigger className="w-[360px] h-[50px] rounded-[5px] border-[#777] text-[15px]">
+														<SelectTrigger
+															className={cn(
+																"w-[360px] h-[50px] rounded-[5px] text-[17px] text-black-700 px-4 [&>svg]:text-black-600 data-[state=open]:rounded-b-none data-[state=open]:border-b-0",
+																fieldState.error ? "border-red-500" : "border-black-600",
+															)}
+														>
 															<SelectValue placeholder="선택" />
 														</SelectTrigger>
 													</FormControl>
-													<SelectContent>
-														<SelectItem value="학부생">학부생</SelectItem>
-														<SelectItem value="대학원생">대학원생</SelectItem>
-														<SelectItem value="졸업생">졸업생</SelectItem>
-														<SelectItem value="기타">기타</SelectItem>
+													<SelectContent
+														className="w-[360px] rounded-t-none rounded-b-[5px] border-black-600 p-0 shadow-none data-[side=bottom]:translate-y-0"
+														sideOffset={0}
+													>
+														<SelectItem
+															value="학부생"
+															className="h-[50px] px-4 text-[17px] text-black-700 data-[state=checked]:text-peach-500 data-[state=checked]:font-medium focus:bg-transparent"
+														>
+															학부생
+														</SelectItem>
+														<SelectItem
+															value="대학원생"
+															className="h-[50px] px-4 text-[17px] text-black-700 data-[state=checked]:text-peach-500 data-[state=checked]:font-medium focus:bg-transparent"
+														>
+															대학원생
+														</SelectItem>
+														<SelectItem
+															value="졸업생"
+															className="h-[50px] px-4 text-[17px] text-black-700 data-[state=checked]:text-peach-500 data-[state=checked]:font-medium focus:bg-transparent"
+														>
+															졸업생
+														</SelectItem>
+														<SelectItem
+															value="기타"
+															className="h-[50px] px-4 text-[17px] text-black-700 data-[state=checked]:text-peach-500 data-[state=checked]:font-medium focus:bg-transparent"
+														>
+															기타
+														</SelectItem>
 													</SelectContent>
 												</Select>
 												<FormMessage />
@@ -255,19 +286,42 @@ export default function SignupPage() {
 									<FormField
 										control={form.control}
 										name="qualification"
-										render={({ field }) => (
+										render={({ field, fieldState }) => (
 											<FormItem className="gap-1.5">
 												<RequiredLabel label="자격" />
 												<Select onValueChange={field.onChange} value={field.value}>
 													<FormControl>
-														<SelectTrigger className="w-[360px] h-[50px] rounded-[5px] border-[#777] text-[15px]">
+														<SelectTrigger
+															className={cn(
+																"w-[360px] h-[50px] rounded-[5px] text-[17px] text-black-700 px-4 [&>svg]:text-black-600 data-[state=open]:rounded-b-none data-[state=open]:border-b-0",
+																fieldState.error ? "border-red-500" : "border-black-600",
+															)}
+														>
 															<SelectValue placeholder="선택" />
 														</SelectTrigger>
 													</FormControl>
-													<SelectContent>
-														<SelectItem value="준회원">준회원</SelectItem>
-														<SelectItem value="정회원">정회원</SelectItem>
-														<SelectItem value="활동회원">활동회원</SelectItem>
+													<SelectContent
+														className="w-[360px] rounded-t-none rounded-b-[5px] border-black-600 p-0 shadow-none data-[side=bottom]:translate-y-0"
+														sideOffset={0}
+													>
+														<SelectItem
+															value="준회원"
+															className="h-[50px] px-4 text-[17px] text-black-700 data-[state=checked]:text-peach-500 data-[state=checked]:font-medium focus:bg-transparent"
+														>
+															준회원
+														</SelectItem>
+														<SelectItem
+															value="정회원"
+															className="h-[50px] px-4 text-[17px] text-black-700 data-[state=checked]:text-peach-500 data-[state=checked]:font-medium focus:bg-transparent"
+														>
+															정회원
+														</SelectItem>
+														<SelectItem
+															value="활동회원"
+															className="h-[50px] px-4 text-[17px] text-black-700 data-[state=checked]:text-peach-500 data-[state=checked]:font-medium focus:bg-transparent"
+														>
+															활동회원
+														</SelectItem>
 													</SelectContent>
 												</Select>
 												<FormMessage />
@@ -285,7 +339,7 @@ export default function SignupPage() {
 												<FormControl>
 													<Input
 														placeholder="example"
-														className="w-[360px] h-[50px] rounded-[5px] border-[#777] text-[15px]"
+														className="w-[360px] h-[50px] rounded-[5px] border-black-600 text-[15px]"
 														{...field}
 													/>
 												</FormControl>
@@ -335,22 +389,13 @@ export default function SignupPage() {
 												<FormControl>
 													<Checkbox checked={field.value} onCheckedChange={field.onChange} />
 												</FormControl>
-												<span className="text-[13px] text-[#505050]">[선택] 이메일 SMS 정보 수신 동의</span>
+												<span className="text-[13px] text-[#505050]">
+													[선택] 이메일 SMS 정보 수신 동의
+												</span>
 											</FormItem>
 										)}
 									/>
 								</div>
-
-								{/* 필수 동의 에러 팝업 */}
-								{termsError && (
-									<div className="flex items-center gap-2 px-[30px] py-[25px] rounded-md border border-destructive bg-destructive/5">
-										<svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="shrink-0" aria-hidden="true">
-											<circle cx="12" cy="12" r="10" stroke="#ef4444" strokeWidth="2" />
-											<path d="M12 8v4M12 16h.01" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
-										</svg>
-										<span className="text-[15px] text-destructive">{termsError}</span>
-									</div>
-								)}
 
 								{/* 가입하기 버튼 */}
 								<Button

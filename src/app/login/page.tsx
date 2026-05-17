@@ -119,9 +119,21 @@ export default function LoginPage() {
 						© wafflestudio. All rights reserved.
 					</p>
 
-					{/* {ENABLE_DEV_AUTH && (
-						<DevSigninForm onSuccess={handleDevSigninSuccess} onError={handleDevSigninError} />
-					)} */}
+					{ENABLE_DEV_AUTH && (
+						<div className="mt-6 space-y-2">
+							<button
+								type="button"
+								onClick={() => {
+									sessionStorage.setItem("auth_token", "dev-test-token")
+									router.push("/signup")
+								}}
+								className="w-full text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+							>
+								[Dev] 회원가입 페이지 직접 보기
+							</button>
+							<DevSigninForm onSuccess={handleDevSigninSuccess} onError={handleDevSigninError} />
+						</div>
+					)}
 				</CardContent>
 			</Card>
 		</div>
