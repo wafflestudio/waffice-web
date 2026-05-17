@@ -6,6 +6,7 @@ import { useState } from "react"
 import { DevSigninForm } from "@/components/auth/dev-signin-form"
 import { GoogleButton } from "@/components/auth/google-button"
 import { Logo } from "@/components/auth/logo"
+import { SignupButton } from "@/components/auth/signup-button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { useGoogleOAuth } from "@/hooks/use-google-oauth"
 import { authClient } from "@/lib/auth"
@@ -86,36 +87,52 @@ export default function LoginPage() {
 	const displayError = authError || oauthError
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-muted/30">
-			<Card className="w-full max-w-md">
-				<CardHeader className="flex flex-col items-start text-left space-y-3">
-					<Logo size="md" />
-					<h1 className="text-2xl font-bold">로그인</h1>
+		<div className="min-h-screen flex items-center justify-center bg-background">
+			<Card className="w-[460px] px-[50px] pt-[70px] pb-[70px]">
+				<CardHeader className="flex flex-row items-center justify-center gap-2 p-0 mb-[70px]">
+					<Logo size="sm" />
+					<h1 className="text-2xl font-bold">WAFFICE</h1>
 				</CardHeader>
-				<CardContent className="space-y-4">
+				<CardContent className="p-0">
 					{displayError && (
-						<div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
+						<div className="p-3 mb-4 text-sm text-destructive bg-destructive/10 rounded-md">
 							{displayError}
 						</div>
 					)}
 
-					<GoogleButton onClick={openPopup} fullWidth disabled={isLoading}>
-						{isLoading ? (
-							<>
-								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-								로그인 중...
-							</>
-						) : (
-							"Google로 로그인"
-						)}
-					</GoogleButton>
+					<div className="flex flex-col gap-[15px]">
+						<GoogleButton onClick={openPopup} fullWidth disabled={isLoading}>
+							{isLoading ? (
+								<>
+									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									로그인 중...
+								</>
+							) : (
+								"Google로 로그인"
+							)}
+						</GoogleButton>
 
-					<p className="text-sm text-center text-muted-foreground">
-						아직 계정이 없으시다면 Google 로그인 후 회원가입을 진행해주세요.
+						<SignupButton onClick={openPopup} disabled={isLoading} />
+					</div>
+
+					<p className="text-xs text-muted-foreground text-center mt-[30px]">
+						© wafflestudio. All rights reserved.
 					</p>
 
 					{ENABLE_DEV_AUTH && (
-						<DevSigninForm onSuccess={handleDevSigninSuccess} onError={handleDevSigninError} />
+						<div className="mt-6 space-y-2">
+							<button
+								type="button"
+								onClick={() => {
+									sessionStorage.setItem("auth_token", "dev-test-token")
+									router.push("/signup")
+								}}
+								className="w-full text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+							>
+								[Dev] 회원가입 페이지 직접 보기
+							</button>
+							<DevSigninForm onSuccess={handleDevSigninSuccess} onError={handleDevSigninError} />
+						</div>
 					)}
 				</CardContent>
 			</Card>
