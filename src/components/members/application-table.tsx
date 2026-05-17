@@ -1,15 +1,14 @@
 "use client"
 
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Settings2 } from "lucide-react"
-import { useState } from "react"
 import { ApplicationForm } from "@/components/members/application-form"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
+	DropdownMenuFilterRadioItem,
 	DropdownMenuRadioGroup,
-	DropdownMenuRadioItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -41,13 +40,19 @@ interface ApplicationTableProps {
 	onSelectedApplicationsChange: (selected: number[]) => void
 	onApprove?: (id: number, role: string) => void
 	onReject?: (id: number) => void
+	generationSort: SortOrder
+	onGenerationSortChange: (s: SortOrder) => void
+	dateSort: SortOrder
+	onDateSortChange: (s: SortOrder) => void
+	roleFilter: string
+	onRoleFilterChange: (v: string) => void
+	statusFilter: string
+	onStatusFilterChange: (v: string) => void
 }
 
 const ITEMS_PER_PAGE = 10
 const DROPDOWN_CONTENT_CLASS =
 	"min-w-0 rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
-const DROPDOWN_RADIO_ITEM_CLASS =
-	"text-[14px] font-medium text-[#777] data-[state=checked]:text-[#e75010] cursor-pointer"
 
 type SortOrder = "asc" | "desc" | null
 
@@ -73,12 +78,8 @@ function SortHeader({
 					value={sort ?? ""}
 					onValueChange={(v) => onChange(v === sort ? null : (v as SortOrder))}
 				>
-					<DropdownMenuRadioItem value="desc" className={DROPDOWN_RADIO_ITEM_CLASS}>
-						내림차순
-					</DropdownMenuRadioItem>
-					<DropdownMenuRadioItem value="asc" className={DROPDOWN_RADIO_ITEM_CLASS}>
-						오름차순
-					</DropdownMenuRadioItem>
+					<DropdownMenuFilterRadioItem value="desc">내림차순</DropdownMenuFilterRadioItem>
+					<DropdownMenuFilterRadioItem value="asc">오름차순</DropdownMenuFilterRadioItem>
 				</DropdownMenuRadioGroup>
 			</DropdownMenuContent>
 		</DropdownMenu>
@@ -94,12 +95,15 @@ export function ApplicationTable({
 	onSelectedApplicationsChange,
 	onApprove,
 	onReject,
+	generationSort,
+	onGenerationSortChange,
+	dateSort,
+	onDateSortChange,
+	roleFilter,
+	onRoleFilterChange,
+	statusFilter,
+	onStatusFilterChange,
 }: ApplicationTableProps) {
-	const [generationSort, setGenerationSort] = useState<SortOrder>(null)
-	const [dateSort, setDateSort] = useState<SortOrder>(null)
-	const [roleFilter, setRoleFilter] = useState<string>("전체")
-	const [statusFilter, setStatusFilter] = useState<string>("전체")
-
 	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "미가입"]
 	const STATUS_OPTIONS = ["대기", "승인"]
 
@@ -165,7 +169,7 @@ export function ApplicationTable({
 								이름
 							</TableHead>
 							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
-								<SortHeader label="기수" sort={generationSort} onChange={setGenerationSort} />
+								<SortHeader label="기수" sort={generationSort} onChange={onGenerationSortChange} />
 							</TableHead>
 							<TableHead className="text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
 								이메일
@@ -174,7 +178,7 @@ export function ApplicationTable({
 								Github 아이디
 							</TableHead>
 							<TableHead className="w-[180px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
-								<SortHeader label="가입 신청일" sort={dateSort} onChange={setDateSort} />
+								<SortHeader label="가입 신청일" sort={dateSort} onChange={onDateSortChange} />
 							</TableHead>
 							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
 								<DropdownMenu>
@@ -194,16 +198,12 @@ export function ApplicationTable({
 									>
 										<DropdownMenuRadioGroup
 											value={roleFilter}
-											onValueChange={(v) => setRoleFilter(v === roleFilter ? "전체" : v)}
+											onValueChange={(v) => onRoleFilterChange(v === roleFilter ? "전체" : v)}
 										>
 											{ROLE_OPTIONS.map((role) => (
-												<DropdownMenuRadioItem
-													key={role}
-													value={role}
-													className={DROPDOWN_RADIO_ITEM_CLASS}
-												>
+												<DropdownMenuFilterRadioItem key={role} value={role}>
 													{role}
-												</DropdownMenuRadioItem>
+												</DropdownMenuFilterRadioItem>
 											))}
 										</DropdownMenuRadioGroup>
 									</DropdownMenuContent>
@@ -227,16 +227,12 @@ export function ApplicationTable({
 									>
 										<DropdownMenuRadioGroup
 											value={statusFilter}
-											onValueChange={(v) => setStatusFilter(v === statusFilter ? "전체" : v)}
+											onValueChange={(v) => onStatusFilterChange(v === statusFilter ? "전체" : v)}
 										>
 											{STATUS_OPTIONS.map((s) => (
-												<DropdownMenuRadioItem
-													key={s}
-													value={s}
-													className={DROPDOWN_RADIO_ITEM_CLASS}
-												>
+												<DropdownMenuFilterRadioItem key={s} value={s}>
 													{s}
-												</DropdownMenuRadioItem>
+												</DropdownMenuFilterRadioItem>
 											))}
 										</DropdownMenuRadioGroup>
 									</DropdownMenuContent>
