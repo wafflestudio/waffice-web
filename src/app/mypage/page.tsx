@@ -268,7 +268,7 @@ export default function MyPage() {
 		: ""
 
 	return (
-		<div className="space-y-6 p-8">
+		<div className="space-y-6">
 			<div>
 				<h1 className="text-3xl font-bold">마이페이지</h1>
 			</div>

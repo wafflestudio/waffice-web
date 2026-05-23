@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Settings2 } from "lucide-react"
+import { Settings2 } from "lucide-react"
 import { ApplicationForm } from "@/components/members/application-form"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -11,6 +11,7 @@ import {
 	DropdownMenuRadioGroup,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Pagination } from "@/components/ui/pagination"
 import {
 	Table,
 	TableBody,
@@ -304,70 +305,7 @@ export function ApplicationTable({
 				</Table>
 			</div>
 
-			{/* 페이지네이션 */}
-			<div className="flex items-center justify-center gap-[30px]">
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={() => onPageChange(1)}
-					disabled={currentPage === 1}
-				>
-					<ChevronsLeft className="h-4 w-4" />
-				</Button>
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-					disabled={currentPage === 1}
-				>
-					<ChevronLeft className="h-4 w-4" />
-				</Button>
-
-				{Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-					let pageNum: number
-					if (totalPages <= 5) {
-						pageNum = i + 1
-					} else if (currentPage <= 3) {
-						pageNum = i + 1
-					} else if (currentPage >= totalPages - 2) {
-						pageNum = totalPages - 4 + i
-					} else {
-						pageNum = currentPage - 2 + i
-					}
-					return (
-						<Button
-							key={pageNum}
-							variant="ghost"
-							size="sm"
-							onClick={() => onPageChange(pageNum)}
-							className={
-								currentPage === pageNum
-									? "text-[#f77153] font-medium"
-									: "text-[#b4b4b4] font-medium"
-							}
-						>
-							{pageNum}
-						</Button>
-					)
-				})}
-
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-					disabled={currentPage === totalPages}
-				>
-					<ChevronRight className="h-4 w-4" />
-				</Button>
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={() => onPageChange(totalPages)}
-					disabled={currentPage === totalPages}
-				>
-					<ChevronsRight className="h-4 w-4" />
-				</Button>
-			</div>
+			<Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
 		</div>
 	)
 }
