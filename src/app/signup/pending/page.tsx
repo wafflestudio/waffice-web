@@ -5,31 +5,39 @@ import { Logo } from "@/components/auth/logo"
 
 export default function SignupPendingPage() {
 	return (
-		<div className="relative min-h-screen p-6 flex items-center justify-center">
-			<div className="absolute left-4 top-4">
+		<div className="relative min-h-screen bg-white flex items-center justify-center">
+			<div className="absolute left-[30px] top-[30px]">
 				<Link
 					href="/login"
-					className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+					className="inline-flex items-center gap-[10px] text-[17px] leading-[140%] tracking-[-0.02em] text-black-700 hover:opacity-70"
 				>
-					<ArrowLeft className="h-4 w-4" />
+					<ArrowLeft className="w-6 h-6" />
 					이전 화면으로
 				</Link>
 			</div>
 
-			<div className="text-center max-w-xl">
-				<Logo size="lg" className="mx-auto mb-6" />
-				<h1 className="text-2xl md:text-3xl font-bold">가입 승인 대기 중입니다.</h1>
-				<p className="mt-4 text-muted-foreground">
-					가입 요청이 잘 접수되었어요.
-					<br className="hidden sm:block" />
-					운영진이 확인 후 승인 메일을 보내드릴게요. 조금만 기다려주세요.
-				</p>
-				<p className="mt-6 text-sm text-muted-foreground">
-					문의가 필요하신가요?{" "}
-					<a href="mailto:master@wafflestudio.com" className="underline underline-offset-2">
-						master@wafflestudio.com
-					</a>
-				</p>
+			<div className="flex flex-col items-center gap-[48px] w-[424px]">
+				<Logo size="lg" />
+
+				<div className="flex flex-col items-center gap-[36px] w-[424px]">
+					<h1 className="text-[40px] font-bold leading-[140%] text-black-900 text-center">
+						가입 승인 대기 중입니다.
+					</h1>
+
+					<div className="flex flex-col items-center gap-[36px]">
+						<p className="text-[17px] font-normal leading-[140%] tracking-[-0.02em] text-black-700 text-center">
+							가입 요청이 잘 접수되었어요. 운영진이 확인 후 승인 메일을 보내드릴게요. 조금만
+							기다려주세요.
+						</p>
+
+						<p className="text-[16px] leading-[140%] tracking-[-0.02em] text-black-500">
+							문의가 필요하신가요?{" "}
+							<a href="mailto:master@wafflestudio.com" className="underline underline-offset-2">
+								master@wafflestudio.com
+							</a>
+						</p>
+					</div>
+				</div>
 			</div>
 		</div>
 	)
