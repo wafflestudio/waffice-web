@@ -1,12 +1,13 @@
 "use client"
 
-import { Loader2, Search, X } from "lucide-react"
+import { Loader2, X } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import { Forbidden } from "@/components/error/forbidden"
 import { MemberTable } from "@/components/members/member-table"
 import { QualificationChangeDialog } from "@/components/members/qualification-change-dialog"
+import { ActionButton } from "@/components/ui/action-button"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { SearchInput } from "@/components/ui/search-input"
 import { Toast } from "@/components/ui/toast"
 import { apiClient } from "@/lib/api"
 import type {
@@ -256,88 +257,80 @@ export default function MembersPage() {
 	}
 
 	return (
-		<div className="space-y-6 p-8">
+		<div className="flex flex-col gap-[60px]">
 			{/* 헤더 */}
-			<div>
-				<h1 className="text-[36px] font-medium text-[#121212]">회원 관리</h1>
-			</div>
+			<h1 className="text-[36px] font-medium leading-none text-[#121212]">회원 관리</h1>
 
 			{/* 검색 영역 */}
-			<div className="space-y-4">
-				<div className="flex items-center justify-between">
-					<h2 className="flex items-baseline gap-[4px]">
-						<span className="text-[20px] font-medium text-[#121212]">전체 회원</span>
-						<span className="text-[14px] font-medium text-[#121212]">
-							({members.length.toString().padStart(2, "0")})
-						</span>
-					</h2>
-				</div>
+			<div className="flex flex-col gap-[25px]">
+				<h2 className="flex items-center gap-[2px] text-[#121212]">
+					<span className="text-[20px] font-medium leading-none">전체 회원</span>
+					<span className="text-[14px] font-medium leading-[1.4] tracking-[-0.28px]">
+						({members.length.toString().padStart(2, "0")})
+					</span>
+				</h2>
 
-				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-[15px]">
-						<div className="relative w-[320px]">
-							<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-							<Input
+				<div className="flex flex-col gap-[20px]">
+					<div className="flex items-center justify-between">
+						<div className="flex items-center gap-[15px]">
+							<SearchInput
+								containerClassName="w-[300px]"
 								placeholder="검색어를 입력해 주세요"
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
-								className="pl-9"
 							/>
+							<ActionButton variant="primary" size="inline" onClick={handleRoleChange}>
+								회원 자격 변경
+							</ActionButton>
 						</div>
-						<Button
-							className="bg-peach-300 hover:bg-peach-500 text-white"
-							onClick={handleRoleChange}
-						>
-							회원 자격 변경
-						</Button>
-					</div>
-					{activeFilterTags.length > 0 && (
-						<div className="flex items-center gap-[10px]">
-							{activeFilterTags.map((tag) => (
+						{activeFilterTags.length > 0 && (
+							<div className="flex items-center gap-[10px]">
+								{activeFilterTags.map((tag) => (
+									<button
+										key={tag.label}
+										type="button"
+										onClick={tag.onRemove}
+										className="flex justify-center items-center gap-[10px] px-2 py-1.5 bg-peach-100 rounded-[3px]"
+									>
+										<div className="flex justify-start items-center gap-2">
+											<span className="text-sm font-medium text-peach-500">{tag.label}</span>
+											<X className="w-[9px] h-[9px] text-peach-500 shrink-0" />
+										</div>
+									</button>
+								))}
 								<button
-									key={tag.label}
 									type="button"
-									onClick={tag.onRemove}
-									className="flex justify-center items-center gap-[10px] px-2 py-1.5 bg-peach-100 rounded-[3px]"
+									onClick={handleResetFilters}
+									className="flex justify-center items-center gap-[10px] px-2 py-1.5 rounded-[3px]"
 								>
 									<div className="flex justify-start items-center gap-2">
-										<span className="text-sm font-medium text-peach-500">{tag.label}</span>
-										<X className="w-[9px] h-[9px] text-peach-500 shrink-0" />
+										<span className="text-sm font-medium text-peach-500 underline">초기화</span>
 									</div>
 								</button>
-							))}
-							<button
-								type="button"
-								onClick={handleResetFilters}
-								className="flex justify-center items-center gap-[10px] px-2 py-1.5 rounded-[3px]"
-							>
-								<div className="flex justify-start items-center gap-2">
-									<span className="text-sm font-medium text-peach-500 underline">초기화</span>
-								</div>
-							</button>
-						</div>
-					)}
+							</div>
+						)}
+					</div>
+
+					{/* 테이블 */}
+					<MemberTable
+						members={members}
+						searchQuery={searchQuery}
+						currentPage={currentPage}
+						onPageChange={setCurrentPage}
+						selectedMembers={selectedMembers}
+						onSelectedMembersChange={setSelectedMembers}
+						onMemberUpdate={handleMemberUpdate}
+						generationSort={generationSort}
+						onGenerationSortChange={setGenerationSort}
+						roleFilter={roleFilter}
+						onRoleFilterChange={setRoleFilter}
+						enrollmentFilter={enrollmentFilter}
+						onEnrollmentFilterChange={setEnrollmentFilter}
+						accessRightsFilter={accessRightsFilter}
+						onAccessRightsFilterChange={setAccessRightsFilter}
+					/>
 				</div>
 			</div>
-
-			{/* 테이블 */}
-			<MemberTable
-				members={members}
-				searchQuery={searchQuery}
-				currentPage={currentPage}
-				onPageChange={setCurrentPage}
-				selectedMembers={selectedMembers}
-				onSelectedMembersChange={setSelectedMembers}
-				onMemberUpdate={handleMemberUpdate}
-				generationSort={generationSort}
-				onGenerationSortChange={setGenerationSort}
-				roleFilter={roleFilter}
-				onRoleFilterChange={setRoleFilter}
-				enrollmentFilter={enrollmentFilter}
-				onEnrollmentFilterChange={setEnrollmentFilter}
-				accessRightsFilter={accessRightsFilter}
-				onAccessRightsFilterChange={setAccessRightsFilter}
-			/>
 
 			<QualificationChangeDialog
 				open={isDialogOpen}

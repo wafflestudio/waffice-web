@@ -1,6 +1,6 @@
 "use client"
 
-import { Loader2, Search } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Forbidden } from "@/components/error/forbidden"
 import { ApplicationTable } from "@/components/members/application-table"
@@ -12,8 +12,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { SearchInput } from "@/components/ui/search-input"
 import { Toast } from "@/components/ui/toast"
 import { apiClient } from "@/lib/api"
 import type { ApproveRequest, Qualification, UserDetail } from "@/types"
@@ -295,15 +295,12 @@ export default function MemberApplicationsPage() {
 				</div>
 
 				<div className="flex items-center gap-3">
-					<div className="relative flex-1 max-w-md">
-						<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-						<Input
-							placeholder="신청자명을 입력해 주세요"
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							className="pl-9"
-						/>
-					</div>
+					<SearchInput
+						containerClassName="w-[300px]"
+						placeholder="신청자명을 입력해 주세요"
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+					/>
 					<Button
 						className="bg-peach-300 hover:bg-peach-500 text-white"
 						onClick={handleApproveClick}
