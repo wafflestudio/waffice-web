@@ -23,7 +23,7 @@ function GoogleButton({
 	return (
 		<Button
 			onClick={onClick}
-			className={fullWidth ? "w-full" : ""}
+			className={fullWidth ? "w-full h-[50px]" : "h-[50px]"}
 			variant="default"
 			disabled={disabled}
 		>
