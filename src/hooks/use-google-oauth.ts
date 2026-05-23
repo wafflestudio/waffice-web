@@ -91,7 +91,7 @@ export function useGoogleOAuth(
 
 			try {
 				// Exchange code for auth token
-				const redirectUri = `${window.location.origin}/auth/callback`
+				const redirectUri = `${window.location.origin}/auth/callback/`
 				const response = await authClient.exchangeCodeForToken({
 					code,
 					redirect_uri: redirectUri,
@@ -147,7 +147,7 @@ export function useGoogleOAuth(
 			popupRef.current.close()
 		}
 
-		const redirectUri = `${window.location.origin}/auth/callback`
+		const redirectUri = `${window.location.origin}/auth/callback/`
 		const popup = window.open(
 			authClient.getGoogleAuthUrl(redirectUri),
 			"google-oauth-popup",
