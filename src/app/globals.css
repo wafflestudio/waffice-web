@@ -5,6 +5,7 @@
 
 @theme inline {
 	/* Peach */
+	--color-peach-50: var(--peach-50);
 	--color-peach-100: var(--peach-100);
 	--color-peach-200: var(--peach-200);
 	--color-peach-300: var(--peach-300);
@@ -13,6 +14,7 @@
 
 	/* Black (neutral) */
 	--color-black-100: var(--black-100);
+	--color-black-150: var(--black-150);
 	--color-black-200: var(--black-200);
 	--color-black-300: var(--black-300);
 	--color-black-400: var(--black-400);
@@ -63,6 +65,7 @@
 
 :root {
 	/* Peach palette (from Figma) */
+	--peach-50: #fdf1ef;
 	--peach-100: #fef0ec;
 	--peach-200: #fdd5c8;
 	--peach-300: #f77153;
@@ -71,6 +74,7 @@
 
 	/* Black/neutral palette (from Figma) */
 	--black-100: #f7f7f7;
+	--black-150: #ebecf0;
 	--black-200: #efefef;
 	--black-300: #dbdfe0;
 	--black-400: #b4b4b4;
