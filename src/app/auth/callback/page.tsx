@@ -13,6 +13,10 @@ function CallbackContent() {
 	const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
 	useEffect(() => {
+		console.log("[OAuth Callback] full URL:", window.location.href)
+		console.log("[OAuth Callback] search:", window.location.search)
+		console.log("[OAuth Callback] searchParams:", Array.from(searchParams.entries()))
+
 		const code = searchParams.get("code")
 		const error = searchParams.get("error")
 
@@ -35,18 +39,29 @@ function CallbackContent() {
 		}
 
 		if (code) {
+			console.log("[OAuth Callback] code received:", code.slice(0, 20))
+			console.log("[OAuth Callback] window.opener:", window.opener)
+			console.log("[OAuth Callback] window.opener exists:", !!window.opener)
+
 			// Send code to parent window
 			if (window.opener) {
 				setStatus("success")
-				window.opener.postMessage(
-					{
-						type: "GOOGLE_OAUTH_CALLBACK",
-						code,
-					},
-					window.location.origin,
-				)
-				window.close()
+				try {
+					window.opener.postMessage(
+						{
+							type: "GOOGLE_OAUTH_CALLBACK",
+							code,
+						},
+						window.location.origin,
+					)
+					console.log("[OAuth Callback] postMessage sent")
+				} catch (err) {
+					console.error("[OAuth Callback] postMessage failed:", err)
+				}
+				// DEBUG: 임시로 자동 close 막음. 콘솔 확인 후 수동으로 닫기
+				// window.close()
 			} else {
+				console.warn("[OAuth Callback] no opener!")
 				// No opener - user directly accessed this page
 				setStatus("no-opener")
 			}
