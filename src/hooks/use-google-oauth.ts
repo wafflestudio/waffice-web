@@ -46,22 +46,13 @@ export function useGoogleOAuth(
 
 	const handleMessage = useCallback(
 		async (event: MessageEvent) => {
-			console.log("[OAuth Parent] message received:", {
-				origin: event.origin,
-				expectedOrigin: window.location.origin,
-				sourceMatches: event.source === popupRef.current,
-				data: event.data,
-			})
-
 			// Validate origin
 			if (event.origin !== window.location.origin) {
-				console.warn("[OAuth Parent] origin mismatch")
 				return
 			}
 
 			// Validate source is our popup
 			if (event.source !== popupRef.current) {
-				console.warn("[OAuth Parent] source mismatch")
 				return
 			}
 
@@ -77,7 +68,6 @@ export function useGoogleOAuth(
 				setError(oauthError)
 				setIsLoading(false)
 				onErrorRef.current?.(oauthError)
-				console.log("에러발생", oauthError)
 				return
 			}
 
@@ -85,7 +75,6 @@ export function useGoogleOAuth(
 				setError("인증 코드를 받지 못했습니다.")
 				setIsLoading(false)
 				onErrorRef.current?.("인증 코드를 받지 못했습니다.")
-				console.log("코드 안받는 에러발생", oauthError)
 				return
 			}
 
