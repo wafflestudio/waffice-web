@@ -74,7 +74,8 @@ export function QualificationChangeDialog({
 												onClick={() => setSelectedRole(role)}
 												className={cn(
 													"flex h-[50px] w-full items-center p-[16px] rounded-[5px]",
-													"hover:bg-peach-100 hover:border-black-300",												)}
+													"hover:bg-peach-100 hover:border-black-300",
+												)}
 											>
 												<span
 													className={`text-[15px] font-medium leading-[20px] ${
