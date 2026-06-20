@@ -1,6 +1,7 @@
 "use client"
 
 import { Settings2 } from "lucide-react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -20,8 +21,10 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table"
+import { Toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
 import type { AccessRight, Member, MemberCreate, MemberUpdate } from "@/types"
+import { MemberDetailDialog } from "./member-detail-dialog"
 
 interface MemberTableProps {
 	members: Member[]
@@ -40,8 +43,6 @@ interface MemberTableProps {
 	accessRightsFilter: AccessRight[]
 	onAccessRightsFilterChange: (rights: AccessRight[]) => void
 }
-
-import { MemberForm } from "@/components/members/member-form"
 
 const ITEMS_PER_PAGE = 10
 
@@ -62,7 +63,6 @@ export function MemberTable({
 	onPageChange,
 	selectedMembers,
 	onSelectedMembersChange,
-	onMemberUpdate,
 	generationSort,
 	onGenerationSortChange,
 	roleFilter,
@@ -75,6 +75,20 @@ export function MemberTable({
 	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "미가입"]
 	const ENROLLMENT_OPTIONS = ["학부생", "휴학생", "졸업생"]
 	const ACCESS_RIGHT_OPTIONS = ["운영진", "팀장"] satisfies AccessRight[]
+
+	// 회원 상세 페이지 모달
+	const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+	const [toastMessage, setToastMessage] = useState("")
+	const [showToast, setShowToast] = useState(false)
+
+	const handleMemberRowClick = (member: Member) => {
+		setSelectedMember(member)
+	}
+
+	const handleDetailSuccess = (message: string) => {
+		setToastMessage(message)
+		setShowToast(true)
+	}
 
 	// 검색 필터링
 	const filteredMembers = members
@@ -233,8 +247,15 @@ export function MemberTable({
 							const formattedDate = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`
 
 							return (
-								<TableRow key={member.id} className="h-[60px] hover:bg-black-100">
-									<TableCell className="h-[60px] w-[56px] px-[20px]">
+								<TableRow
+									key={member.id}
+									onClick={() => handleMemberRowClick(member)}
+									className="h-[60px] cursor-pointer hover:bg-black-100"
+								>
+									<TableCell
+										className="h-[60px] w-[56px] px-[20px]"
+										onClick={(event) => event.stopPropagation()}
+									>
 										<Checkbox
 											checked={selectedMembers.includes(member.id)}
 											className={TABLE_CHECKBOX_CLASS}
@@ -243,21 +264,7 @@ export function MemberTable({
 											}
 										/>
 									</TableCell>
-									<TableCell className={cn(BODY_CELL_CLASS, "w-[140px]")}>
-										{onMemberUpdate ? (
-											<MemberForm
-												member={member}
-												onSubmit={(data) => onMemberUpdate(member.id, data)}
-												trigger={
-													<button type="button" className="text-left font-medium hover:underline">
-														{member.name}
-													</button>
-												}
-											/>
-										) : (
-											member.name
-										)}
-									</TableCell>
+									<TableCell className={cn(BODY_CELL_CLASS, "w-[140px]")}>{member.name}</TableCell>
 									<TableCell className={cn(BODY_CELL_CLASS, "w-[140px]")}>
 										{member.generation || "-"}
 									</TableCell>
@@ -285,6 +292,19 @@ export function MemberTable({
 			</div>
 
 			<Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
+
+			<MemberDetailDialog
+				member={selectedMember}
+				open={selectedMember !== null}
+				onOpenChange={(open) => {
+					if (!open) {
+						setSelectedMember(null)
+					}
+				}}
+				onSuccess={handleDetailSuccess}
+			/>
+
+			<Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />
 		</div>
 	)
 }
