@@ -1,11 +1,13 @@
 "use client"
 
 import { Check, X as XIcon } from "lucide-react"
-import { useId, useState } from "react"
+import { useEffect, useId, useState } from "react"
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
 
 const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "가입대기"] as const
+const DEFAULT_ROLE = "활동회원"
 
 interface QualificationChangeDialogProps {
 	open: boolean
@@ -18,26 +20,33 @@ export function QualificationChangeDialog({
 	onOpenChange,
 	onSubmit,
 }: QualificationChangeDialogProps) {
-	const [selectedRole, setSelectedRole] = useState("")
+	const [selectedRole, setSelectedRole] = useState(DEFAULT_ROLE)
 	const [reason, setReason] = useState("")
 	const reasonId = useId()
 
+	useEffect(() => {
+		if (open) {
+			setSelectedRole(DEFAULT_ROLE)
+			setReason("")
+		}
+	}, [open])
+
 	const handleCancel = () => {
 		onOpenChange(false)
-		setSelectedRole("")
+		setSelectedRole(DEFAULT_ROLE)
 		setReason("")
 	}
 
 	const handleSubmit = async () => {
 		await onSubmit(selectedRole, reason)
-		setSelectedRole("")
+		setSelectedRole(DEFAULT_ROLE)
 		setReason("")
 	}
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
-				className="w-[460px] max-w-[460px] rounded-[12px] p-0 gap-0 overflow-hidden"
+				className="w-[460px] max-w-[460px] gap-0 overflow-hidden rounded-[12px] border-0 p-0 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
 				showCloseButton={false}
 			>
 				<div className="flex flex-col items-end gap-[10px] w-full pt-[10px] px-[10px] pb-[40px]">
@@ -63,7 +72,9 @@ export function QualificationChangeDialog({
 												key={role}
 												type="button"
 												onClick={() => setSelectedRole(role)}
-												className="flex h-[50px] w-full items-center p-[16px] hover:bg-black-100"
+												className={cn(
+													"flex h-[50px] w-full items-center p-[16px] rounded-[5px]",
+													"hover:bg-peach-100 hover:border-black-300",												)}
 											>
 												<span
 													className={`text-[15px] font-medium leading-[20px] ${
@@ -103,14 +114,14 @@ export function QualificationChangeDialog({
 								<button
 									type="button"
 									onClick={handleCancel}
-									className="w-[121px] h-[50px] border border-black-500 rounded-[4px] text-[15px] font-semibold text-black-900"
+									className="flex items-center justify-center w-[121px] h-[50px] border border-black-300 rounded-[4px] text-[15px] leading-[24px] font-semibold text-black-900 hover:bg-black-300 active:bg-black-300 transition-colors"
 								>
 									취소
 								</button>
 								<button
 									type="button"
 									onClick={handleSubmit}
-									className="w-[121px] h-[50px] bg-peach-300 hover:bg-peach-500 rounded-[4px] text-[15px] font-semibold text-white"
+									className="flex items-center justify-center w-[121px] h-[50px] bg-peach-300 hover:bg-peach-500 active:bg-peach-500 rounded-[4px] text-[15px] leading-[24px] font-semibold text-white"
 								>
 									확인
 								</button>
