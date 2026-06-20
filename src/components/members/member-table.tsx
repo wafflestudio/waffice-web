@@ -21,7 +21,6 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table"
-import { Toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
 import type { AccessRight, Member, MemberCreate, MemberUpdate } from "@/types"
 import { MemberDetailDialog } from "./member-detail-dialog"
@@ -248,15 +247,8 @@ export function MemberTable({
 							const formattedDate = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`
 
 							return (
-								<TableRow
-									key={member.id}
-									onClick={() => handleMemberRowClick(member)}
-									className="h-[60px] cursor-pointer hover:bg-black-100"
-								>
-									<TableCell
-										className="h-[60px] w-[56px] px-[20px]"
-										onClick={(event) => event.stopPropagation()}
-									>
+								<TableRow key={member.id} className="h-[60px] hover:bg-black-100">
+									<TableCell className="h-[60px] w-[56px] px-[20px]">
 										<Checkbox
 											checked={selectedMembers.includes(member.id)}
 											className={TABLE_CHECKBOX_CLASS}
@@ -265,7 +257,21 @@ export function MemberTable({
 											}
 										/>
 									</TableCell>
-									<TableCell className={cn(BODY_CELL_CLASS, "w-[140px]")}>{member.name}</TableCell>
+									<TableCell className={cn(BODY_CELL_CLASS, "w-[140px]")}>
+										{onMemberUpdate ? (
+											<MemberForm
+												member={member}
+												onSubmit={(data) => onMemberUpdate(member.id, data)}
+												trigger={
+													<button type="button" className="text-left font-medium hover:underline">
+														{member.name}
+													</button>
+												}
+											/>
+										) : (
+											member.name
+										)}
+									</TableCell>
 									<TableCell className={cn(BODY_CELL_CLASS, "w-[140px]")}>
 										{member.generation || "-"}
 									</TableCell>
