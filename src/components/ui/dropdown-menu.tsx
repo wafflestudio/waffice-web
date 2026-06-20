@@ -215,7 +215,10 @@ function DropdownMenuFilterRadioItem({
 		<DropdownMenuPrimitive.RadioItem
 			data-slot="dropdown-menu-filter-radio-item"
 			className={cn(
-				"flex cursor-pointer select-none items-center rounded-sm px-[8px] py-[6px] text-[14px] font-medium text-[#777] outline-none transition-colors hover:bg-[#f7f7f7] data-[state=checked]:text-[#e75010] data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+				"flex h-[40px] cursor-pointer select-none items-center rounded-[3px] px-[8px] py-[6px] text-[14px] font-medium leading-[20px] text-black-600 outline-none transition-colors",
+				"hover:bg-peach-100 data-[highlighted]:bg-peach-100",
+				"data-[state=checked]:text-peach-500 data-[state=checked]:bg-white",
+				"data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
 				className,
 			)}
 			{...props}

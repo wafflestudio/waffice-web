@@ -1,6 +1,7 @@
 "use client"
 
 import { Settings2 } from "lucide-react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -20,7 +21,10 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table"
+import { Toast } from "@/components/ui/toast"
+import { cn } from "@/lib/utils"
 import type { AccessRight, Member, MemberCreate, MemberUpdate } from "@/types"
+import { MemberDetailDialog } from "./member-detail-dialog"
 
 interface MemberTableProps {
 	members: Member[]
@@ -40,12 +44,17 @@ interface MemberTableProps {
 	onAccessRightsFilterChange: (rights: AccessRight[]) => void
 }
 
-import { MemberForm } from "@/components/members/member-form"
-
 const ITEMS_PER_PAGE = 10
 
 const DROPDOWN_CONTENT_CLASS =
 	"min-w-0 rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
+const HEADER_CELL_CLASS =
+	"h-[50px] px-[20px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]"
+const BODY_CELL_CLASS = "h-[60px] px-[20px] text-[15px] font-normal text-[#121212]"
+const FILTER_TRIGGER_CLASS =
+	"h-auto gap-[6px] rounded-none p-0 text-[15px] font-medium tracking-[-0.3px] text-[#121212] hover:bg-transparent hover:text-[#121212]"
+const TABLE_CHECKBOX_CLASS =
+	"size-4 rounded-[3px] border-[#999] shadow-none data-[state=checked]:border-peach-300 data-[state=checked]:bg-peach-300 data-[state=checked]:text-white"
 
 export function MemberTable({
 	members,
@@ -54,7 +63,6 @@ export function MemberTable({
 	onPageChange,
 	selectedMembers,
 	onSelectedMembersChange,
-	onMemberUpdate,
 	generationSort,
 	onGenerationSortChange,
 	roleFilter,
@@ -67,6 +75,20 @@ export function MemberTable({
 	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "미가입"]
 	const ENROLLMENT_OPTIONS = ["학부생", "휴학생", "졸업생"]
 	const ACCESS_RIGHT_OPTIONS = ["운영진", "팀장"] satisfies AccessRight[]
+
+	// 회원 상세 페이지 모달
+	const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+	const [toastMessage, setToastMessage] = useState("")
+	const [showToast, setShowToast] = useState(false)
+
+	const handleMemberRowClick = (member: Member) => {
+		setSelectedMember(member)
+	}
+
+	const handleDetailSuccess = (message: string) => {
+		setToastMessage(message)
+		setShowToast(true)
+	}
 
 	// 검색 필터링
 	const filteredMembers = members
@@ -117,38 +139,30 @@ export function MemberTable({
 	return (
 		<div className="space-y-4">
 			{/* 테이블 */}
-			<div className="bg-white border-[#dbdfe0] border-t border-b overflow-hidden">
-				<Table>
+			<div className="overflow-hidden border-[#dbdfe0] border-t border-b bg-white">
+				<Table className="min-w-[1540px] table-fixed">
 					<TableHeader>
-						<TableRow className="bg-[#f7f7f7]">
-							<TableHead className="w-12">
-								<Checkbox checked={isAllSelected} onCheckedChange={handleSelectAll} />
+						<TableRow className="h-[50px] bg-[#f7f7f7] hover:bg-[#f7f7f7]">
+							<TableHead className="h-[50px] w-[56px] px-[20px]">
+								<Checkbox
+									checked={isAllSelected}
+									onCheckedChange={handleSelectAll}
+									className={TABLE_CHECKBOX_CLASS}
+								/>
 							</TableHead>
-							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
-								이름
-							</TableHead>
-							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>이름</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<GenerationSortHeader sort={generationSort} onSortChange={onGenerationSortChange} />
 							</TableHead>
-							<TableHead className="text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
-								이메일
-							</TableHead>
-							<TableHead className="text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
-								Github 아이디
-							</TableHead>
-							<TableHead className="w-[180px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
-								계정 생성일
-							</TableHead>
-							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[302px]")}>이메일</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[302px]")}>Github 아이디</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[180px]")}>계정 생성일</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
-										<Button
-											variant="ghost"
-											size="sm"
-											className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3"
-										>
+										<Button variant="ghost" size="sm" className={FILTER_TRIGGER_CLASS}>
 											자격
-											<Settings2 className="h-4 w-4 text-gray-400" />
+											<Settings2 className="size-4 text-[#121212]" strokeWidth={1.8} />
 										</Button>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent
@@ -168,16 +182,12 @@ export function MemberTable({
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</TableHead>
-							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
-										<Button
-											variant="ghost"
-											size="sm"
-											className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3"
-										>
+										<Button variant="ghost" size="sm" className={FILTER_TRIGGER_CLASS}>
 											재학여부
-											<Settings2 className="h-4 w-4 text-gray-400" />
+											<Settings2 className="size-4 text-[#121212]" strokeWidth={1.8} />
 										</Button>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent
@@ -199,16 +209,12 @@ export function MemberTable({
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</TableHead>
-							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
-										<Button
-											variant="ghost"
-											size="sm"
-											className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3"
-										>
+										<Button variant="ghost" size="sm" className={FILTER_TRIGGER_CLASS}>
 											접근 권한
-											<Settings2 className="h-4 w-4 text-gray-400" />
+											<Settings2 className="size-4 text-[#121212]" strokeWidth={1.8} />
 										</Button>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent
@@ -241,49 +247,41 @@ export function MemberTable({
 							const formattedDate = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`
 
 							return (
-								<TableRow key={member.id} className="h-[60px]">
-									<TableCell>
+								<TableRow
+									key={member.id}
+									onClick={() => handleMemberRowClick(member)}
+									className="h-[60px] cursor-pointer hover:bg-black-100"
+								>
+									<TableCell
+										className="h-[60px] w-[56px] px-[20px]"
+										onClick={(event) => event.stopPropagation()}
+									>
 										<Checkbox
 											checked={selectedMembers.includes(member.id)}
+											className={TABLE_CHECKBOX_CLASS}
 											onCheckedChange={(checked) =>
 												handleSelectMember(member.id, checked as boolean)
 											}
 										/>
 									</TableCell>
-									<TableCell className="w-[140px] text-[15px] font-normal text-[#121212]">
-										{onMemberUpdate ? (
-											<MemberForm
-												member={member}
-												onSubmit={(data) => onMemberUpdate(member.id, data)}
-												trigger={
-													<button type="button" className="text-left font-medium hover:underline">
-														{member.name}
-													</button>
-												}
-											/>
-										) : (
-											member.name
-										)}
-									</TableCell>
-									<TableCell className="w-[140px] text-[15px] font-normal text-[#121212]">
+									<TableCell className={cn(BODY_CELL_CLASS, "w-[140px]")}>{member.name}</TableCell>
+									<TableCell className={cn(BODY_CELL_CLASS, "w-[140px]")}>
 										{member.generation || "-"}
 									</TableCell>
-									<TableCell className="text-[15px] font-normal text-[#121212]">
-										{member.email}
-									</TableCell>
-									<TableCell className="text-[15px] font-normal text-[#121212]">
+									<TableCell className={cn(BODY_CELL_CLASS, "w-[302px]")}>{member.email}</TableCell>
+									<TableCell className={cn(BODY_CELL_CLASS, "w-[302px]")}>
 										{member.github_username || "-"}
 									</TableCell>
-									<TableCell className="w-[180px] text-[15px] font-normal text-[#121212]">
+									<TableCell className={cn(BODY_CELL_CLASS, "w-[180px]")}>
 										{formattedDate}
 									</TableCell>
-									<TableCell className="w-[140px] text-[15px] font-normal text-[#121212]">
+									<TableCell className={cn(BODY_CELL_CLASS, "w-[140px]")}>
 										{member.role || "활동회원"}
 									</TableCell>
-									<TableCell className="w-[140px] text-[15px] font-normal text-[#121212]">
+									<TableCell className={cn(BODY_CELL_CLASS, "w-[140px]")}>
 										{member.affiliation || "학부생"}
 									</TableCell>
-									<TableCell className="w-[140px] text-[15px] font-normal text-[#121212]">
+									<TableCell className={cn(BODY_CELL_CLASS, "w-[140px]")}>
 										{member.access_rights?.length ? member.access_rights.join(", ") : "없음"}
 									</TableCell>
 								</TableRow>
@@ -294,6 +292,19 @@ export function MemberTable({
 			</div>
 
 			<Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
+
+			<MemberDetailDialog
+				member={selectedMember}
+				open={selectedMember !== null}
+				onOpenChange={(open) => {
+					if (!open) {
+						setSelectedMember(null)
+					}
+				}}
+				onSuccess={handleDetailSuccess}
+			/>
+
+			<Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />
 		</div>
 	)
 }
@@ -309,9 +320,9 @@ function GenerationSortHeader({
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant="ghost" size="sm" className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3">
+				<Button variant="ghost" size="sm" className={FILTER_TRIGGER_CLASS}>
 					기수
-					<Settings2 className="h-4 w-4 text-gray-400" />
+					<Settings2 className="size-4 text-[#121212]" strokeWidth={1.8} />
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="start" className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}>

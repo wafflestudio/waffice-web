@@ -4,6 +4,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+	/* Base */
+	--color-white: var(--white);
+
 	/* Peach */
 	--color-peach-50: var(--peach-50);
 	--color-peach-100: var(--peach-100);
@@ -64,9 +67,12 @@
 }
 
 :root {
+	/* Base palette (from Figma) */
+	--white: #ffffff;
+
 	/* Peach palette (from Figma) */
-	--peach-50: #fdf1ef;
-	--peach-100: #fef0ec;
+	--peach-50: #fef0ec;
+	--peach-100: #fdf1ef;
 	--peach-200: #fdd5c8;
 	--peach-300: #f77153;
 	--peach-400: #f05a38;
