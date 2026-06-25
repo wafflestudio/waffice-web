@@ -50,13 +50,13 @@ export function Gnb({ isLoggedIn, onLogout }: GnbProps) {
 							>
 								로그아웃
 							</button>
-							<Link
-								href="/mypage"
-								aria-label="마이페이지"
+							<div
+								aria-label="프로필"
 								className="relative block size-[40px] overflow-hidden rounded-full"
+								role="img"
 							>
 								<Image src="/profile.png" alt="프로필" fill sizes="40px" className="object-cover" />
-							</Link>
+							</div>
 						</>
 					) : (
 						<Link href="/login">
