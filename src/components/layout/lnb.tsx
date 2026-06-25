@@ -41,7 +41,7 @@ const NAV_ITEMS: NavItem[] = [
 		href: "/projects",
 		icon: FolderOpen,
 		subItems: [
-			{ name: "내 프로젝트 목록", href: "/projects" },
+			{ name: "내 프로젝트 목록", href: "/projects/my" },
 			{ name: "프로젝트 상세", href: "/projects/detail" },
 		],
 	},
@@ -111,7 +111,7 @@ function NavMenuItem({ item, pathname }: NavMenuItemProps) {
 			{active && item.subItems && (
 				<div className="flex w-[180px] flex-col gap-[2px]">
 					{item.subItems.map((sub) => {
-						const subActive = pathname === sub.href
+						const subActive = sub.href !== item.href && pathname === sub.href
 
 						return (
 							<Link
@@ -120,7 +120,7 @@ function NavMenuItem({ item, pathname }: NavMenuItemProps) {
 								className={cn(
 									"flex h-[34px] w-[180px] items-center rounded-[4px] py-[6px] pr-[8px] pl-[40px] text-[13px]",
 									subActive
-										? "bg-peach-100 font-semibold leading-[18px] text-peach-500"
+										? "bg-white font-semibold leading-[20px] text-peach-500"
 										: "font-medium leading-[18px] text-black-700 hover:bg-black-100",
 								)}
 							>
