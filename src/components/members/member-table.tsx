@@ -141,7 +141,7 @@ export function MemberTable({
 		<div className="space-y-4">
 			{/* 테이블 */}
 			<div className="overflow-hidden border-[#dbdfe0] border-t border-b bg-white">
-				<Table className="table-fixed">
+				<Table className="min-w-[1540px] table-fixed">
 					<TableHeader>
 						<TableRow className="h-[50px] bg-[#f7f7f7] hover:bg-[#f7f7f7]">
 							<TableHead className="h-[50px] w-[56px] px-[20px]">
@@ -155,8 +155,8 @@ export function MemberTable({
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<GenerationSortHeader sort={generationSort} onSortChange={onGenerationSortChange} />
 							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "min-w-0")}>이메일</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "min-w-0")}>Github 아이디</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[302px]")}>이메일</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[302px]")}>Github 아이디</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[180px]")}>계정 생성일</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<DropdownMenu>
@@ -269,10 +269,8 @@ export function MemberTable({
 									<TableCell className={cn(BODY_CELL_CLASS, "w-[140px]")}>
 										{member.generation || "-"}
 									</TableCell>
-									<TableCell className={cn(BODY_CELL_CLASS, "max-w-0 truncate")}>
-										{member.email}
-									</TableCell>
-									<TableCell className={cn(BODY_CELL_CLASS, "max-w-0 truncate")}>
+									<TableCell className={cn(BODY_CELL_CLASS, "w-[302px]")}>{member.email}</TableCell>
+									<TableCell className={cn(BODY_CELL_CLASS, "w-[302px]")}>
 										{member.github_username || "-"}
 									</TableCell>
 									<TableCell className={cn(BODY_CELL_CLASS, "w-[180px]")}>
