@@ -1,4 +1,4 @@
-import type { Qualification } from "./common"
+import type { GraduationStatus, NotificationChannel, Qualification } from "./common"
 
 export interface Website {
 	url: string
@@ -12,6 +12,7 @@ export interface UserDetail {
 	name: string
 	generation: string
 	qualification: Qualification
+	graduation_status: GraduationStatus
 	is_admin: boolean
 	phone: string | null
 	affiliation: string | null
@@ -20,7 +21,11 @@ export interface UserDetail {
 	github_username: string | null
 	slack_id: string | null
 	websites: Website[] | null
-	created_at: number // Unix timestamp
+	student_id: string | null
+	department: string | null
+	contact_email: string | null
+	notification_channel: NotificationChannel
+	created_at: number
 }
 
 export interface UserBrief {
@@ -31,10 +36,11 @@ export interface UserBrief {
 }
 
 export interface ApproveRequest {
-	qualification: "associate" | "regular" | "active" // Cannot be "pending"
+	qualification: Exclude<Qualification, "pending">
 }
 
 export interface ProfileUpdateRequest {
+	name?: string | null
 	phone?: string | null
 	affiliation?: string | null
 	bio?: string | null
@@ -42,24 +48,19 @@ export interface ProfileUpdateRequest {
 	github_username?: string | null
 	slack_id?: string | null
 	websites?: Website[] | null
+	graduation_status?: GraduationStatus | null
+	student_id?: string | null
+	department?: string | null
+	contact_email?: string | null
+	notification_channel?: NotificationChannel | null
 }
 
-export interface MyPageProfileUpdateRequest extends ProfileUpdateRequest {
-	name?: string | null
-	generation?: string | null
-	enrollment_status?: string | null
-	student_id?: string | null
-	major?: string | null
-	school_email?: string | null
-	position?: string | null
-	sms_notification?: boolean | null
-	email_notification?: boolean | null
-}
+export interface MyPageProfileUpdateRequest extends ProfileUpdateRequest {}
 
 export interface UserUpdateRequest extends ProfileUpdateRequest {
-	name?: string | null
 	qualification?: Qualification | null
 	is_admin?: boolean | null
+	generation?: string | null
 }
 
 export interface UserPendingCreate {

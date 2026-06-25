@@ -1,5 +1,7 @@
 // UI 전용 레거시 타입 — API 응답은 UserDetail 사용
-export type EnrollmentStatus = "학부생" | "휴학생" | "졸업생"
+import type { UserDetail, Website } from "./user"
+
+export type EnrollmentStatus = "학부생" | "휴학생" | "졸업생" | "대학원생"
 export type AccessRight = "운영진" | "팀장"
 
 export interface Member {
@@ -13,6 +15,7 @@ export interface Member {
 	role?: string
 	affiliation?: EnrollmentStatus
 	access_rights?: AccessRight[]
+	user?: UserDetail
 	status: "active" | "inactive" | "suspended"
 	join_date: string
 	created_at: string
@@ -25,9 +28,14 @@ export interface MemberCreate {
 	phone?: string
 	github_username?: string
 	slack_id?: string
+	generation?: string
+	role?: string
 	status?: "active" | "inactive" | "suspended"
 	affiliation?: EnrollmentStatus
 	access_rights?: AccessRight[]
+	student_id?: string
+	department?: string
+	websites?: Website[] | null
 }
 
 export interface MemberUpdate {
@@ -40,6 +48,9 @@ export interface MemberUpdate {
 	role?: string
 	affiliation?: EnrollmentStatus
 	access_rights?: AccessRight[]
+	student_id?: string
+	department?: string
+	websites?: Website[] | null
 	join_date?: string
 	created_at?: string
 	status?: "active" | "inactive" | "suspended"
