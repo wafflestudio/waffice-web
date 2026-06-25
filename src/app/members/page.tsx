@@ -1,7 +1,7 @@
 "use client"
 
 import { Loader2, X } from "lucide-react"
-import { useCallback, useEffect, useState } from "react"
+import { useState } from "react"
 import { Forbidden } from "@/components/error/forbidden"
 import { MemberTable } from "@/components/members/member-table"
 import { QualificationChangeDialog } from "@/components/members/qualification-change-dialog"
@@ -9,61 +9,8 @@ import { ActionButton } from "@/components/ui/action-button"
 import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/ui/search-input"
 import { Toast } from "@/components/ui/toast"
-import { apiClient } from "@/lib/api"
-import type {
-	AccessRight,
-	Member,
-	MemberCreate,
-	MemberUpdate,
-	Qualification,
-	UserDetail,
-} from "@/types"
-
-// UserDetail을 Member로 변환하는 함수
-const qualificationToRole = (qualification: Qualification): string => {
-	switch (qualification) {
-		case "active":
-			return "활동회원"
-		case "regular":
-			return "정회원"
-		case "associate":
-			return "준회원"
-		case "pending":
-			return "미가입"
-		default:
-			return "미가입"
-	}
-}
-
-const roleToQualification = (role: string): Qualification => {
-	switch (role) {
-		case "활동회원":
-			return "active"
-		case "정회원":
-			return "regular"
-		case "준회원":
-			return "associate"
-		default:
-			return "pending"
-	}
-}
-
-const userDetailToMember = (user: UserDetail): Member => ({
-	id: user.id,
-	name: user.name,
-	email: user.email,
-	phone: user.phone || undefined,
-	github_username: user.github_username || undefined,
-	slack_id: user.slack_id || undefined,
-	generation: user.generation,
-	role: qualificationToRole(user.qualification),
-	affiliation: user.affiliation as Member["affiliation"],
-	access_rights: user.is_admin ? ["운영진"] : [],
-	status: user.qualification === "pending" ? "inactive" : "active",
-	join_date: new Date(user.created_at * 1000).toISOString(),
-	created_at: new Date(user.created_at * 1000).toISOString(),
-	updated_at: new Date(user.created_at * 1000).toISOString(),
-})
+import { roleToQualification, useMembers, useUpdateUserAdmin } from "@/hooks/use-members"
+import type { AccessRight, MemberCreate, MemberUpdate, UserUpdateRequest } from "@/types"
 
 export default function MembersPage() {
 	const [searchQuery, setSearchQuery] = useState("")
@@ -72,78 +19,41 @@ export default function MembersPage() {
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState("")
-	const [members, setMembers] = useState<Member[]>([])
-	const [isLoading, setIsLoading] = useState(true)
-	const [error, setError] = useState<string | null>(null)
-	const [isForbidden, setIsForbidden] = useState(false)
 	const [generationSort, setGenerationSort] = useState<"desc" | "asc" | null>(null)
 	const [roleFilter, setRoleFilter] = useState("전체")
 	const [enrollmentFilter, setEnrollmentFilter] = useState("전체")
 	const [accessRightsFilter, setAccessRightsFilter] = useState<AccessRight[]>([])
-
-	// 회원 목록 불러오기
-	const fetchMembers = useCallback(async () => {
-		try {
-			setIsLoading(true)
-			setIsForbidden(false)
-			const response = await apiClient.getUsers(undefined, 100)
-			if (response.ok && response.data) {
-				const memberList = response.data.items
-					.filter((u) => u.qualification !== "pending")
-					.map(userDetailToMember)
-				setMembers(memberList)
-			} else {
-				setError(response.message || "회원 목록을 불러오는데 실패했습니다.")
-			}
-		} catch (err) {
-			const message = err instanceof Error ? err.message : "회원 목록을 불러오는데 실패했습니다."
-			if (message.includes("403")) {
-				setIsForbidden(true)
-			} else {
-				setError(message)
-			}
-			setError(err instanceof Error ? err.message : "회원 목록을 불러오는데 실패했습니다.")
-		} finally {
-			setIsLoading(false)
-		}
-	}, [])
-
-	useEffect(() => {
-		fetchMembers()
-	}, [fetchMembers])
+	const {
+		data: members = [],
+		isLoading,
+		error,
+		refetch: refetchMembers,
+	} = useMembers(undefined, 100)
+	const updateUserMutation = useUpdateUserAdmin()
+	const isForbidden = error?.message.includes("403") ?? false
 
 	// 회원 정보 수정 핸들러
 	const handleMemberUpdate = async (id: number, data: MemberCreate | MemberUpdate) => {
 		try {
-			const updateRequest: {
-				phone?: string | null
-				affiliation?: string | null
-				github_username?: string | null
-				slack_id?: string | null
-			} = {}
+			const updateRequest: UserUpdateRequest = {}
 
+			if (data.name !== undefined) updateRequest.name = data.name || null
+			if (data.email !== undefined) updateRequest.contact_email = data.email || null
 			if (data.phone !== undefined) updateRequest.phone = data.phone || null
-			if (data.affiliation !== undefined) updateRequest.affiliation = data.affiliation || null
+			if (data.affiliation !== undefined) updateRequest.graduation_status = data.affiliation || null
 			if (data.github_username !== undefined)
 				updateRequest.github_username = data.github_username || null
 			if (data.slack_id !== undefined) updateRequest.slack_id = data.slack_id || null
+			if (data.student_id !== undefined) updateRequest.student_id = data.student_id || null
+			if (data.department !== undefined) updateRequest.department = data.department || null
+			if (data.websites !== undefined) updateRequest.websites = data.websites
+			if (data.generation !== undefined) updateRequest.generation = data.generation || null
+			if (data.role !== undefined) updateRequest.qualification = roleToQualification(data.role)
+			if (data.access_rights !== undefined)
+				updateRequest.is_admin = data.access_rights.includes("운영진")
 
-			const response = await apiClient.updateUserAdmin(id, updateRequest)
-
-			if (response.ok && response.data) {
-				// 로컬 상태 업데이트
-				setMembers((prev) =>
-					prev.map((m) => {
-						if (m.id === id && response.data) {
-							return userDetailToMember(response.data)
-						}
-						return m
-					}),
-				)
-				setToastMessage("회원 정보가 성공적으로 업데이트되었습니다.")
-			} else {
-				setToastMessage(response.message || "회원 정보 업데이트에 실패했습니다.")
-			}
+			await updateUserMutation.mutateAsync({ userId: id, data: updateRequest })
+			setToastMessage("회원 정보가 성공적으로 업데이트되었습니다.")
 			setShowToast(true)
 		} catch (err) {
 			console.error("Failed to update member:", err)
@@ -204,26 +114,11 @@ export default function MembersPage() {
 		try {
 			const qualification = roleToQualification(role)
 			const updatePromises = selectedMembers.map((userId) =>
-				apiClient.updateUserAdmin(userId, { qualification }),
+				updateUserMutation.mutateAsync({ userId, data: { qualification } }),
 			)
-			const results = await Promise.all(updatePromises)
-
-			const failedUpdates = results.filter((r) => !r.ok)
-			if (failedUpdates.length > 0) {
-				setToastMessage(`${failedUpdates.length}명의 자격 변경에 실패했습니다. 다시 시도해주세요.`)
-			} else {
-				setToastMessage(`${selectedMembers.length}명의 회원 자격이 성공적으로 변경되었습니다.`)
-				setMembers((prev) =>
-					prev.map((m) => {
-						if (selectedMembers.includes(m.id)) {
-							const result = results.find((r) => r.data?.id === m.id)
-							return result?.data ? userDetailToMember(result.data) : m
-						}
-						return m
-					}),
-				)
-				setSelectedMembers([])
-			}
+			await Promise.all(updatePromises)
+			setToastMessage(`${selectedMembers.length}명의 회원 자격이 성공적으로 변경되었습니다.`)
+			setSelectedMembers([])
 			setShowToast(true)
 		} catch (err) {
 			setToastMessage(err instanceof Error ? err.message : "자격 변경 처리 중 오류가 발생했습니다.")
@@ -250,19 +145,19 @@ export default function MembersPage() {
 	if (error) {
 		return (
 			<div className="flex flex-col items-center justify-center min-h-screen space-y-4">
-				<p className="text-destructive">{error}</p>
-				<Button onClick={() => window.location.reload()}>다시 시도</Button>
+				<p className="text-destructive">{error.message}</p>
+				<Button onClick={() => refetchMembers()}>다시 시도</Button>
 			</div>
 		)
 	}
 
 	return (
-		<div className="flex flex-col gap-[60px]">
+		<div className="flex flex-col gap-[30px]">
 			{/* 헤더 */}
 			<h1 className="text-[36px] font-medium leading-none text-[#121212]">회원 관리</h1>
 
 			{/* 검색 영역 */}
-			<div className="flex flex-col gap-[25px]">
+			<div className="flex flex-col gap-[16px]">
 				<h2 className="flex items-center gap-[2px] text-[#121212]">
 					<span className="text-[20px] font-medium leading-none">전체 회원</span>
 					<span className="text-[14px] font-medium leading-[1.4] tracking-[-0.28px]">
@@ -270,7 +165,7 @@ export default function MembersPage() {
 					</span>
 				</h2>
 
-				<div className="flex flex-col gap-[20px]">
+				<div className="flex flex-col gap-[12px]">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-[15px]">
 							<SearchInput
