@@ -20,50 +20,20 @@ import type { Qualification, UserDetail } from "@/types"
 
 const STUDENT_ID_REGEX = /^\d{4}-\d{5}$/
 
-const mypageSchema = z
-	.object({
-		name: z.string().min(1, "필수 입력값입니다."),
-		generation: z
-			.string()
-			.min(1, "필수 입력값입니다.")
-			.regex(/^\d+(\.\d+)?$/, "기수는 숫자 형식으로 입력해 주세요. (예: 22, 22.5)"),
-		email: z.string().email("이메일 형식이 올바르지 않습니다."),
-		enrollmentStatus: z.enum(["학부생", "대학원생", "휴학생", "졸업생"]),
-		studentId: z.string().optional(),
-		major: z.string().optional(),
-		linkedInUrl: z.string().optional(),
-		githubId: z.string().optional(),
-		phone: z.string().optional(),
-		contactEmail: z.string().email("이메일 형식이 올바르지 않습니다.").optional().or(z.literal("")),
-		smsNotification: z.boolean(),
-		emailNotification: z.boolean(),
-	})
-	.superRefine((data, ctx) => {
-		if (data.enrollmentStatus === "학부생") {
-			const studentId = (data.studentId ?? "").trim()
-			if (!studentId) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					path: ["studentId"],
-					message: "필수 입력값입니다.",
-				})
-			} else if (!STUDENT_ID_REGEX.test(studentId)) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					path: ["studentId"],
-					message: "학번은 YYYY-XXXXX 형식이어야 합니다.",
-				})
-			}
-
-			if (!(data.major ?? "").trim()) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					path: ["major"],
-					message: "필수 입력값입니다.",
-				})
-			}
-		}
-	})
+const mypageSchema = z.object({
+	name: z.string().optional(),
+	generation: z.string().optional(),
+	email: z.string().optional(),
+	enrollmentStatus: z.enum(["학부생", "대학원생", "휴학생", "졸업생"]),
+	studentId: z.string().optional(),
+	major: z.string().optional(),
+	linkedInUrl: z.string().optional(),
+	githubId: z.string().optional(),
+	phone: z.string().optional(),
+	contactEmail: z.string().email("이메일 형식이 올바르지 않습니다.").optional().or(z.literal("")),
+	smsNotification: z.boolean(),
+	emailNotification: z.boolean(),
+})
 
 type MypageFormValues = z.infer<typeof mypageSchema>
 
@@ -125,6 +95,22 @@ const formatCreatedAt = (createdAt?: number) => {
 	return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(
 		date.getDate(),
 	).padStart(2, "0")}`
+}
+
+const getRelinkErrorMessage = (message: string) => {
+	if (message.includes("GOOGLE_ACCOUNT_ALREADY_LINKED")) {
+		return "이미 다른 회원에게 연동된 Google 계정입니다."
+	}
+
+	if (message.includes("EMAIL_ALREADY_IN_USE")) {
+		return "이미 다른 회원이 사용 중인 이메일입니다."
+	}
+
+	if (message.includes("INVALID_AUTH_TOKEN")) {
+		return "Google 인증 정보가 유효하지 않습니다. 다시 시도해주세요."
+	}
+
+	return message || "연동 계정 변경에 실패했습니다."
 }
 
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -238,15 +224,10 @@ export default function MyPage() {
 			const websites = buildWebsites(user?.websites, data.linkedInUrl || "")
 
 			const response = await apiClient.updateMyProfile({
-				name: data.name,
 				phone: data.phone || null,
-				affiliation: data.major || null,
-				bio: isStudent ? `${data.generation}기 - ${data.studentId}` : null,
 				github_username: data.githubId || null,
 				websites,
 				graduation_status: data.enrollmentStatus,
-				student_id: data.studentId || null,
-				department: data.major || null,
 				contact_email: data.contactEmail || null,
 				notification_channel: toNotificationChannel(data.smsNotification, data.emailNotification),
 			})
@@ -323,9 +304,15 @@ export default function MyPage() {
 								</div>
 								<button
 									type="button"
+									onClick={openRelinkPopup}
+									disabled={isRelinking}
 									className="flex h-[28px] w-fit items-center justify-center rounded-[4px] border border-black-300 bg-white px-[14px] py-[4px] text-[12px] font-medium leading-[24px] text-black-900"
 								>
-									연동 계정 변경
+									{isRelinking ? (
+										<Loader2 className="size-[14px] animate-spin" />
+									) : (
+										"연동 계정 변경"
+									)}
 								</button>
 							</div>
 						</div>
