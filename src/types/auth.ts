@@ -19,6 +19,10 @@ export interface SigninRequest {
 	auth_token: string
 }
 
+export interface RelinkGoogleAccountRequest {
+	auth_token: string
+}
+
 export interface SignupRequest {
 	auth_token: string
 	name: string
