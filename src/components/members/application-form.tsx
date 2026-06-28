@@ -36,7 +36,7 @@ interface ApplicationFormProps {
 	trigger?: React.ReactNode
 }
 
-const ROLE_OPTIONS = ["준회원", "정회원", "활동회원"] as const
+const ROLE_OPTIONS = ["활동회원", "정회원", "준회원"] as const
 
 export function ApplicationForm({
 	application,
@@ -82,7 +82,7 @@ export function ApplicationForm({
 
 	const infoRows = (
 		<div className="w-full flex flex-col">
-			<div className="h-[65px] flex items-center border-t border-b border-[#dbdfe0]">
+			<div className="h-[80px] flex items-center border-t border-b border-[#dbdfe0]">
 				<div className="w-[150px] shrink-0 px-[20px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
 					이름
 				</div>
@@ -90,7 +90,7 @@ export function ApplicationForm({
 					{application.name}
 				</div>
 			</div>
-			<div className="h-[65px] flex items-center border-b border-[#dbdfe0]">
+			<div className="h-[80px] flex items-center border-b border-[#dbdfe0]">
 				<div className="w-[150px] shrink-0 px-[20px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
 					자격
 				</div>
@@ -126,7 +126,7 @@ export function ApplicationForm({
 					)}
 				</div>
 			</div>
-			<div className="h-[65px] flex items-center border-b border-[#dbdfe0]">
+			<div className="h-[80px] flex items-center border-b border-[#dbdfe0]">
 				<div className="w-[150px] shrink-0 px-[20px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
 					기수
 				</div>
@@ -134,7 +134,7 @@ export function ApplicationForm({
 					{application.generation}
 				</div>
 			</div>
-			<div className="h-[65px] flex items-center border-b border-[#dbdfe0]">
+			<div className="h-[80px] flex items-center border-b border-[#dbdfe0]">
 				<div className="w-[150px] shrink-0 px-[20px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
 					이메일
 				</div>
@@ -142,7 +142,7 @@ export function ApplicationForm({
 					{application.email}
 				</div>
 			</div>
-			<div className="h-[65px] flex items-center border-b border-[#dbdfe0]">
+			<div className="h-[80px] flex items-center border-b border-[#dbdfe0]">
 				<div className="w-[150px] shrink-0 px-[20px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
 					재학여부
 				</div>
@@ -156,7 +156,7 @@ export function ApplicationForm({
 	const step1Content = (
 		<DialogContent
 			showCloseButton={false}
-			className="w-[580px] max-w-[580px] rounded-[15px] p-0 gap-0"
+			className="w-[600px] max-w-[600px] rounded-[15px] p-0 gap-0 overflow-hidden"
 		>
 			<div className="pt-[10px] px-[10px] pb-[40px] flex flex-col items-end gap-[10px]">
 				{closeButton}
@@ -172,14 +172,14 @@ export function ApplicationForm({
 									<button
 										type="button"
 										onClick={handleReject}
-										className="h-[50px] px-[50px] border border-[#dbdfe0] rounded-[4px] text-[15px] font-semibold text-[#121212] bg-white"
+										className="h-[50px] w-[121px] border border-[#dbdfe0] rounded-[4px] text-[15px] font-semibold text-[#121212] bg-white"
 									>
 										반려
 									</button>
 									<button
 										type="button"
 										onClick={() => setStep(2)}
-										className="h-[50px] px-[50px] bg-[#f77153] rounded-[4px] text-[15px] font-semibold text-white"
+										className="h-[50px] w-[121px] bg-[#f77153] rounded-[4px] text-[15px] font-semibold text-white"
 									>
 										승인
 									</button>
@@ -189,7 +189,7 @@ export function ApplicationForm({
 									<button
 										type="button"
 										onClick={() => setOpen(false)}
-										className="h-[50px] px-[50px] border border-[#dbdfe0] rounded-[4px] text-[15px] font-semibold text-[#121212] bg-white"
+										className="h-[50px] w-[121px] border border-[#dbdfe0] rounded-[4px] text-[15px] font-semibold text-[#121212] bg-white"
 									>
 										취소
 									</button>

@@ -63,6 +63,7 @@ export function MemberTable({
 	onPageChange,
 	selectedMembers,
 	onSelectedMembersChange,
+	onMemberUpdate,
 	generationSort,
 	onGenerationSortChange,
 	roleFilter,
@@ -73,7 +74,7 @@ export function MemberTable({
 	onAccessRightsFilterChange,
 }: MemberTableProps) {
 	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "미가입"]
-	const ENROLLMENT_OPTIONS = ["학부생", "휴학생", "졸업생"]
+	const ENROLLMENT_OPTIONS = ["학부생", "휴학생", "졸업생", "대학원생"]
 	const ACCESS_RIGHT_OPTIONS = ["운영진", "팀장"] satisfies AccessRight[]
 
 	// 회원 상세 페이지 모달
@@ -296,6 +297,7 @@ export function MemberTable({
 			<MemberDetailDialog
 				member={selectedMember}
 				open={selectedMember !== null}
+				onMemberUpdate={onMemberUpdate}
 				onOpenChange={(open) => {
 					if (!open) {
 						setSelectedMember(null)

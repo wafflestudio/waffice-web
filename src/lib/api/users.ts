@@ -1,5 +1,6 @@
+import type { ActivityCreateRequest, ActivityDetail, ActivityUpdateRequest } from "@/types/activity"
 import type { ApiResponse, CursorPage } from "@/types/common"
-import type { HistoryDetail } from "@/types/history"
+import type { AuditLogDetail, HistoryDetail } from "@/types/history"
 import type { ApproveRequest, UserDetail, UserUpdateRequest } from "@/types/user"
 import type { ApiClient } from "./client"
 
@@ -40,8 +41,47 @@ export function createUsersApi(client: ApiClient) {
 			})
 		},
 
+		getUserAuditLog(userId: number): Promise<ApiResponse<AuditLogDetail[]>> {
+			return client.request<ApiResponse<AuditLogDetail[]>>(`/users/${userId}/audit-log`)
+		},
+
 		getUserHistory(userId: number): Promise<ApiResponse<HistoryDetail[]>> {
-			return client.request<ApiResponse<HistoryDetail[]>>(`/users/${userId}/history`)
+			console.warn("getUserHistory() is deprecated. Use getUserAuditLog() instead.")
+			return client.request<ApiResponse<HistoryDetail[]>>(`/users/${userId}/audit-log`)
+		},
+
+		getUserActivities(userId: number): Promise<ApiResponse<ActivityDetail[]>> {
+			return client.request<ApiResponse<ActivityDetail[]>>(`/users/${userId}/activities`)
+		},
+
+		createUserActivity(
+			userId: number,
+			request: ActivityCreateRequest,
+		): Promise<ApiResponse<ActivityDetail>> {
+			return client.request<ApiResponse<ActivityDetail>>(`/users/${userId}/activities`, {
+				method: "POST",
+				body: JSON.stringify(request),
+			})
+		},
+
+		updateUserActivity(
+			userId: number,
+			activityId: number,
+			request: ActivityUpdateRequest,
+		): Promise<ApiResponse<ActivityDetail>> {
+			return client.request<ApiResponse<ActivityDetail>>(
+				`/users/${userId}/activities/${activityId}`,
+				{
+					method: "PATCH",
+					body: JSON.stringify(request),
+				},
+			)
+		},
+
+		deleteUserActivity(userId: number, activityId: number): Promise<ApiResponse<null>> {
+			return client.request<ApiResponse<null>>(`/users/${userId}/activities/${activityId}`, {
+				method: "DELETE",
+			})
 		},
 	}
 }

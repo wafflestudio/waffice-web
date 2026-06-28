@@ -1,6 +1,6 @@
 import type { UserBrief } from "./user"
 
-export type HistoryAction =
+export type AuditLogAction =
 	| "qualification_changed"
 	| "admin_granted"
 	| "admin_revoked"
@@ -8,35 +8,14 @@ export type HistoryAction =
 	| "project_left"
 	| "project_role_changed"
 
-export interface HistoryDetail {
+export interface AuditLogDetail {
 	id: number
-	action: HistoryAction
+	action: AuditLogAction
 	payload: Record<string, unknown>
 	actor: UserBrief | null
 	created_at: number // Unix timestamp
 }
 
-// Legacy History types (deprecated)
-export type UserHistoryType = "join" | "left" | "discipline" | "project_join" | "project_left"
-
-export interface UserHistoryCreate {
-	userid: number
-	type: UserHistoryType
-	description?: string | null
-	curr_privilege?: string | null
-	curr_time_stop?: number | null
-	prev_privilege?: string | null
-	prev_time_stop?: number | null
-}
-
-export interface UserHistory {
-	id: number
-	userid: number
-	type: UserHistoryType
-	description?: string | null
-	curr_privilege?: string | null
-	curr_time_stop?: number | null
-	prev_privilege?: string | null
-	prev_time_stop?: number | null
-	created_at?: string
-}
+// Backward-compatible aliases. 나중에 사용처 정리하면서 제거하면 됨.
+export type HistoryAction = AuditLogAction
+export type HistoryDetail = AuditLogDetail

@@ -3,6 +3,7 @@ import type {
 	DevSigninRequest,
 	GoogleTokenRequest,
 	GoogleTokenResponse,
+	RelinkGoogleAccountRequest,
 	SigninRequest,
 	SignupRequest,
 } from "@/types"
@@ -36,8 +37,12 @@ class AuthClient {
 		})
 
 		if (!response.ok) {
-			const errorBody = await response.text()
-			throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorBody}`)
+			const errorBody = await response.json().catch(() => null)
+			const message =
+				errorBody?.message ||
+				errorBody?.error ||
+				`API Error: ${response.status} ${response.statusText}`
+			throw new Error(message)
 		}
 
 		return response.json()
@@ -58,6 +63,13 @@ class AuthClient {
 
 	async signin(request: SigninRequest): Promise<AuthResponse> {
 		return this.request<AuthResponse>("/auth/signin", {
+			method: "POST",
+			body: JSON.stringify(request),
+		})
+	}
+
+	async relinkGoogleAccount(request: RelinkGoogleAccountRequest): Promise<AuthResponse> {
+		return this.request<AuthResponse>("/auth/google/relink", {
 			method: "POST",
 			body: JSON.stringify(request),
 		})
