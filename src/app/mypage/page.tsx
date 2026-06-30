@@ -6,17 +6,17 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-
+import { useAuth } from "@/components/providers/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { SelectField } from "@/components/ui/select-field"
 import { Toast } from "@/components/ui/toast"
 import { useGoogleRelink } from "@/hooks/use-google-relink"
 import { apiClient } from "@/lib/api"
-import { authClient } from "@/lib/auth"
-import type { Qualification, UserDetail } from "@/types"
+import type { Qualification, UserDetail, UserRole } from "@/types"
 
 const STUDENT_ID_REGEX = /^\d{4}-\d{5}$/
 
@@ -51,6 +51,21 @@ const qualificationToKorean = (qualification: Qualification): string => {
 			return "승인대기"
 		default:
 			return "미가입"
+	}
+}
+
+const userRoleToKorean = (role?: UserRole): string => {
+	switch (role) {
+		case "admin_and_leader":
+			return "운영진, 팀장"
+		case "admin":
+			return "운영진"
+		case "leader":
+			return "팀장"
+		case "member":
+			return "정회원"
+		default:
+			return ""
 	}
 }
 
@@ -124,14 +139,45 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
 	)
 }
 
+function ProfileUpdateSuccessDialog({
+	open,
+	onOpenChange,
+}: {
+	open: boolean
+	onOpenChange: (open: boolean) => void
+}) {
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent
+				showCloseButton={false}
+				className="flex w-[360px] max-w-[calc(100%-32px)] flex-col items-start overflow-hidden rounded-[12px] border-black-300 bg-white px-[40px] pb-[26px] pt-[30px] shadow-[0px_0px_10px_0px_rgba(0,0,0,0.06)] sm:max-w-[360px]"
+			>
+				<div className="flex w-full flex-col items-end gap-[40px]">
+					<DialogTitle className="w-full text-[15px] font-medium leading-[1.4] text-black-900">
+						성공적으로 변경이 완료되었습니다.
+					</DialogTitle>
+					<button
+						type="button"
+						onClick={() => onOpenChange(false)}
+						className="flex h-[40px] items-center justify-center rounded-[4px] bg-peach-300 px-[30px] py-[8px] text-[15px] font-medium leading-[24px] text-white hover:bg-peach-500"
+					>
+						확인
+					</button>
+				</div>
+			</DialogContent>
+		</Dialog>
+	)
+}
+
 export default function MyPage() {
 	const router = useRouter()
+	const { user: authUser, isLoading: isAuthLoading, setUser: setAuthUser } = useAuth()
 	const [user, setUser] = useState<UserDetail | null>(null)
-	const [isLoading, setIsLoading] = useState(true)
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState("")
+	const [showSuccessDialog, setShowSuccessDialog] = useState(false)
 
 	const form = useForm<MypageFormValues>({
 		resolver: zodResolver(mypageSchema),
@@ -154,6 +200,7 @@ export default function MyPage() {
 	const { openRelinkPopup, isLoading: isRelinking } = useGoogleRelink({
 		onSuccess: (result) => {
 			setUser(result.user)
+			setAuthUser(result.user)
 			form.setValue("email", result.user.email)
 			setToastMessage("연동 계정이 변경되었습니다.")
 			setShowToast(true)
@@ -164,56 +211,45 @@ export default function MyPage() {
 		},
 	})
 
-	// 사용자 정보 불러오기
 	useEffect(() => {
-		const fetchUser = async () => {
-			try {
-				setIsLoading(true)
-				const response = await authClient.getMe()
-				if (response.ok && response.data?.user) {
-					const userData = response.data.user
-					setUser(userData)
+		if (isAuthLoading) return
 
-					// bio에서 추가 정보 추출 (형식: "23.5기 - 2021-12345" 또는 "23.5기 - 직책")
-					let studentId = ""
-					if (userData.bio) {
-						const bioMatch = userData.bio.match(/^\d+(\.\d+)?기 - (.+)$/)
-						if (bioMatch) {
-							const extractedValue = bioMatch[2]
-							if (STUDENT_ID_REGEX.test(extractedValue)) {
-								studentId = extractedValue
-							}
-						}
-					}
+		if (!authUser) {
+			setError("사용자 정보를 불러오는데 실패했습니다.")
+			return
+		}
 
-					const notificationChannel = userData.notification_channel
+		setUser(authUser)
+		setError(null)
 
-					form.reset({
-						name: userData.name || "",
-						generation: userData.generation || "",
-						email: userData.email || "",
-						enrollmentStatus: userData.graduation_status || "학부생",
-						studentId: userData.student_id || studentId,
-						major: userData.department || userData.affiliation || "",
-						linkedInUrl: getLinkedInUrl(userData.websites),
-						githubId: userData.github_username || "",
-						phone: userData.phone || "",
-						contactEmail: userData.contact_email || "",
-						smsNotification: notificationChannel === "sms" || notificationChannel === "both",
-						emailNotification: notificationChannel === "email" || notificationChannel === "both",
-					})
-				} else {
-					setError("사용자 정보를 불러오는데 실패했습니다.")
+		let studentId = ""
+		if (authUser.bio) {
+			const bioMatch = authUser.bio.match(/^\d+(\.\d+)?기 - (.+)$/)
+			if (bioMatch) {
+				const extractedValue = bioMatch[2]
+				if (STUDENT_ID_REGEX.test(extractedValue)) {
+					studentId = extractedValue
 				}
-			} catch (err) {
-				setError(err instanceof Error ? err.message : "사용자 정보를 불러오는데 실패했습니다.")
-			} finally {
-				setIsLoading(false)
 			}
 		}
 
-		fetchUser()
-	}, [form])
+		const notificationChannel = authUser.notification_channel
+
+		form.reset({
+			name: authUser.name || "",
+			generation: authUser.generation || "",
+			email: authUser.email || "",
+			enrollmentStatus: authUser.graduation_status || "학부생",
+			studentId: authUser.student_id || studentId,
+			major: authUser.department || authUser.affiliation || "",
+			linkedInUrl: getLinkedInUrl(authUser.websites),
+			githubId: authUser.github_username || "",
+			phone: authUser.phone || "",
+			contactEmail: authUser.contact_email || "",
+			smsNotification: notificationChannel === "sms" || notificationChannel === "both",
+			emailNotification: notificationChannel === "email" || notificationChannel === "both",
+		})
+	}, [authUser, form, isAuthLoading])
 
 	const onSubmit = async (data: MypageFormValues) => {
 		setIsSubmitting(true)
@@ -233,10 +269,10 @@ export default function MyPage() {
 			})
 
 			if (response.ok) {
-				setToastMessage("프로필이 성공적으로 업데이트되었습니다.")
-				setShowToast(true)
+				setShowSuccessDialog(true)
 				if (response.data) {
 					setUser(response.data)
+					setAuthUser(response.data)
 				}
 			} else {
 				setToastMessage(response.message || "프로필 업데이트에 실패했습니다.")
@@ -255,7 +291,7 @@ export default function MyPage() {
 		router.back()
 	}
 
-	if (isLoading) {
+	if (isAuthLoading) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
 				<Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -275,7 +311,7 @@ export default function MyPage() {
 	const createdAt = formatCreatedAt(user?.created_at)
 
 	return (
-		<div className="flex w-full flex-col items-center">
+		<div className="flex w-full flex-col items-start">
 			<div className="flex w-full max-w-[1162px] flex-col gap-[40px]">
 				<h1 className="text-[28px] font-medium leading-normal text-black-900">마이페이지</h1>
 				<Form {...form}>
@@ -350,7 +386,7 @@ export default function MyPage() {
 										<Input
 											aria-disabled
 											readOnly
-											value={user?.is_admin ? "운영진" : "회원"}
+											value={userRoleToKorean(user?.role)}
 											className={inactiveFieldClass}
 										/>
 									</FieldRow>
@@ -494,6 +530,7 @@ export default function MyPage() {
 				</Form>
 
 				<Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />
+				<ProfileUpdateSuccessDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog} />
 			</div>
 		</div>
 	)
