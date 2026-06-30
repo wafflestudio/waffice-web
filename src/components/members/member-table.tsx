@@ -21,7 +21,6 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table"
-import { Toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
 import type { AccessRight, Member, MemberCreate, MemberUpdate } from "@/types"
 import { MemberDetailDialog } from "./member-detail-dialog"
@@ -79,16 +78,9 @@ export function MemberTable({
 
 	// 회원 상세 페이지 모달
 	const [selectedMember, setSelectedMember] = useState<Member | null>(null)
-	const [toastMessage, setToastMessage] = useState("")
-	const [showToast, setShowToast] = useState(false)
 
 	const handleMemberRowClick = (member: Member) => {
 		setSelectedMember(member)
-	}
-
-	const handleDetailSuccess = (message: string) => {
-		setToastMessage(message)
-		setShowToast(true)
 	}
 
 	// 검색 필터링
@@ -305,10 +297,7 @@ export function MemberTable({
 						setSelectedMember(null)
 					}
 				}}
-				onSuccess={handleDetailSuccess}
 			/>
-
-			<Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />
 		</div>
 	)
 }

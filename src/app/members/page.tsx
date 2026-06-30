@@ -5,14 +5,18 @@ import { useState } from "react"
 import { Forbidden } from "@/components/error/forbidden"
 import { MemberTable } from "@/components/members/member-table"
 import { QualificationChangeDialog } from "@/components/members/qualification-change-dialog"
+import { useAuth } from "@/components/providers/auth-provider"
 import { ActionButton } from "@/components/ui/action-button"
 import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/ui/search-input"
 import { Toast } from "@/components/ui/toast"
 import { roleToQualification, useMembers, useUpdateUserAdmin } from "@/hooks/use-members"
-import type { AccessRight, MemberCreate, MemberUpdate, UserUpdateRequest } from "@/types"
+import { canManageMembers } from "@/lib/permissions"
+import type { AccessRight, MemberCreate, MemberUpdate } from "@/types"
+import { toUserUpdateRequest } from "@/types"
 
 export default function MembersPage() {
+	const { user, isLoading: isAuthLoading } = useAuth()
 	const [searchQuery, setSearchQuery] = useState("")
 	const [currentPage, setCurrentPage] = useState(1)
 	const [selectedMembers, setSelectedMembers] = useState<number[]>([])
@@ -23,42 +27,27 @@ export default function MembersPage() {
 	const [roleFilter, setRoleFilter] = useState("전체")
 	const [enrollmentFilter, setEnrollmentFilter] = useState("전체")
 	const [accessRightsFilter, setAccessRightsFilter] = useState<AccessRight[]>([])
+	const canViewMembers = canManageMembers(user)
 	const {
 		data: members = [],
 		isLoading,
 		error,
 		refetch: refetchMembers,
-	} = useMembers(undefined, 100)
+	} = useMembers(undefined, 100, { enabled: !isAuthLoading && canViewMembers })
 	const updateUserMutation = useUpdateUserAdmin()
 	const isForbidden = error?.message.includes("403") ?? false
 
 	// 회원 정보 수정 핸들러
 	const handleMemberUpdate = async (id: number, data: MemberCreate | MemberUpdate) => {
 		try {
-			const updateRequest: UserUpdateRequest = {}
-
-			if (data.name !== undefined) updateRequest.name = data.name || null
-			if (data.email !== undefined) updateRequest.contact_email = data.email || null
-			if (data.phone !== undefined) updateRequest.phone = data.phone || null
-			if (data.affiliation !== undefined) updateRequest.graduation_status = data.affiliation || null
-			if (data.github_username !== undefined)
-				updateRequest.github_username = data.github_username || null
-			if (data.slack_id !== undefined) updateRequest.slack_id = data.slack_id || null
-			if (data.student_id !== undefined) updateRequest.student_id = data.student_id || null
-			if (data.department !== undefined) updateRequest.department = data.department || null
-			if (data.websites !== undefined) updateRequest.websites = data.websites
-			if (data.generation !== undefined) updateRequest.generation = data.generation || null
-			if (data.role !== undefined) updateRequest.qualification = roleToQualification(data.role)
-			if (data.access_rights !== undefined)
-				updateRequest.is_admin = data.access_rights.includes("운영진")
-
-			await updateUserMutation.mutateAsync({ userId: id, data: updateRequest })
+			await updateUserMutation.mutateAsync({ userId: id, data: toUserUpdateRequest(data) })
 			setToastMessage("회원 정보가 성공적으로 업데이트되었습니다.")
 			setShowToast(true)
 		} catch (err) {
 			console.error("Failed to update member:", err)
 			setToastMessage(err instanceof Error ? err.message : "회원 정보 업데이트에 실패했습니다.")
 			setShowToast(true)
+			throw err
 		}
 	}
 
@@ -128,7 +117,7 @@ export default function MembersPage() {
 		}
 	}
 
-	if (isLoading) {
+	if (isAuthLoading || isLoading) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
 				<Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -136,7 +125,7 @@ export default function MembersPage() {
 		)
 	}
 
-	if (isForbidden) {
+	if (!canViewMembers || isForbidden) {
 		return (
 			<Forbidden message="회원 관리 페이지에 접근할 권한이 없습니다. 관리자 권한이 필요합니다." />
 		)
