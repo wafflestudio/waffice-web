@@ -14,6 +14,16 @@ import type { AuthResult, AuthStatus } from "@/types"
 
 const ENABLE_DEV_AUTH = process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH === "true"
 
+const getSafeNextPath = (next: string | null) => {
+	if (!next || !next.startsWith("/") || next.startsWith("//")) return "/"
+	return next
+}
+
+const getCurrentNextPath = () => {
+	if (typeof window === "undefined") return "/"
+	return getSafeNextPath(new URLSearchParams(window.location.search).get("next"))
+}
+
 export default function LoginPage() {
 	const router = useRouter()
 	const [authError, setAuthError] = useState<string | null>(null)
@@ -33,7 +43,7 @@ export default function LoginPage() {
 					if (response.data.status === "pending") {
 						router.push("/signup/pending")
 					} else {
-						router.push("/")
+						router.replace(getCurrentNextPath())
 					}
 				} else {
 					setAuthError("로그인에 실패했습니다.")
@@ -70,7 +80,7 @@ export default function LoginPage() {
 		if (result.status === "pending") {
 			router.push("/signup/pending")
 		} else {
-			router.push("/")
+			router.replace(getCurrentNextPath())
 		}
 	}
 

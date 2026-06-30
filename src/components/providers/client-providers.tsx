@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { MainLayout } from "@/components/layout/main-layout"
+import { AuthProvider } from "@/components/providers/auth-provider"
 
 interface ClientProvidersProps {
 	children: React.ReactNode
@@ -21,7 +22,9 @@ export function ClientProviders({ children }: ClientProvidersProps) {
 
 	return (
 		<QueryClientProvider client={queryClient}>
-			{isAuthPage ? children : <MainLayout>{children}</MainLayout>}
+			<AuthProvider enabled={!isAuthPage}>
+				{isAuthPage ? children : <MainLayout>{children}</MainLayout>}
+			</AuthProvider>
 		</QueryClientProvider>
 	)
 }
