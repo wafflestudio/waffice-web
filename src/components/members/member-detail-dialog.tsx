@@ -15,16 +15,18 @@ interface MemberDetailDialogProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
 	onMemberUpdate?: (id: number, data: MemberUpdate) => Promise<void>
-	onSuccess?: (message: string) => void
 }
 
 const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "가입대기"] as const
 const ENROLLMENT_OPTIONS = ["학부생", "대학원생", "휴학생", "졸업생"] as const
-const ACCESS_RIGHT_OPTIONS = ["팀장", "운영진"] satisfies AccessRight[]
+const ACCESS_RIGHT_OPTIONS = ["운영진", "팀장"] satisfies AccessRight[]
+const FIELD_ROW_CLASS = "relative flex h-[60px] w-[500px] items-center pl-[140px] py-[10px]"
+const FIELD_LABEL_CLASS =
+	"absolute left-0 top-1/2 flex -translate-y-1/2 items-center text-[14px] font-medium text-black-900"
 const FIELD_CLASS =
-	"h-[50px] w-[360px] rounded-[5px] border-black-300 bg-white px-[16px] text-[15px] font-normal text-black-900 shadow-none outline-none placeholder:text-black-500 focus-visible:border-peach-300 focus-visible:ring-0"
+	"h-[40px] w-[360px] rounded-[5px] border-black-300 bg-white px-[16px] text-[14px] font-normal text-black-900 shadow-none outline-none placeholder:text-black-500 focus-visible:border-peach-300 focus-visible:ring-0"
 const SMALL_FIELD_CLASS =
-	"h-[50px] w-[175px] rounded-[5px] border-black-300 bg-white px-[16px] text-[15px] font-normal text-black-900 shadow-none outline-none placeholder:text-black-500 focus-visible:border-peach-300 focus-visible:ring-0"
+	"h-[40px] w-[175px] rounded-[5px] border-black-300 bg-white px-[16px] text-[14px] font-normal text-black-900 shadow-none outline-none placeholder:text-black-500 focus-visible:border-peach-300 focus-visible:ring-0"
 
 const getLinkedInUrl = (websites?: Website[] | null) =>
 	websites?.find((website) => website.type.toLowerCase() === "linkedin")?.url ?? ""
@@ -45,11 +47,11 @@ const buildWebsites = (websites: Website[] | null | undefined, linkedInUrl: stri
 	return nextWebsites.length > 0 ? nextWebsites : null
 }
 
-const formatDate = (value?: string) => {
+const formatDate = (value?: string | number) => {
 	if (!value) return ""
 
 	const date = new Date(value)
-	if (Number.isNaN(date.getTime())) return value
+	if (Number.isNaN(date.getTime())) return String(value)
 
 	return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(
 		date.getDate(),
@@ -66,10 +68,10 @@ function FieldRow({
 	children: React.ReactNode
 }) {
 	return (
-		<div className="flex h-[70px] w-[500px] items-center justify-between">
-			<span className="flex shrink-0 items-center text-[15px] font-medium tracking-[-0.3px] text-black-900">
+		<div className={FIELD_ROW_CLASS}>
+			<span className={FIELD_LABEL_CLASS}>
 				{label}
-				{required && <span className="text-[17px] text-red-500">*</span>}
+				{required && <span className="text-red-500">*</span>}
 			</span>
 			{children}
 		</div>
@@ -114,13 +116,13 @@ function AccessRightToggle({
 		<button type="button" onClick={onToggle} className="flex items-center gap-[16px]">
 			<span
 				className={cn(
-					"flex size-[20px] items-center justify-center rounded-[4px]",
+					"flex size-[16px] items-center justify-center rounded-[3.5px]",
 					checked ? "bg-peach-300 text-white" : "border border-black-500 bg-white text-transparent",
 				)}
 			>
-				{checked && <Check className="size-[12px]" strokeWidth={2.5} />}
+				{checked && <Check className="size-[10px]" strokeWidth={3} />}
 			</span>
-			<span className="text-[17px] font-normal tracking-[-0.34px] text-black-700">{right}</span>
+			<span className="text-[14px] font-normal tracking-[-0.28px] text-black-700">{right}</span>
 		</button>
 	)
 }
@@ -169,7 +171,6 @@ export function MemberDetailDialog({
 	open,
 	onOpenChange,
 	onMemberUpdate,
-	onSuccess,
 }: MemberDetailDialogProps) {
 	const [role, setRole] = useState<(typeof ROLE_OPTIONS)[number]>("활동회원")
 	const [generation, setGeneration] = useState("")
@@ -249,10 +250,8 @@ export function MemberDetailDialog({
 
 			setConfirmOpen(false)
 			onOpenChange(false)
-			onSuccess?.("성공적으로 변경이 완료되었습니다.")
-		} catch (error) {
+		} catch {
 			setConfirmOpen(false)
-			onSuccess?.(error instanceof Error ? error.message : "회원 정보 변경에 실패했습니다.")
 		}
 	}
 
@@ -271,31 +270,28 @@ export function MemberDetailDialog({
 							</DialogClose>
 						</div>
 
-						<div className="flex w-[1162px] max-w-[calc(100%-80px)] flex-col gap-[50px]">
-							<DialogTitle className="h-[43px] shrink-0 text-[36px] font-medium leading-none text-black-900">
+						<div className="flex w-[1100px] max-w-[calc(100%-80px)] flex-col gap-[40px]">
+							<DialogTitle className="shrink-0 text-[28px] font-medium leading-normal text-black-900">
 								회원 상세
 							</DialogTitle>
 
 							<div className="flex flex-col gap-[40px]">
 								<header className="flex h-[80px] items-center gap-[20px]">
-									<div className="flex size-[80px] shrink-0 items-center justify-center rounded-full bg-black-300 text-black-700">
+									<div className="flex size-[80px] shrink-0 items-center justify-center rounded-full bg-black-300 text-white">
 										<UserRound className="size-[36px]" strokeWidth={1.8} />
 									</div>
 									<div className="flex flex-col gap-[4px]">
-										<p className="text-[20px] font-medium leading-[1.4] tracking-[-0.4px] text-black-900">
+										<p className="text-[18px] font-medium leading-[1.4] tracking-[-0.36px] text-black-900">
 											{member.name}
 										</p>
-										<p className="text-[15px] font-normal leading-[1.4] tracking-[-0.3px] text-black-600">
+										<p className="text-[14px] font-normal leading-[1.4] tracking-[-0.28px] text-black-600">
 											{email}
 										</p>
 									</div>
 								</header>
 
-								<section className="flex flex-col gap-[15px]">
-									<h3 className="text-[20px] font-medium tracking-[-0.4px] text-black-900">
-										회원 정보 수정하기
-									</h3>
-									<div className="flex justify-between border-black-300 border-t pt-[10px]">
+								<section className="flex w-full flex-col gap-[30px]">
+									<div className="flex w-[1100px] items-start justify-between pt-[10px]">
 										<div className="flex flex-col">
 											<SelectField
 												label="자격"
@@ -303,6 +299,11 @@ export function MemberDetailDialog({
 												options={ROLE_OPTIONS}
 												onChange={setRole}
 												required
+												className={FIELD_ROW_CLASS}
+												labelClassName={FIELD_LABEL_CLASS}
+												triggerClassName={FIELD_CLASS}
+												contentClassName="w-[360px]"
+												itemClassName="h-[40px] px-[16px] text-[14px]"
 											/>
 											<TextField
 												label="기수"
@@ -311,28 +312,29 @@ export function MemberDetailDialog({
 												required
 												placeholder="기수를 입력해주세요"
 											/>
-											<TextField label="이메일" value={email} onChange={setEmail} required />
 											<TextField
 												label="Github 아이디"
 												value={githubId}
 												onChange={setGithubId}
 												placeholder="Github 아이디를 입력해주세요"
 											/>
-											<div className="flex h-[70px] w-[500px] items-center">
-												<div className="flex w-[325px] items-center gap-[85px]">
-													<p className="shrink-0 text-[15px] font-medium tracking-[-0.3px] text-black-900">
-														접근 권한
-													</p>
-													<div className="flex items-center gap-[30px]">
-														{ACCESS_RIGHT_OPTIONS.map((right) => (
-															<AccessRightToggle
-																key={right}
-																right={right}
-																checked={accessRights.includes(right)}
-																onToggle={() => toggleAccessRight(right)}
-															/>
-														))}
-													</div>
+											<TextField
+												label="소식 수신용 이메일"
+												value={email}
+												onChange={setEmail}
+												placeholder="example@gmail.com"
+											/>
+											<div className={cn(FIELD_ROW_CLASS, "gap-[30px]")}>
+												<p className={FIELD_LABEL_CLASS}>접근 권한</p>
+												<div className="flex items-center gap-[37px]">
+													{ACCESS_RIGHT_OPTIONS.map((right) => (
+														<AccessRightToggle
+															key={right}
+															right={right}
+															checked={accessRights.includes(right)}
+															onToggle={() => toggleAccessRight(right)}
+														/>
+													))}
 												</div>
 											</div>
 										</div>
@@ -344,6 +346,11 @@ export function MemberDetailDialog({
 												options={ENROLLMENT_OPTIONS}
 												onChange={setEnrollment}
 												required
+												className={FIELD_ROW_CLASS}
+												labelClassName={FIELD_LABEL_CLASS}
+												triggerClassName={FIELD_CLASS}
+												contentClassName="w-[360px]"
+												itemClassName="h-[40px] px-[16px] text-[14px]"
 											/>
 											<FieldRow label="학번 · 학과">
 												<div className="flex gap-[10px]">
@@ -386,26 +393,26 @@ export function MemberDetailDialog({
 											</FieldRow>
 										</div>
 									</div>
-								</section>
 
-								<div className="flex justify-end">
-									<div className="flex gap-[16px]">
-										<button
-											type="button"
-											onClick={() => onOpenChange(false)}
-											className="flex h-[50px] items-center justify-center rounded-[4px] border border-black-500 bg-white px-[50px] py-[8px] text-[17px] font-medium leading-[24px] text-black-900 transition-colors hover:bg-black-100 active:bg-black-300"
-										>
-											취소
-										</button>
-										<button
-											type="button"
-											onClick={handleSubmitClick}
-											className="flex h-[50px] items-center justify-center rounded-[4px] bg-peach-300 px-[50px] py-[8px] text-[17px] font-medium leading-[24px] text-white transition-colors hover:bg-peach-500 active:bg-peach-500"
-										>
-											확인
-										</button>
+									<div className="flex w-full justify-end">
+										<div className="flex h-[50px] items-center gap-[10px]">
+											<button
+												type="button"
+												onClick={() => onOpenChange(false)}
+												className="flex h-[50px] w-[121px] items-center justify-center rounded-[4px] border border-black-300 bg-white text-[15px] font-semibold leading-[24px] text-black-900 transition-colors hover:bg-black-100 active:bg-black-300"
+											>
+												취소
+											</button>
+											<button
+												type="button"
+												onClick={handleSubmitClick}
+												className="flex h-[50px] w-[121px] items-center justify-center rounded-[4px] bg-peach-300 text-[15px] font-semibold leading-[24px] text-white transition-colors hover:bg-peach-500 active:bg-peach-500"
+											>
+												확인
+											</button>
+										</div>
 									</div>
-								</div>
+								</section>
 							</div>
 						</div>
 					</div>

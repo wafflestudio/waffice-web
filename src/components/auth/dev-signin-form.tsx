@@ -14,7 +14,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select"
 import { authClient } from "@/lib/auth"
-import type { AuthResult, DevSigninRequest } from "@/types"
+import type { AuthResult, DevSigninRequest, UserRole } from "@/types"
 
 type Qualification = DevSigninRequest["qualification"]
 
@@ -22,7 +22,7 @@ interface PresetUser {
 	label: string
 	email: string
 	name: string
-	is_admin: boolean
+	role: UserRole
 	qualification: Qualification
 }
 
@@ -31,35 +31,35 @@ const PRESET_USERS: PresetUser[] = [
 		label: "Admin User",
 		email: "admin@example.com",
 		name: "Admin User",
-		is_admin: true,
+		role: "admin",
 		qualification: "active",
 	},
 	{
 		label: "Active User",
 		email: "active@example.com",
 		name: "Active User",
-		is_admin: false,
+		role: "member",
 		qualification: "active",
 	},
 	{
 		label: "Regular User",
 		email: "regular@example.com",
 		name: "Regular User",
-		is_admin: false,
+		role: "member",
 		qualification: "regular",
 	},
 	{
 		label: "Associate User",
 		email: "associate@example.com",
 		name: "Associate User",
-		is_admin: false,
+		role: "member",
 		qualification: "associate",
 	},
 	{
 		label: "Pending User",
 		email: "pending@example.com",
 		name: "Pending User",
-		is_admin: false,
+		role: "member",
 		qualification: "pending",
 	},
 ]
@@ -114,7 +114,7 @@ export function DevSigninForm({ onSuccess, onError }: DevSigninFormProps) {
 			{
 				email: preset.email,
 				name: preset.name,
-				is_admin: preset.is_admin,
+				role: preset.role,
 				qualification: preset.qualification,
 			},
 			preset.label,
@@ -130,7 +130,7 @@ export function DevSigninForm({ onSuccess, onError }: DevSigninFormProps) {
 		handleSignin({
 			email,
 			name,
-			is_admin: isAdmin,
+			role: isAdmin ? "admin" : "member",
 			qualification,
 		})
 	}

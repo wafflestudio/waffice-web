@@ -1,3 +1,4 @@
+import type { Qualification, UserRole } from "./common"
 import type { UserDetail } from "./user"
 
 export type AuthStatus = "new" | "pending" | "active"
@@ -35,8 +36,8 @@ export interface SignupRequest {
 export interface DevSigninRequest {
 	email: string
 	name: string
-	is_admin: boolean
-	qualification: "pending" | "associate" | "regular" | "active"
+	role?: UserRole
+	qualification?: Qualification
 }
 
 export interface Token {

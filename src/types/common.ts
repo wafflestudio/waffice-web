@@ -4,6 +4,7 @@ export type GraduationStatus = "학부생" | "졸업생" | "휴학생" | "대학
 
 export type NotificationChannel = "email" | "sms" | "both"
 
+export type UserRole = "member" | "leader" | "admin" | "admin_and_leader"
 export interface CursorPage<T> {
 	items: T[]
 	next_cursor?: number | null

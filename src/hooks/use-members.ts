@@ -9,6 +9,7 @@ import type {
 	Member,
 	Qualification,
 	UserDetail,
+	UserRole,
 	UserUpdateRequest,
 } from "@/types"
 
@@ -51,6 +52,29 @@ export const roleToQualification = (role: string): Qualification => {
 	}
 }
 
+export const userRoleToAccessRights = (role: UserRole): Member["access_rights"] => {
+	switch (role) {
+		case "admin_and_leader":
+			return ["운영진", "팀장"]
+		case "admin":
+			return ["운영진"]
+		case "leader":
+			return ["팀장"]
+		case "member":
+			return []
+	}
+}
+
+export const accessRightsToUserRole = (accessRights: Member["access_rights"] = []): UserRole => {
+	const isAdmin = accessRights.includes("운영진")
+	const isLeader = accessRights.includes("팀장")
+
+	if (isAdmin && isLeader) return "admin_and_leader"
+	if (isAdmin) return "admin"
+	if (isLeader) return "leader"
+	return "member"
+}
+
 export const userDetailToMember = (user: UserDetail): Member => ({
 	id: user.id,
 	name: user.name,
@@ -61,7 +85,7 @@ export const userDetailToMember = (user: UserDetail): Member => ({
 	generation: user.generation,
 	role: qualificationToRole(user.qualification),
 	affiliation: user.graduation_status,
-	access_rights: user.is_admin ? ["운영진"] : [],
+	access_rights: userRoleToAccessRights(user.role),
 	user,
 	status: user.qualification === "pending" ? "inactive" : "active",
 	join_date: new Date(user.created_at * 1000).toISOString(),
@@ -85,7 +109,11 @@ function assertSuccessfulResponse<T>(response: ApiResponse<T>, fallbackMessage: 
 	return response.data ?? null
 }
 
-export function useUsers(cursor?: number, limit = 100) {
+interface UseMembersQueryOptions {
+	enabled?: boolean
+}
+
+export function useUsers(cursor?: number, limit = 100, options: UseMembersQueryOptions = {}) {
 	return useQuery<CursorPage<UserDetail>, Error>({
 		queryKey: memberQueryKeys.users(cursor, limit),
 		queryFn: async () =>
@@ -93,10 +121,11 @@ export function useUsers(cursor?: number, limit = 100) {
 				await apiClient.getUsers(cursor, limit),
 				"회원 목록을 불러오는데 실패했습니다.",
 			),
+		enabled: options.enabled ?? true,
 	})
 }
 
-export function useMembers(cursor?: number, limit = 100) {
+export function useMembers(cursor?: number, limit = 100, options: UseMembersQueryOptions = {}) {
 	return useQuery<Member[], Error>({
 		queryKey: memberQueryKeys.memberList(cursor, limit),
 		queryFn: async () => {
@@ -106,6 +135,7 @@ export function useMembers(cursor?: number, limit = 100) {
 			)
 			return users.items.filter((user) => user.qualification !== "pending").map(userDetailToMember)
 		},
+		enabled: options.enabled ?? true,
 	})
 }
 

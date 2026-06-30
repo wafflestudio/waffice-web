@@ -8,11 +8,20 @@ import {
 	FolderOpen,
 	GraduationCap,
 	Home,
+	LogOut,
+	UserRound,
 	Users,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { useAuth } from "@/components/providers/auth-provider"
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import type { Qualification, UserDetail } from "@/types"
 
@@ -41,7 +50,7 @@ const NAV_ITEMS: NavItem[] = [
 		href: "/projects",
 		icon: FolderOpen,
 		subItems: [
-			{ name: "내 프로젝트 목록", href: "/projects" },
+			{ name: "내 프로젝트 목록", href: "/projects/my" },
 			{ name: "프로젝트 상세", href: "/projects/detail" },
 		],
 	},
@@ -58,7 +67,8 @@ const isMenuActive = (pathname: string, href: string) => {
 
 const getProfileRoleLabel = (user?: UserDetail | null) => {
 	if (!user) return "프로필"
-	if (user.is_admin) return "운영진"
+	if (user.role === "admin" || user.role === "admin_and_leader") return "운영진"
+	if (user.role === "leader") return "팀장"
 
 	const qualificationLabel: Record<Qualification, string> = {
 		active: "활동",
@@ -68,10 +78,6 @@ const getProfileRoleLabel = (user?: UserDetail | null) => {
 	}
 
 	return qualificationLabel[user.qualification]
-}
-
-interface LnbProps {
-	user?: UserDetail | null
 }
 
 interface NavMenuItemProps {
@@ -111,7 +117,7 @@ function NavMenuItem({ item, pathname }: NavMenuItemProps) {
 			{active && item.subItems && (
 				<div className="flex w-[180px] flex-col gap-[2px]">
 					{item.subItems.map((sub) => {
-						const subActive = pathname === sub.href
+						const subActive = sub.href !== item.href && pathname === sub.href
 
 						return (
 							<Link
@@ -120,7 +126,7 @@ function NavMenuItem({ item, pathname }: NavMenuItemProps) {
 								className={cn(
 									"flex h-[34px] w-[180px] items-center rounded-[4px] py-[6px] pr-[8px] pl-[40px] text-[13px]",
 									subActive
-										? "bg-peach-100 font-semibold leading-[18px] text-peach-500"
+										? "bg-white font-semibold leading-[20px] text-peach-500"
 										: "font-medium leading-[18px] text-black-700 hover:bg-black-100",
 								)}
 							>
@@ -134,9 +140,21 @@ function NavMenuItem({ item, pathname }: NavMenuItemProps) {
 	)
 }
 
-export function Lnb({ user }: LnbProps) {
+export function Lnb() {
 	const pathname = usePathname()
+	const router = useRouter()
+	const { user, logout } = useAuth()
 	const profileImage = user?.avatar_url || "/profile.png"
+
+	const handleLogout = async () => {
+		try {
+			await logout()
+		} catch (err) {
+			console.error("로그아웃 실패:", err)
+		} finally {
+			router.replace("/login")
+		}
+	}
 
 	return (
 		<aside className="flex h-full w-[220px] shrink-0 flex-col border-[#ebecf0] border-r bg-white px-[20px] pt-[30px] pb-0">
@@ -163,24 +181,54 @@ export function Lnb({ user }: LnbProps) {
 				</nav>
 			</div>
 
-			<Link
-				href="/mypage"
-				aria-label="마이페이지"
-				className="-mx-[20px] mt-auto flex h-[63px] w-[220px] items-center border-[#ebecf0] border-t px-[30px] hover:bg-black-100"
-			>
-				<div
-					aria-label={`${user?.name || "사용자"} 프로필`}
-					className="size-[30px] shrink-0 rounded-full bg-black-300 bg-cover bg-center"
-					role="img"
-					style={{ backgroundImage: `url(${profileImage})` }}
-				/>
-				<span className="ml-[8px] min-w-0 flex-1 truncate text-[15px] font-medium text-black-900 leading-normal">
-					{user?.name || "사용자"}
-				</span>
-				<span className="ml-[8px] flex h-[20px] w-[50px] shrink-0 items-center justify-center rounded-[20px] border border-black-400 text-center text-[12px] font-medium text-black-400 leading-normal">
-					{getProfileRoleLabel(user)}
-				</span>
-			</Link>
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<button
+						type="button"
+						aria-label={user ? "프로필 메뉴 열기" : "로그인 페이지로 이동"}
+						onClick={() => {
+							if (!user) router.push("/login")
+						}}
+						className="-mx-[20px] mt-auto flex h-[63px] w-[220px] items-center border-[#ebecf0] border-t px-[30px] text-left hover:bg-black-100"
+					>
+						<div
+							aria-label={`${user?.name || "사용자"} 프로필`}
+							className="size-[30px] shrink-0 rounded-full bg-black-300 bg-cover bg-center"
+							role="img"
+							style={{ backgroundImage: `url(${profileImage})` }}
+						/>
+						<span className="ml-[8px] min-w-0 flex-1 truncate text-[15px] font-medium text-black-900 leading-normal">
+							{user?.name || "사용자"}
+						</span>
+						<span className="ml-[8px] flex h-[20px] w-[50px] shrink-0 items-center justify-center rounded-[20px] border border-black-400 text-center text-[12px] font-medium text-black-400 leading-normal">
+							{getProfileRoleLabel(user)}
+						</span>
+					</button>
+				</DropdownMenuTrigger>
+				{user && (
+					<DropdownMenuContent
+						align="start"
+						side="top"
+						sideOffset={8}
+						className="w-[180px] rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
+					>
+						<DropdownMenuItem
+							onSelect={() => router.push("/mypage")}
+							className="h-[40px] cursor-pointer rounded-[3px] px-[10px] text-[14px] font-medium text-black-700 hover:bg-black-100 focus:bg-black-100"
+						>
+							<UserRound className="size-[16px] text-black-600" strokeWidth={1.8} />
+							마이페이지
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							onSelect={handleLogout}
+							className="h-[40px] cursor-pointer rounded-[3px] px-[10px] text-[14px] font-medium text-black-700 hover:bg-black-100 focus:bg-black-100"
+						>
+							<LogOut className="size-[16px] text-black-600" strokeWidth={1.8} />
+							로그아웃
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				)}
+			</DropdownMenu>
 		</aside>
 	)
 }

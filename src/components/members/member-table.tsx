@@ -21,7 +21,6 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table"
-import { Toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
 import type { AccessRight, Member, MemberCreate, MemberUpdate } from "@/types"
 import { MemberDetailDialog } from "./member-detail-dialog"
@@ -79,16 +78,9 @@ export function MemberTable({
 
 	// 회원 상세 페이지 모달
 	const [selectedMember, setSelectedMember] = useState<Member | null>(null)
-	const [toastMessage, setToastMessage] = useState("")
-	const [showToast, setShowToast] = useState(false)
 
 	const handleMemberRowClick = (member: Member) => {
 		setSelectedMember(member)
-	}
-
-	const handleDetailSuccess = (message: string) => {
-		setToastMessage(message)
-		setShowToast(true)
 	}
 
 	// 검색 필터링
@@ -140,7 +132,7 @@ export function MemberTable({
 	return (
 		<div className="space-y-4">
 			{/* 테이블 */}
-			<div className="overflow-hidden border-[#dbdfe0] border-t border-b bg-white">
+			<div className="overflow-x-auto border-[#dbdfe0] border-t border-b bg-white">
 				<Table className="min-w-[1540px] table-fixed">
 					<TableHeader>
 						<TableRow className="h-[50px] bg-[#f7f7f7] hover:bg-[#f7f7f7]">
@@ -155,8 +147,8 @@ export function MemberTable({
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<GenerationSortHeader sort={generationSort} onSortChange={onGenerationSortChange} />
 							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[302px]")}>이메일</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[302px]")}>Github 아이디</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "min-w-0")}>이메일</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "min-w-0")}>Github 아이디</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[180px]")}>계정 생성일</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<DropdownMenu>
@@ -269,8 +261,10 @@ export function MemberTable({
 									<TableCell className={cn(BODY_CELL_CLASS, "w-[140px]")}>
 										{member.generation || "-"}
 									</TableCell>
-									<TableCell className={cn(BODY_CELL_CLASS, "w-[302px]")}>{member.email}</TableCell>
-									<TableCell className={cn(BODY_CELL_CLASS, "w-[302px]")}>
+									<TableCell className={cn(BODY_CELL_CLASS, "w-[302px] truncate")}>
+										{member.email}
+									</TableCell>
+									<TableCell className={cn(BODY_CELL_CLASS, "w-[302px] truncate")}>
 										{member.github_username || "-"}
 									</TableCell>
 									<TableCell className={cn(BODY_CELL_CLASS, "w-[180px]")}>
@@ -303,10 +297,7 @@ export function MemberTable({
 						setSelectedMember(null)
 					}
 				}}
-				onSuccess={handleDetailSuccess}
 			/>
-
-			<Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />
 		</div>
 	)
 }
