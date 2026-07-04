@@ -10,10 +10,15 @@ export function createUsersApi(client: ApiClient) {
 			return client.request<ApiResponse<UserDetail[]>>("/users/pending")
 		},
 
-		getUsers(cursor?: number, limit = 20): Promise<ApiResponse<CursorPage<UserDetail>>> {
+		getUsers(
+			cursor?: number,
+			limit = 20,
+			name?: string,
+		): Promise<ApiResponse<CursorPage<UserDetail>>> {
 			const params = new URLSearchParams()
 			if (cursor) params.append("cursor", cursor.toString())
 			params.append("limit", limit.toString())
+			if (name?.trim()) params.append("name", name.trim())
 			return client.request<ApiResponse<CursorPage<UserDetail>>>(`/users?${params.toString()}`)
 		},
 

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/lib/api"
 import type {
 	ActivityCreateRequest,
@@ -15,10 +15,10 @@ import type {
 
 export const memberQueryKeys = {
 	all: ["members"] as const,
-	users: (cursor?: number, limit = 100) =>
-		[...memberQueryKeys.all, "users", cursor, limit] as const,
-	memberList: (cursor?: number, limit = 100) =>
-		[...memberQueryKeys.all, "member-list", cursor, limit] as const,
+	users: (cursor?: number, limit = 100, name = "") =>
+		[...memberQueryKeys.all, "users", cursor, limit, name] as const,
+	memberList: (cursor?: number, limit = 100, name = "") =>
+		[...memberQueryKeys.all, "member-list", cursor, limit, name] as const,
 	user: (userId: number) => [...memberQueryKeys.all, "user", userId] as const,
 	auditLog: (userId: number) => [...memberQueryKeys.all, "audit-log", userId] as const,
 	activities: (userId: number) => [...memberQueryKeys.all, "activities", userId] as const,
@@ -111,30 +111,37 @@ function assertSuccessfulResponse<T>(response: ApiResponse<T>, fallbackMessage: 
 
 interface UseMembersQueryOptions {
 	enabled?: boolean
+	name?: string
 }
 
 export function useUsers(cursor?: number, limit = 100, options: UseMembersQueryOptions = {}) {
+	const name = options.name?.trim() ?? ""
+
 	return useQuery<CursorPage<UserDetail>, Error>({
-		queryKey: memberQueryKeys.users(cursor, limit),
+		queryKey: memberQueryKeys.users(cursor, limit, name),
 		queryFn: async () =>
 			getResponseData(
-				await apiClient.getUsers(cursor, limit),
+				await apiClient.getUsers(cursor, limit, name),
 				"회원 목록을 불러오는데 실패했습니다.",
 			),
+		placeholderData: keepPreviousData,
 		enabled: options.enabled ?? true,
 	})
 }
 
 export function useMembers(cursor?: number, limit = 100, options: UseMembersQueryOptions = {}) {
+	const name = options.name?.trim() ?? ""
+
 	return useQuery<Member[], Error>({
-		queryKey: memberQueryKeys.memberList(cursor, limit),
+		queryKey: memberQueryKeys.memberList(cursor, limit, name),
 		queryFn: async () => {
 			const users = getResponseData(
-				await apiClient.getUsers(cursor, limit),
+				await apiClient.getUsers(cursor, limit, name),
 				"회원 목록을 불러오는데 실패했습니다.",
 			)
 			return users.items.filter((user) => user.qualification !== "pending").map(userDetailToMember)
 		},
+		placeholderData: keepPreviousData,
 		enabled: options.enabled ?? true,
 	})
 }
