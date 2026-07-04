@@ -8,9 +8,10 @@ const actionButtonVariants = cva(
 	{
 		variants: {
 			variant: {
-				primary: "bg-peach-300 text-white hover:bg-peach-400",
+				primary: "bg-peach-300 text-white hover:bg-peach-500 active:bg-peach-500",
 				secondary: "bg-peach-50 text-peach-500 hover:bg-peach-100",
-				tertiary: "bg-white border border-black-500 text-black-900 hover:bg-black-100",
+				tertiary:
+					"bg-white border border-black-300 text-black-900 hover:bg-black-300 active:bg-black-300",
 			},
 			size: {
 				lg: "h-[50px] px-[50px] py-[13px] rounded-[4px]",

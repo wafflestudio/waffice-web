@@ -15,6 +15,7 @@ interface SelectFieldProps<T extends string> {
 	value: T
 	options: readonly T[]
 	onChange: (value: T) => void
+	placeholder?: string
 	required?: boolean
 	className?: string
 	labelClassName?: string
@@ -28,6 +29,7 @@ function SelectField<T extends string>({
 	value,
 	options,
 	onChange,
+	placeholder,
 	required = false,
 	className,
 	labelClassName,
@@ -45,7 +47,7 @@ function SelectField<T extends string>({
 						triggerClassName,
 					)}
 				>
-					<span>{value}</span>
+					<span className={cn(!value && "text-black-600")}>{value || placeholder}</span>
 					<ChevronDown className="size-[24px] text-black-900" />
 				</button>
 			</DropdownMenuTrigger>
