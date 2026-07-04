@@ -3,6 +3,7 @@
 import { Loader2, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Forbidden } from "@/components/error/forbidden"
+import { MemberBulkUpdateDialog } from "@/components/members/member-bulk-update-dialog"
 import { MemberTable } from "@/components/members/member-table"
 import { QualificationChangeDialog } from "@/components/members/qualification-change-dialog"
 import { useAuth } from "@/components/providers/auth-provider"
@@ -22,6 +23,7 @@ export default function MembersPage() {
 	const [currentPage, setCurrentPage] = useState(1)
 	const [selectedMembers, setSelectedMembers] = useState<number[]>([])
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
+	const [isBulkUpdateDialogOpen, setIsBulkUpdateDialogOpen] = useState(false)
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState("")
 	const [generationSort, setGenerationSort] = useState<"desc" | "asc" | null>(null)
@@ -179,6 +181,13 @@ export default function MembersPage() {
 							<ActionButton variant="primary" size="inline" onClick={handleRoleChange}>
 								회원 자격 변경
 							</ActionButton>
+							<ActionButton
+								variant="secondary"
+								size="inline"
+								onClick={() => setIsBulkUpdateDialogOpen(true)}
+							>
+								활동회원 명부 일괄 갱신
+							</ActionButton>
 						</div>
 						{activeFilterTags.length > 0 && (
 							<div className="flex items-center gap-[10px]">
@@ -233,6 +242,10 @@ export default function MembersPage() {
 				open={isDialogOpen}
 				onOpenChange={setIsDialogOpen}
 				onSubmit={handleDialogSubmit}
+			/>
+			<MemberBulkUpdateDialog
+				open={isBulkUpdateDialogOpen}
+				onOpenChange={setIsBulkUpdateDialogOpen}
 			/>
 
 			{/* 성공 토스트 알림 */}

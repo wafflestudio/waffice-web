@@ -1,5 +1,10 @@
 import type { Member } from "./member"
 
+export interface CurrentProject {
+	id: number
+	name: string
+}
+
 export interface Project {
 	id: number
 	name: string

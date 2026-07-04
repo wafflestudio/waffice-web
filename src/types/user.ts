@@ -1,5 +1,6 @@
 import type { GraduationStatus, NotificationChannel, Qualification, UserRole } from "./common"
 import type { MemberCreate, MemberUpdate } from "./member"
+import type { CurrentProject } from "./project"
 
 export interface Website {
 	url: string
@@ -27,6 +28,7 @@ export interface UserDetail {
 	contact_email: string | null
 	notification_channel: NotificationChannel
 	created_at: number
+	current_projects: CurrentProject[]
 }
 
 export interface UserBrief {

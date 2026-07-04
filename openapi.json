@@ -1059,6 +1059,16 @@
 				"required": ["items"],
 				"title": "CursorPage[UserDetail]"
 			},
+			"CurrentProject": {
+				"properties": {
+					"id": { "type": "integer", "title": "Id", "description": "Unique project identifier" },
+					"name": { "type": "string", "title": "Name", "description": "Project name" }
+				},
+				"type": "object",
+				"required": ["id", "name"],
+				"title": "CurrentProject",
+				"description": "Brief project info for showing a user's current memberships."
+			},
 			"GoogleTokenRequest": {
 				"properties": {
 					"code": {
@@ -1925,6 +1935,12 @@
 						"title": "Created At",
 						"description": "Unix timestamp when user was created",
 						"examples": [1706745600]
+					},
+					"current_projects": {
+						"items": { "$ref": "#/components/schemas/CurrentProject" },
+						"type": "array",
+						"title": "Current Projects",
+						"description": "Projects the user is currently a member of"
 					}
 				},
 				"type": "object",
@@ -1942,7 +1958,8 @@
 					"github_username",
 					"slack_id",
 					"websites",
-					"created_at"
+					"created_at",
+					"current_projects"
 				],
 				"title": "UserDetail",
 				"description": "Complete user profile information."
