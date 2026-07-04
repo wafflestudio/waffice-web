@@ -1,7 +1,7 @@
 "use client"
 
 import { Loader2, X } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Forbidden } from "@/components/error/forbidden"
 import { MemberTable } from "@/components/members/member-table"
 import { QualificationChangeDialog } from "@/components/members/qualification-change-dialog"
@@ -18,6 +18,7 @@ import { toUserUpdateRequest } from "@/types"
 export default function MembersPage() {
 	const { user, isLoading: isAuthLoading } = useAuth()
 	const [searchQuery, setSearchQuery] = useState("")
+	const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
 	const [currentPage, setCurrentPage] = useState(1)
 	const [selectedMembers, setSelectedMembers] = useState<number[]>([])
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -33,9 +34,21 @@ export default function MembersPage() {
 		isLoading,
 		error,
 		refetch: refetchMembers,
-	} = useMembers(undefined, 100, { enabled: !isAuthLoading && canViewMembers })
+	} = useMembers(undefined, 100, {
+		enabled: !isAuthLoading && canViewMembers,
+		name: debouncedSearchQuery,
+	})
 	const updateUserMutation = useUpdateUserAdmin()
 	const isForbidden = error?.message.includes("403") ?? false
+
+	useEffect(() => {
+		const timeoutId = window.setTimeout(() => {
+			setDebouncedSearchQuery(searchQuery.trim())
+			setCurrentPage(1)
+		}, 300)
+
+		return () => window.clearTimeout(timeoutId)
+	}, [searchQuery])
 
 	// 회원 정보 수정 핸들러
 	const handleMemberUpdate = async (id: number, data: MemberCreate | MemberUpdate) => {

@@ -312,6 +312,17 @@
 							"title": "Limit"
 						},
 						"description": "Number of users per page (1-100)"
+					},
+					{
+						"name": "name",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"anyOf": [{ "type": "string" }, { "type": "null" }],
+							"description": "Filter users by name. Supports partial matches.",
+							"title": "Name"
+						},
+						"description": "Filter users by name. Supports partial matches."
 					}
 				],
 				"responses": {
