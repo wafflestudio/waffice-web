@@ -1,6 +1,5 @@
 "use client"
 
-import { Settings2 } from "lucide-react"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -8,6 +7,7 @@ import {
 	DropdownMenuRadioGroup,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { FilterTrigger } from "@/components/ui/filter-tag"
 import type { ProjectManagementStatus, ProjectManagementStatusFilter } from "@/types"
 
 export const PROJECT_STATUS_OPTIONS = [
@@ -25,13 +25,13 @@ export function ProjectStatusFilter({ value, onChange }: ProjectStatusFilterProp
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<button
-					type="button"
-					className="flex items-center gap-[6px] text-[15px] font-medium tracking-[-0.3px] text-black-900"
+				<FilterTrigger
+					aria-label="운영 상태 필터"
+					className="h-auto w-auto gap-[6px] rounded-none p-0 text-[15px] font-medium tracking-[-0.3px] text-black-900 hover:bg-transparent"
+					iconClassName="size-[16px]"
 				>
 					운영 상태
-					<Settings2 className="size-[16px]" strokeWidth={1.8} />
-				</button>
+				</FilterTrigger>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent
 				align="start"

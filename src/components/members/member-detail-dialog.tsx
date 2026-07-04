@@ -4,6 +4,7 @@ import { Check, UserRound, X as XIcon } from "lucide-react"
 import type * as React from "react"
 import { useEffect, useState } from "react"
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { DialogActionButton } from "@/components/ui/dialog-action-button"
 import { Input } from "@/components/ui/input"
 import { SelectField } from "@/components/ui/select-field"
 import { Toast } from "@/components/ui/toast"
@@ -146,20 +147,12 @@ function ConfirmDialog({
 					회원 정보를 변경하시겠습니까?
 				</p>
 				<div className="mt-[40px] flex justify-end gap-[10px]">
-					<button
-						type="button"
-						onClick={() => onOpenChange(false)}
-						className="flex h-[40px] items-center justify-center rounded-[4px] border border-black-500 bg-white px-[30px] text-[15px] font-semibold leading-[24px] text-black-900"
-					>
+					<DialogActionButton variant="cancel" size="sm" onClick={() => onOpenChange(false)}>
 						취소
-					</button>
-					<button
-						type="button"
-						onClick={onConfirm}
-						className="flex h-[40px] items-center justify-center rounded-[4px] bg-peach-300 px-[30px] text-[15px] font-semibold leading-[24px] text-white"
-					>
+					</DialogActionButton>
+					<DialogActionButton size="sm" onClick={onConfirm}>
 						확인
-					</button>
+					</DialogActionButton>
 				</div>
 			</DialogContent>
 		</Dialog>
@@ -396,20 +389,10 @@ export function MemberDetailDialog({
 
 									<div className="flex w-full justify-end">
 										<div className="flex h-[50px] items-center gap-[10px]">
-											<button
-												type="button"
-												onClick={() => onOpenChange(false)}
-												className="flex h-[50px] w-[121px] items-center justify-center rounded-[4px] border border-black-300 bg-white text-[15px] font-semibold leading-[24px] text-black-900 transition-colors hover:bg-black-100 active:bg-black-300"
-											>
+											<DialogActionButton variant="cancel" onClick={() => onOpenChange(false)}>
 												취소
-											</button>
-											<button
-												type="button"
-												onClick={handleSubmitClick}
-												className="flex h-[50px] w-[121px] items-center justify-center rounded-[4px] bg-peach-300 text-[15px] font-semibold leading-[24px] text-white transition-colors hover:bg-peach-500 active:bg-peach-500"
-											>
-												확인
-											</button>
+											</DialogActionButton>
+											<DialogActionButton onClick={handleSubmitClick}>확인</DialogActionButton>
 										</div>
 									</div>
 								</section>

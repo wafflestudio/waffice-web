@@ -1,6 +1,6 @@
 "use client"
 
-import { Loader2, X } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Forbidden } from "@/components/error/forbidden"
 import { MemberBulkUpdateDialog } from "@/components/members/member-bulk-update-dialog"
@@ -9,6 +9,7 @@ import { QualificationChangeDialog } from "@/components/members/qualification-ch
 import { useAuth } from "@/components/providers/auth-provider"
 import { ActionButton } from "@/components/ui/action-button"
 import { Button } from "@/components/ui/button"
+import { FilterResetButton, FilterTag, FilterTagGroup } from "@/components/ui/filter-tag"
 import { SearchInput } from "@/components/ui/search-input"
 import { Toast } from "@/components/ui/toast"
 import { roleToQualification, useMembers, useUpdateUserAdmin } from "@/hooks/use-members"
@@ -190,30 +191,12 @@ export default function MembersPage() {
 							</ActionButton>
 						</div>
 						{activeFilterTags.length > 0 && (
-							<div className="flex items-center gap-[10px]">
+							<FilterTagGroup>
 								{activeFilterTags.map((tag) => (
-									<button
-										key={tag.label}
-										type="button"
-										onClick={tag.onRemove}
-										className="flex justify-center items-center gap-[10px] px-2 py-1.5 bg-peach-100 rounded-[3px]"
-									>
-										<div className="flex justify-start items-center gap-2">
-											<span className="text-sm font-medium text-peach-500">{tag.label}</span>
-											<X className="w-[9px] h-[9px] text-peach-500 shrink-0" />
-										</div>
-									</button>
+									<FilterTag key={tag.label} label={tag.label} onClick={tag.onRemove} />
 								))}
-								<button
-									type="button"
-									onClick={handleResetFilters}
-									className="flex justify-center items-center gap-[10px] px-2 py-1.5 rounded-[3px]"
-								>
-									<div className="flex justify-start items-center gap-2">
-										<span className="text-sm font-medium text-peach-500 underline">초기화</span>
-									</div>
-								</button>
-							</div>
+								<FilterResetButton onClick={handleResetFilters}>초기화</FilterResetButton>
+							</FilterTagGroup>
 						)}
 					</div>
 

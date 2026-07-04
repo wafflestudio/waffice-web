@@ -10,6 +10,7 @@ import { useAuth } from "@/components/providers/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { DialogActionButton } from "@/components/ui/dialog-action-button"
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { SelectField } from "@/components/ui/select-field"
@@ -510,20 +511,12 @@ export default function MyPage() {
 
 						<div className="flex w-full justify-end">
 							<div className="flex h-[50px] items-center gap-[10px]">
-								<button
-									type="button"
-									onClick={handleCancel}
-									className="flex h-[50px] w-[121px] items-center justify-center rounded-[4px] border border-black-300 bg-white text-[15px] font-semibold leading-[24px] text-black-900 hover:bg-black-100"
-								>
+								<DialogActionButton variant="cancel" onClick={handleCancel}>
 									취소
-								</button>
-								<button
-									type="submit"
-									disabled={isSubmitting}
-									className="flex h-[50px] w-[121px] items-center justify-center rounded-[4px] bg-peach-300 text-[15px] font-semibold leading-[24px] text-white hover:bg-peach-500 disabled:cursor-not-allowed disabled:opacity-60"
-								>
+								</DialogActionButton>
+								<DialogActionButton type="submit" disabled={isSubmitting}>
 									{isSubmitting ? <Loader2 className="size-[18px] animate-spin" /> : "확인"}
-								</button>
+								</DialogActionButton>
 							</div>
 						</div>
 					</form>

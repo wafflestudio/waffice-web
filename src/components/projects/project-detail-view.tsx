@@ -1,11 +1,20 @@
 "use client"
 
-import { ArrowUpRight, ChevronDown, MoreHorizontal, Plus, Search, Settings2, X } from "lucide-react"
+import { ArrowUpRight, ChevronDown, MoreHorizontal, Plus, Search, X } from "lucide-react"
 import type * as React from "react"
 import { useEffect, useMemo, useState } from "react"
 import { CalendarDateField } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { DesignDialogContent } from "@/components/ui/design-dialog"
+import {
+	DesignTable,
+	DesignTableBodyCell,
+	DesignTableHeaderCell,
+	DesignTableHeaderRow,
+	DesignTableRow,
+} from "@/components/ui/design-table"
+import { Dialog, DialogTitle } from "@/components/ui/dialog"
+import { DialogActionButton } from "@/components/ui/dialog-action-button"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -13,9 +22,16 @@ import {
 	DropdownMenuRadioGroup,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+	FilterResetButton,
+	FilterTag,
+	FilterTagGroup,
+	FilterTrigger,
+} from "@/components/ui/filter-tag"
 import { Input } from "@/components/ui/input"
 import { Pagination } from "@/components/ui/pagination"
 import { SearchInput } from "@/components/ui/search-input"
+import { DotStatusBadge, TagBadge } from "@/components/ui/status-badge"
 import { Toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
 import type {
@@ -55,31 +71,16 @@ const ACTIVITY_STATUS_DOT_CLASS: Record<ProjectDetailMember["status"], string> =
 	비활성화: "bg-black-400",
 }
 
-const CONFIRM_BUTTON_CLASS =
-	"flex h-[50px] w-[121px] items-center justify-center rounded-[4px] bg-peach-300 text-[15px] font-semibold leading-[24px] text-white transition-colors hover:bg-peach-500 active:bg-peach-500"
-const CANCEL_BUTTON_CLASS =
-	"flex h-[50px] w-[121px] items-center justify-center rounded-[4px] border border-black-300 bg-white text-[15px] font-semibold leading-[24px] text-black-900 transition-colors hover:bg-black-300 active:bg-black-300"
-const SMALL_CONFIRM_BUTTON_CLASS =
-	"flex h-[40px] items-center justify-center rounded-[4px] bg-peach-300 px-[30px] text-[15px] font-medium leading-[24px] text-white transition-colors hover:bg-peach-500 active:bg-peach-500"
-const SMALL_CANCEL_BUTTON_CLASS =
-	"flex h-[40px] items-center justify-center rounded-[4px] border border-black-300 bg-white px-[30px] text-[15px] font-medium leading-[24px] text-black-900 transition-colors hover:bg-black-100 active:bg-black-300"
-
 function StatusBadge({ status }: { status: ProjectManagementStatus }) {
 	return (
-		<div className="flex items-center gap-[6px] text-[15px] text-black-900">
-			<span className={cn("size-[10px] rounded-full", STATUS_DOT_CLASS[status])} />
-			<span>{status}</span>
-		</div>
+		<DotStatusBadge dotClassName={STATUS_DOT_CLASS[status]} className="text-[15px] tracking-normal">
+			{status}
+		</DotStatusBadge>
 	)
 }
 
 function ActivityStatusBadge({ status }: { status: ProjectDetailMember["status"] }) {
-	return (
-		<div className="flex items-center gap-[6px] text-[14px] font-normal leading-[17px] whitespace-nowrap text-black-900 tracking-[-0.28px]">
-			<span className={cn("size-[10px] rounded-full", ACTIVITY_STATUS_DOT_CLASS[status])} />
-			<span>{status}</span>
-		</div>
-	)
+	return <DotStatusBadge dotClassName={ACTIVITY_STATUS_DOT_CLASS[status]}>{status}</DotStatusBadge>
 }
 
 function SectionRow({
@@ -358,32 +359,19 @@ function ActivityMembersSection({
 							</span>
 						</button>
 					</div>
-					<div
+					<FilterTagGroup
 						className={cn(
-							"flex items-center gap-[10px] transition-all duration-300",
+							"transition-all duration-300",
 							showPastMembers && "pointer-events-none translate-x-[8px] opacity-0",
 						)}
 					>
 						{activityStatusFilter !== "전체" && (
 							<>
-								<button
-									type="button"
-									onClick={onResetActivityStatusFilter}
-									className="flex h-[33px] items-center gap-[8px] rounded-[3px] bg-peach-100 px-[8px] py-[6px] text-[14px] font-medium text-peach-500 transition-colors hover:bg-peach-100/80"
-								>
-									{activityStatusFilter}
-									<X className="size-[9px]" strokeWidth={2.3} />
-								</button>
-								<button
-									type="button"
-									onClick={onResetActivityStatusFilter}
-									className="flex h-[33px] items-center gap-[8px] rounded-[3px] px-[8px] py-[6px] text-[14px] font-medium text-peach-500 underline underline-offset-[2px]"
-								>
-									초기화
-								</button>
+								<FilterTag label={activityStatusFilter} onClick={onResetActivityStatusFilter} />
+								<FilterResetButton onClick={onResetActivityStatusFilter}>초기화</FilterResetButton>
 							</>
 						)}
-					</div>
+					</FilterTagGroup>
 				</div>
 
 				<h3 className="sr-only">
@@ -395,14 +383,14 @@ function ActivityMembersSection({
 						showPastMembers && "translate-y-[2px]",
 					)}
 				>
-					<table className="w-[1456px] table-fixed border-collapse">
+					<DesignTable className="w-[1456px]">
 						<thead>
-							<tr className="h-[40px] border-black-300 border-y bg-black-100">
-								<TableHeaderCell className="w-[120px]">이름</TableHeaderCell>
-								<TableHeaderCell className="w-[200px]">포지션</TableHeaderCell>
-								<TableHeaderCell className="w-[388px]">이메일</TableHeaderCell>
-								<TableHeaderCell className="w-[388px]">Github 아이디</TableHeaderCell>
-								<TableHeaderCell className="w-[100px]">
+							<DesignTableHeaderRow>
+								<DesignTableHeaderCell className="w-[120px]">이름</DesignTableHeaderCell>
+								<DesignTableHeaderCell className="w-[200px]">포지션</DesignTableHeaderCell>
+								<DesignTableHeaderCell className="w-[388px]">이메일</DesignTableHeaderCell>
+								<DesignTableHeaderCell className="w-[388px]">Github 아이디</DesignTableHeaderCell>
+								<DesignTableHeaderCell className="w-[100px]">
 									<div className="flex items-center gap-[6px]">
 										활동 상태
 										<ActivityStatusFilter
@@ -410,41 +398,40 @@ function ActivityMembersSection({
 											onChange={onActivityStatusFilterChange}
 										/>
 									</div>
-								</TableHeaderCell>
-								<TableHeaderCell className="w-[180px]">활동 기간</TableHeaderCell>
-								<TableHeaderCell className="w-[80px] text-center">수정</TableHeaderCell>
-							</tr>
+								</DesignTableHeaderCell>
+								<DesignTableHeaderCell className="w-[180px]">활동 기간</DesignTableHeaderCell>
+								<DesignTableHeaderCell className="w-[80px] text-center">수정</DesignTableHeaderCell>
+							</DesignTableHeaderRow>
 						</thead>
 						<tbody>
 							{paginatedMembers.map((member) => (
-								<tr
-									key={member.id}
-									className="h-[50px] border-black-300 border-b text-[14px] text-black-900 hover:bg-black-100"
-								>
-									<TableBodyCell className="w-[120px]">
+								<DesignTableRow key={member.id} className="h-[50px]">
+									<DesignTableBodyCell className="w-[120px]">
 										<div className="flex min-w-0 items-center gap-[6px]">
 											<span className="truncate">{member.name}</span>
-											{member.isLeader && (
-												<span className="flex h-[20px] shrink-0 items-center justify-center rounded-[3px] bg-peach-100 px-[9px] text-[11px] font-medium leading-[14px] text-peach-500">
-													팀장
-												</span>
-											)}
+											{member.isLeader && <TagBadge>팀장</TagBadge>}
 										</div>
-									</TableBodyCell>
-									<TableBodyCell className="w-[200px] truncate">{member.position}</TableBodyCell>
-									<TableBodyCell className="w-[388px] truncate">{member.email}</TableBodyCell>
-									<TableBodyCell className="w-[388px] truncate">{member.githubId}</TableBodyCell>
-									<TableBodyCell className="w-[100px]">
+									</DesignTableBodyCell>
+									<DesignTableBodyCell className="w-[200px] truncate">
+										{member.position}
+									</DesignTableBodyCell>
+									<DesignTableBodyCell className="w-[388px] truncate">
+										{member.email}
+									</DesignTableBodyCell>
+									<DesignTableBodyCell className="w-[388px] truncate">
+										{member.githubId}
+									</DesignTableBodyCell>
+									<DesignTableBodyCell className="w-[100px]">
 										<ActivityStatusSelect
 											value={member.status}
 											disabled={showPastMembers}
 											onChange={(status) => onStatusChange(member.id, status)}
 										/>
-									</TableBodyCell>
-									<TableBodyCell className="w-[180px] truncate">
+									</DesignTableBodyCell>
+									<DesignTableBodyCell className="w-[180px] truncate">
 										{member.startDate} - {member.endDate}
-									</TableBodyCell>
-									<TableBodyCell className="w-[80px] px-0">
+									</DesignTableBodyCell>
+									<DesignTableBodyCell className="w-[80px] px-0">
 										<button
 											type="button"
 											aria-label={`${member.name} 팀원 수정`}
@@ -453,11 +440,11 @@ function ActivityMembersSection({
 										>
 											<MoreHorizontal className="size-[24px]" strokeWidth={1.8} />
 										</button>
-									</TableBodyCell>
-								</tr>
+									</DesignTableBodyCell>
+								</DesignTableRow>
 							))}
 						</tbody>
-					</table>
+					</DesignTable>
 				</div>
 				<Pagination
 					currentPage={currentPage}
@@ -466,35 +453,6 @@ function ActivityMembersSection({
 				/>
 			</div>
 		</SectionRow>
-	)
-}
-
-function TableHeaderCell({
-	children,
-	className,
-}: {
-	children: React.ReactNode
-	className?: string
-}) {
-	return (
-		<th
-			className={cn(
-				"overflow-hidden px-[20px] text-left text-[14px] font-medium leading-[17px] whitespace-nowrap text-black-900 text-ellipsis tracking-[-0.28px]",
-				className,
-			)}
-		>
-			{children}
-		</th>
-	)
-}
-
-function TableBodyCell({ children, className }: { children: React.ReactNode; className?: string }) {
-	return (
-		<td
-			className={cn("h-[50px] overflow-hidden px-[20px] align-middle whitespace-nowrap", className)}
-		>
-			{children}
-		</td>
 	)
 }
 
@@ -508,13 +466,7 @@ function ActivityStatusFilter({
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<button
-					type="button"
-					aria-label="활동 상태 필터"
-					className="flex size-[16px] items-center justify-center rounded-[3px] text-black-600 hover:bg-black-300/40"
-				>
-					<Settings2 className="size-[12px]" strokeWidth={1.8} />
-				</button>
+				<FilterTrigger aria-label="활동 상태 필터" />
 			</DropdownMenuTrigger>
 			<DropdownMenuContent
 				align="start"
@@ -742,18 +694,11 @@ function ProjectStatusHistoryDialog({
 }) {
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent
-				className="w-[534px] max-w-[calc(100vw-32px)] gap-0 overflow-visible rounded-[15px] border-0 bg-white px-[50px] pt-[10px] pb-[40px] shadow-none"
-				showCloseButton={false}
+			<DesignDialogContent
+				className="w-[534px] max-w-[calc(100vw-32px)] overflow-visible rounded-[15px] border-0 px-[50px] pt-[10px] pb-[40px] shadow-none"
+				showDesignClose
+				onClose={() => onOpenChange(false)}
 			>
-				<button
-					type="button"
-					aria-label="닫기"
-					onClick={() => onOpenChange(false)}
-					className="ml-auto flex size-[35px] items-center justify-center text-black-800 transition-colors hover:text-black-900"
-				>
-					<X className="size-[28px]" strokeWidth={2.4} />
-				</button>
 				<div className="mt-[10px] flex flex-col gap-[50px]">
 					<DialogTitle className="text-[24px] font-medium leading-normal text-black-900">
 						운영 상태 변경 이력
@@ -786,24 +731,14 @@ function ProjectStatusHistoryDialog({
 							))}
 						</div>
 						<div className="flex h-[50px] items-center gap-[10px]">
-							<button
-								type="button"
-								onClick={() => onOpenChange(false)}
-								className={CANCEL_BUTTON_CLASS}
-							>
+							<DialogActionButton variant="cancel" onClick={() => onOpenChange(false)}>
 								취소
-							</button>
-							<button
-								type="button"
-								onClick={() => onOpenChange(false)}
-								className={CONFIRM_BUTTON_CLASS}
-							>
-								확인
-							</button>
+							</DialogActionButton>
+							<DialogActionButton onClick={() => onOpenChange(false)}>확인</DialogActionButton>
 						</div>
 					</div>
 				</div>
-			</DialogContent>
+			</DesignDialogContent>
 		</Dialog>
 	)
 }
@@ -841,10 +776,7 @@ function ProjectMemberDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent
-				className="!w-[587px] !max-w-[calc(100vw-32px)] gap-0 overflow-visible rounded-[15px] border-0 bg-white p-0 shadow-none"
-				showCloseButton={false}
-			>
+			<DesignDialogContent className="!w-[587px] !max-w-[calc(100vw-32px)] overflow-visible rounded-[15px] border-0 shadow-none">
 				<div className="flex flex-col gap-[10px] overflow-visible px-[10px] pt-[10px] pb-[40px]">
 					<button
 						type="button"
@@ -915,33 +847,28 @@ function ProjectMemberDialog({
 									</MemberDialogRow>
 									{mode === "edit" && (
 										<MemberDialogRow label="기록 삭제">
-											<button
-												type="button"
+											<DialogActionButton
+												variant="danger"
+												size="sm"
 												onClick={onDeleteRecord}
-												className="flex h-[36px] items-center justify-center rounded-[3px] bg-[#ffeaea] px-[16px] text-[14px] font-semibold leading-[24px] text-[#f44949] transition-colors hover:bg-[#ffdada]"
+												className="h-[36px] rounded-[3px] px-[16px] text-[14px]"
 											>
 												기록 삭제
-											</button>
+											</DialogActionButton>
 										</MemberDialogRow>
 									)}
 								</div>
 								<div className="flex h-[50px] items-center gap-[10px]">
-									<button
-										type="button"
-										onClick={() => onOpenChange(false)}
-										className={CANCEL_BUTTON_CLASS}
-									>
+									<DialogActionButton variant="cancel" onClick={() => onOpenChange(false)}>
 										취소
-									</button>
-									<button type="button" onClick={onSubmit} className={CONFIRM_BUTTON_CLASS}>
-										확인
-									</button>
+									</DialogActionButton>
+									<DialogActionButton onClick={onSubmit}>확인</DialogActionButton>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-			</DialogContent>
+			</DesignDialogContent>
 		</Dialog>
 	)
 }
@@ -1043,10 +970,7 @@ function SmallAlertDialog({
 }) {
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent
-				className="w-[340px] max-w-[calc(100vw-32px)] gap-0 rounded-[12px] border border-black-300 bg-white px-[40px] pt-[30px] pb-[26px] shadow-[0px_0px_10px_0px_rgba(0,0,0,0.06)]"
-				showCloseButton={false}
-			>
+			<DesignDialogContent className="w-[340px] max-w-[calc(100vw-32px)] rounded-[12px] border border-black-300 px-[40px] pt-[30px] pb-[26px] shadow-[0px_0px_10px_0px_rgba(0,0,0,0.06)]">
 				<DialogTitle className="sr-only">{title}</DialogTitle>
 				<div className="flex flex-col items-end gap-[40px]">
 					<div className="flex w-full flex-col gap-[15px]">
@@ -1059,20 +983,16 @@ function SmallAlertDialog({
 					</div>
 					<div className="flex items-center gap-[10px]">
 						{!confirmOnly && (
-							<button
-								type="button"
-								onClick={() => onOpenChange(false)}
-								className={SMALL_CANCEL_BUTTON_CLASS}
-							>
+							<DialogActionButton variant="cancel" size="sm" onClick={() => onOpenChange(false)}>
 								취소
-							</button>
+							</DialogActionButton>
 						)}
-						<button type="button" onClick={onConfirm} className={SMALL_CONFIRM_BUTTON_CLASS}>
+						<DialogActionButton size="sm" onClick={onConfirm}>
 							확인
-						</button>
+						</DialogActionButton>
 					</div>
 				</div>
-			</DialogContent>
+			</DesignDialogContent>
 		</Dialog>
 	)
 }
