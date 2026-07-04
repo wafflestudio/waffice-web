@@ -55,6 +55,11 @@ const FILTER_TRIGGER_CLASS =
 const TABLE_CHECKBOX_CLASS =
 	"size-4 rounded-[3px] border-[#999] shadow-none data-[state=checked]:border-peach-300 data-[state=checked]:bg-peach-300 data-[state=checked]:text-white"
 
+const formatCurrentProjects = (member: Member) => {
+	const projectNames = member.current_projects?.map((project) => project.name).filter(Boolean) ?? []
+	return projectNames.length > 0 ? projectNames.join(", ") : "-"
+}
+
 export function MemberTable({
 	members,
 	searchQuery,
@@ -149,7 +154,7 @@ export function MemberTable({
 							</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "min-w-0")}>이메일</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "min-w-0")}>Github 아이디</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[180px]")}>계정 생성일</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[200px]")}>활동 프로젝트</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
@@ -236,8 +241,7 @@ export function MemberTable({
 					</TableHeader>
 					<TableBody>
 						{paginatedMembers.map((member) => {
-							const d = new Date(member.join_date)
-							const formattedDate = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`
+							const currentProjects = formatCurrentProjects(member)
 
 							return (
 								<TableRow
@@ -267,8 +271,11 @@ export function MemberTable({
 									<TableCell className={cn(BODY_CELL_CLASS, "w-[302px] truncate")}>
 										{member.github_username || "-"}
 									</TableCell>
-									<TableCell className={cn(BODY_CELL_CLASS, "w-[180px]")}>
-										{formattedDate}
+									<TableCell
+										className={cn(BODY_CELL_CLASS, "w-[200px] truncate")}
+										title={currentProjects}
+									>
+										{currentProjects}
 									</TableCell>
 									<TableCell className={cn(BODY_CELL_CLASS, "w-[140px]")}>
 										{member.role || "활동회원"}

@@ -1,4 +1,5 @@
 // UI 전용 레거시 타입 — API 응답은 UserDetail 사용
+import type { CurrentProject } from "./project"
 import type { UserDetail, Website } from "./user"
 
 export type EnrollmentStatus = "학부생" | "휴학생" | "졸업생" | "대학원생"
@@ -15,6 +16,7 @@ export interface Member {
 	role?: string
 	affiliation?: EnrollmentStatus
 	access_rights?: AccessRight[]
+	current_projects?: CurrentProject[]
 	user?: UserDetail
 	status: "active" | "inactive" | "suspended"
 	join_date: string
