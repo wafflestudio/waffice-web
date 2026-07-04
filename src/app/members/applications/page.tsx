@@ -6,6 +6,7 @@ import { Forbidden } from "@/components/error/forbidden"
 import { ApplicationTable } from "@/components/members/application-table"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { FilterResetButton, FilterTag, FilterTagGroup } from "@/components/ui/filter-tag"
 import { SearchInput } from "@/components/ui/search-input"
 import { Toast } from "@/components/ui/toast"
 import { apiClient } from "@/lib/api"
@@ -342,30 +343,12 @@ export default function MemberApplicationsPage() {
 						</Button>
 					</div>
 					{activeFilterTags.length > 0 && (
-						<div className="flex items-center gap-[10px]">
+						<FilterTagGroup>
 							{activeFilterTags.map((tag) => (
-								<button
-									key={tag.label}
-									type="button"
-									onClick={tag.onRemove}
-									className="flex items-center gap-2 px-2 py-1.5 bg-[#fdf1ef] rounded-[3px]"
-								>
-									<span className="text-[14px] font-medium text-[#e75010] tracking-[-0.14px] leading-[1.5]">
-										{tag.label}
-									</span>
-									<X className="w-[9px] h-[9px] text-[#e75010] shrink-0" />
-								</button>
+								<FilterTag key={tag.label} label={tag.label} onClick={tag.onRemove} />
 							))}
-							<button
-								type="button"
-								onClick={handleResetFilters}
-								className="flex items-center px-2 py-1.5 rounded-[3px]"
-							>
-								<span className="text-[14px] font-medium text-[#e75010] tracking-[-0.14px] leading-[1.5] underline">
-									초기화
-								</span>
-							</button>
-						</div>
+							<FilterResetButton onClick={handleResetFilters}>초기화</FilterResetButton>
+						</FilterTagGroup>
 					)}
 				</div>
 			</div>

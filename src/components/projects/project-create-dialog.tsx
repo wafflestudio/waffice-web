@@ -1,16 +1,11 @@
 "use client"
 
-import { ChevronDown, X } from "lucide-react"
 import { useEffect, useState } from "react"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuFilterRadioItem,
-	DropdownMenuRadioGroup,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { DesignDialogContent } from "@/components/ui/design-dialog"
+import { Dialog, DialogTitle } from "@/components/ui/dialog"
+import { DialogActionButton } from "@/components/ui/dialog-action-button"
 import { Input } from "@/components/ui/input"
+import { SelectField } from "@/components/ui/select-field"
 import { Textarea } from "@/components/ui/textarea"
 import type { ProjectCreateFormValues } from "@/types"
 import { PROJECT_STATUS_OPTIONS } from "./project-status-filter"
@@ -39,47 +34,6 @@ function ProjectCreateField({ label, children }: { label: string; children: Reac
 	)
 }
 
-function ProjectCreateStatusSelect({
-	value,
-	onChange,
-}: {
-	value: ProjectCreateFormValues["status"]
-	onChange: (value: ProjectCreateFormValues["status"]) => void
-}) {
-	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<button
-					type="button"
-					className="flex h-[50px] w-[360px] items-center justify-between rounded-[5px] border border-black-300 bg-white p-[16px] text-[15px] font-normal tracking-[-0.3px] text-black-600 outline-none hover:border-black-300 focus-visible:border-peach-300"
-				>
-					<span>{value || "선택"}</span>
-					<ChevronDown className="size-[24px] text-black-600" strokeWidth={1.8} />
-				</button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent
-				align="start"
-				className="w-[360px] rounded-[5px] border-black-300 p-0 shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
-			>
-				<DropdownMenuRadioGroup
-					value={value}
-					onValueChange={(nextValue) => onChange(nextValue as ProjectCreateFormValues["status"])}
-				>
-					{PROJECT_STATUS_OPTIONS.map((status) => (
-						<DropdownMenuFilterRadioItem
-							key={status}
-							value={status}
-							className="h-[50px] px-[16px] text-[15px]"
-						>
-							{status}
-						</DropdownMenuFilterRadioItem>
-					))}
-				</DropdownMenuRadioGroup>
-			</DropdownMenuContent>
-		</DropdownMenu>
-	)
-}
-
 export function ProjectCreateDialog({ open, onOpenChange, onSubmit }: ProjectCreateDialogProps) {
 	const [values, setValues] = useState<ProjectCreateFormValues>(initialValues)
 
@@ -99,18 +53,11 @@ export function ProjectCreateDialog({ open, onOpenChange, onSubmit }: ProjectCre
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent
-				className="w-[460px] max-w-[calc(100vw-32px)] gap-0 rounded-[12px] border border-black-300 bg-white px-[50px] pt-[10px] pb-[40px] shadow-none"
-				showCloseButton={false}
+			<DesignDialogContent
+				className="w-[460px] max-w-[calc(100vw-32px)] rounded-[12px] border border-black-300 px-[50px] pt-[10px] pb-[40px] shadow-none"
+				showDesignClose
+				onClose={() => onOpenChange(false)}
 			>
-				<button
-					type="button"
-					aria-label="닫기"
-					onClick={() => onOpenChange(false)}
-					className="ml-auto flex size-[35px] items-center justify-center text-black-800 hover:text-black-900"
-				>
-					<X className="size-[28px]" strokeWidth={2.4} />
-				</button>
 				<div className="mt-[10px] flex flex-col gap-[50px]">
 					<DialogTitle className="text-[24px] font-medium leading-normal text-black-900">
 						새 프로젝트 생성
@@ -127,9 +74,11 @@ export function ProjectCreateDialog({ open, onOpenChange, onSubmit }: ProjectCre
 								/>
 							</ProjectCreateField>
 							<ProjectCreateField label="운영 상태">
-								<ProjectCreateStatusSelect
+								<SelectField
 									value={values.status}
+									options={PROJECT_STATUS_OPTIONS}
 									onChange={(status) => setValues((prev) => ({ ...prev, status }))}
+									placeholder="선택"
 								/>
 							</ProjectCreateField>
 							<ProjectCreateField label="설명">
@@ -144,23 +93,14 @@ export function ProjectCreateDialog({ open, onOpenChange, onSubmit }: ProjectCre
 							</ProjectCreateField>
 						</div>
 						<div className="flex h-[50px] items-center gap-[10px]">
-							<button
-								type="button"
-								onClick={() => onOpenChange(false)}
-								className="flex h-[50px] w-[121px] items-center justify-center rounded-[4px] border border-black-300 bg-white text-[15px] font-semibold leading-[24px] text-black-900 hover:bg-black-100"
-							>
+							<DialogActionButton variant="cancel" onClick={() => onOpenChange(false)}>
 								취소
-							</button>
-							<button
-								type="submit"
-								className="flex h-[50px] w-[121px] items-center justify-center rounded-[4px] bg-peach-300 text-[15px] font-semibold leading-[24px] text-white hover:bg-peach-500"
-							>
-								확인
-							</button>
+							</DialogActionButton>
+							<DialogActionButton type="submit">확인</DialogActionButton>
 						</div>
 					</form>
 				</div>
-			</DialogContent>
+			</DesignDialogContent>
 		</Dialog>
 	)
 }

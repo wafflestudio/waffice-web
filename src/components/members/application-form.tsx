@@ -9,6 +9,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog"
+import { DialogActionButton } from "@/components/ui/dialog-action-button"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -169,37 +170,19 @@ export function ApplicationForm({
 						<div className="flex items-center gap-[10px] self-end">
 							{isPending ? (
 								<>
-									<button
-										type="button"
-										onClick={handleReject}
-										className="h-[50px] w-[121px] border border-[#dbdfe0] rounded-[4px] text-[15px] font-semibold text-[#121212] bg-white"
-									>
+									<DialogActionButton variant="cancel" onClick={handleReject}>
 										반려
-									</button>
-									<button
-										type="button"
-										onClick={() => setStep(2)}
-										className="h-[50px] w-[121px] bg-[#f77153] rounded-[4px] text-[15px] font-semibold text-white"
-									>
-										승인
-									</button>
+									</DialogActionButton>
+									<DialogActionButton onClick={() => setStep(2)}>승인</DialogActionButton>
 								</>
 							) : (
 								<>
-									<button
-										type="button"
-										onClick={() => setOpen(false)}
-										className="h-[50px] w-[121px] border border-[#dbdfe0] rounded-[4px] text-[15px] font-semibold text-[#121212] bg-white"
-									>
+									<DialogActionButton variant="cancel" onClick={() => setOpen(false)}>
 										취소
-									</button>
-									<button
-										type="button"
-										onClick={() => setOpen(false)}
-										className="h-[50px] px-[50px] bg-[#f77153] rounded-[4px] text-[15px] font-semibold text-white"
-									>
+									</DialogActionButton>
+									<DialogActionButton onClick={() => setOpen(false)} className="w-auto px-[50px]">
 										회원 상세로 이동
-									</button>
+									</DialogActionButton>
 								</>
 							)}
 						</div>
@@ -252,20 +235,19 @@ export function ApplicationForm({
 						</div>
 						{/* 하단 버튼 */}
 						<div className="flex items-center gap-[16px]">
-							<button
-								type="button"
+							<DialogActionButton
+								variant="cancel"
 								onClick={() => setStep(1)}
-								className="h-[50px] px-[50px] border border-[#999] rounded-[4px] text-[17px] font-medium text-[#121212]"
+								className="w-auto px-[50px] text-[17px] font-medium"
 							>
 								취소
-							</button>
-							<button
-								type="button"
+							</DialogActionButton>
+							<DialogActionButton
 								onClick={handleConfirm}
-								className="h-[50px] px-[50px] bg-[#f77153] rounded-[4px] text-[17px] font-medium text-white"
+								className="w-auto px-[50px] text-[17px] font-medium"
 							>
 								확인
-							</button>
+							</DialogActionButton>
 						</div>
 					</div>
 				</div>

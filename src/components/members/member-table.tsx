@@ -1,8 +1,6 @@
 "use client"
 
-import { Settings2 } from "lucide-react"
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
 	DropdownMenu,
@@ -12,6 +10,7 @@ import {
 	DropdownMenuRadioGroup,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { FilterTrigger } from "@/components/ui/filter-tag"
 import { Pagination } from "@/components/ui/pagination"
 import {
 	Table,
@@ -51,7 +50,7 @@ const HEADER_CELL_CLASS =
 	"h-[50px] px-[20px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]"
 const BODY_CELL_CLASS = "h-[60px] px-[20px] text-[15px] font-normal text-[#121212]"
 const FILTER_TRIGGER_CLASS =
-	"h-auto gap-[6px] rounded-none p-0 text-[15px] font-medium tracking-[-0.3px] text-[#121212] hover:bg-transparent hover:text-[#121212]"
+	"h-auto w-auto gap-[6px] rounded-none p-0 text-[15px] font-medium tracking-[-0.3px] text-[#121212] hover:bg-transparent"
 const TABLE_CHECKBOX_CLASS =
 	"size-4 rounded-[3px] border-[#999] shadow-none data-[state=checked]:border-peach-300 data-[state=checked]:bg-peach-300 data-[state=checked]:text-white"
 
@@ -158,10 +157,13 @@ export function MemberTable({
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
-										<Button variant="ghost" size="sm" className={FILTER_TRIGGER_CLASS}>
+										<FilterTrigger
+											aria-label="자격 필터"
+											className={FILTER_TRIGGER_CLASS}
+											iconClassName="size-4 text-[#121212]"
+										>
 											자격
-											<Settings2 className="size-4 text-[#121212]" strokeWidth={1.8} />
-										</Button>
+										</FilterTrigger>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent
 										align="start"
@@ -183,10 +185,13 @@ export function MemberTable({
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
-										<Button variant="ghost" size="sm" className={FILTER_TRIGGER_CLASS}>
+										<FilterTrigger
+											aria-label="재학여부 필터"
+											className={FILTER_TRIGGER_CLASS}
+											iconClassName="size-4 text-[#121212]"
+										>
 											재학여부
-											<Settings2 className="size-4 text-[#121212]" strokeWidth={1.8} />
-										</Button>
+										</FilterTrigger>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent
 										align="start"
@@ -210,10 +215,13 @@ export function MemberTable({
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
-										<Button variant="ghost" size="sm" className={FILTER_TRIGGER_CLASS}>
+										<FilterTrigger
+											aria-label="접근 권한 필터"
+											className={FILTER_TRIGGER_CLASS}
+											iconClassName="size-4 text-[#121212]"
+										>
 											접근 권한
-											<Settings2 className="size-4 text-[#121212]" strokeWidth={1.8} />
-										</Button>
+										</FilterTrigger>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent
 										align="start"
@@ -320,10 +328,13 @@ function GenerationSortHeader({
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant="ghost" size="sm" className={FILTER_TRIGGER_CLASS}>
+				<FilterTrigger
+					aria-label="기수 정렬"
+					className={FILTER_TRIGGER_CLASS}
+					iconClassName="size-4 text-[#121212]"
+				>
 					기수
-					<Settings2 className="size-4 text-[#121212]" strokeWidth={1.8} />
-				</Button>
+				</FilterTrigger>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="start" className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}>
 				<DropdownMenuRadioGroup

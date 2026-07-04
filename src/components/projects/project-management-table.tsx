@@ -2,6 +2,7 @@
 
 import { Minus } from "lucide-react"
 import { Pagination } from "@/components/ui/pagination"
+import { DotStatusBadge } from "@/components/ui/status-badge"
 import {
 	Table,
 	TableBody,
@@ -46,12 +47,7 @@ const STATUS_DOT_CLASS: Record<ProjectManagementStatus, string> = {
 }
 
 function ProjectStatusBadge({ status }: { status: ProjectManagementStatus }) {
-	return (
-		<div className="flex items-center gap-[6px]">
-			<span className={cn("size-[10px] rounded-full", STATUS_DOT_CLASS[status])} />
-			<span>{status}</span>
-		</div>
-	)
+	return <DotStatusBadge dotClassName={STATUS_DOT_CLASS[status]}>{status}</DotStatusBadge>
 }
 
 function ProjectLinkSummary({ project }: { project: ProjectManagementRow }) {

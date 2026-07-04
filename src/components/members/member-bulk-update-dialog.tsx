@@ -3,7 +3,9 @@
 import { X as XIcon } from "lucide-react"
 import { useId, useRef, useState } from "react"
 import { CalendarDateField } from "@/components/ui/calendar"
-import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { DesignDialogContent } from "@/components/ui/design-dialog"
+import { Dialog, DialogClose, DialogTitle } from "@/components/ui/dialog"
+import { DialogActionButton } from "@/components/ui/dialog-action-button"
 import { cn } from "@/lib/utils"
 
 interface MemberBulkUpdateDialogProps {
@@ -73,10 +75,7 @@ export function MemberBulkUpdateDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={handleOpenChange}>
-			<DialogContent
-				className="w-[460px] max-w-[460px] gap-0 overflow-visible rounded-[12px] border border-black-300 bg-white p-0 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
-				showCloseButton={false}
-			>
+			<DesignDialogContent className="w-[460px] max-w-[460px] overflow-visible rounded-[12px] border border-black-300 shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
 				<div className="flex w-full flex-col items-end gap-[10px] px-[10px] pt-[10px] pb-[40px]">
 					<DialogClose
 						onClick={handleCancel}
@@ -182,25 +181,15 @@ export function MemberBulkUpdateDialog({
 							</div>
 
 							<div className="flex h-[50px] items-center gap-[10px]">
-								<button
-									type="button"
-									onClick={handleCancel}
-									className="flex h-[50px] w-[121px] items-center justify-center rounded-[4px] border border-black-300 bg-white text-[15px] font-semibold leading-[24px] text-black-900 transition-colors hover:bg-black-300 active:bg-black-300"
-								>
+								<DialogActionButton variant="cancel" onClick={handleCancel}>
 									취소
-								</button>
-								<button
-									type="button"
-									onClick={handleSubmit}
-									className="flex h-[50px] w-[121px] items-center justify-center rounded-[4px] bg-peach-300 text-[15px] font-semibold leading-[24px] text-white transition-colors hover:bg-peach-500 active:bg-peach-500 disabled:cursor-not-allowed disabled:bg-peach-300/60"
-								>
-									확인
-								</button>
+								</DialogActionButton>
+								<DialogActionButton onClick={handleSubmit}>확인</DialogActionButton>
 							</div>
 						</div>
 					</div>
 				</div>
-			</DialogContent>
+			</DesignDialogContent>
 		</Dialog>
 	)
 }

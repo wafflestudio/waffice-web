@@ -1,8 +1,6 @@
 "use client"
 
-import { Settings2 } from "lucide-react"
 import { ApplicationForm } from "@/components/members/application-form"
-import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
 	DropdownMenu,
@@ -11,7 +9,9 @@ import {
 	DropdownMenuRadioGroup,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { FilterTrigger } from "@/components/ui/filter-tag"
 import { Pagination } from "@/components/ui/pagination"
+import { DotStatusBadge } from "@/components/ui/status-badge"
 import {
 	Table,
 	TableBody,
@@ -54,6 +54,8 @@ interface ApplicationTableProps {
 const ITEMS_PER_PAGE = 10
 const DROPDOWN_CONTENT_CLASS =
 	"min-w-0 rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
+const FILTER_TRIGGER_CLASS =
+	"h-auto w-auto gap-[6px] rounded-none p-0 text-[15px] font-medium text-[#121212] hover:bg-transparent"
 
 type SortOrder = "asc" | "desc" | null
 
@@ -69,10 +71,13 @@ function SortHeader({
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant="ghost" size="sm" className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3">
+				<FilterTrigger
+					aria-label={`${label} 정렬`}
+					className={FILTER_TRIGGER_CLASS}
+					iconClassName="size-4 text-[#121212]"
+				>
 					{label}
-					<Settings2 className="h-4 w-4 text-gray-400" />
-				</Button>
+				</FilterTrigger>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="start" className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}>
 				<DropdownMenuRadioGroup
@@ -184,14 +189,13 @@ export function ApplicationTable({
 							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
-										<Button
-											variant="ghost"
-											size="sm"
-											className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3"
+										<FilterTrigger
+											aria-label="자격 필터"
+											className={FILTER_TRIGGER_CLASS}
+											iconClassName="size-4 text-[#121212]"
 										>
 											자격
-											<Settings2 className="h-4 w-4 text-gray-400" />
-										</Button>
+										</FilterTrigger>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent
 										align="start"
@@ -213,14 +217,13 @@ export function ApplicationTable({
 							<TableHead className="w-[140px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
-										<Button
-											variant="ghost"
-											size="sm"
-											className="h-8 gap-1 font-medium hover:bg-gray-50 -ml-3"
+										<FilterTrigger
+											aria-label="승인여부 필터"
+											className={FILTER_TRIGGER_CLASS}
+											iconClassName="size-4 text-[#121212]"
 										>
 											승인여부
-											<Settings2 className="h-4 w-4 text-gray-400" />
-										</Button>
+										</FilterTrigger>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent
 										align="start"
@@ -289,14 +292,12 @@ export function ApplicationTable({
 										{application.role || "미가입"}
 									</TableCell>
 									<TableCell className="w-[140px]">
-										<div className="flex items-center gap-[6px]">
-											<span
-												className={`size-[8px] rounded-full shrink-0 ${isPending ? "bg-[#ffd21f]" : "bg-[#84aef1]"}`}
-											/>
-											<span className="text-[15px] font-normal text-[#121212]">
-												{isPending ? "대기" : "승인"}
-											</span>
-										</div>
+										<DotStatusBadge
+											dotClassName={isPending ? "bg-[#ffd21f]" : "bg-[#84aef1]"}
+											className="[&_span:first-child]:size-[8px] text-[15px] tracking-normal"
+										>
+											{isPending ? "대기" : "승인"}
+										</DotStatusBadge>
 									</TableCell>
 								</TableRow>
 							)
