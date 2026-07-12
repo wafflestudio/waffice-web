@@ -1,13 +1,28 @@
 import type { ActivityCreateRequest, ActivityDetail, ActivityUpdateRequest } from "@/types/activity"
 import type { ApiResponse, CursorPage } from "@/types/common"
 import type { AuditLogDetail, HistoryDetail } from "@/types/history"
-import type { ApproveRequest, UserDetail, UserUpdateRequest } from "@/types/user"
+import type {
+	ApproveRequest,
+	TemporaryMemberImportResult,
+	UserDetail,
+	UserUpdateRequest,
+} from "@/types/user"
 import type { ApiClient } from "./client"
 
 export function createUsersApi(client: ApiClient) {
 	return {
 		getPendingUsers(): Promise<ApiResponse<UserDetail[]>> {
 			return client.request<ApiResponse<UserDetail[]>>("/users/pending")
+		},
+
+		importTemporaryMembers(file: File): Promise<ApiResponse<TemporaryMemberImportResult>> {
+			const formData = new FormData()
+			formData.append("file", file)
+
+			return client.request<ApiResponse<TemporaryMemberImportResult>>("/users/temporary", {
+				method: "POST",
+				body: formData,
+			})
 		},
 
 		getUsers(

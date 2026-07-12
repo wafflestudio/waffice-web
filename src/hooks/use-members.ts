@@ -8,6 +8,7 @@ import type {
 	CursorPage,
 	Member,
 	Qualification,
+	TemporaryMemberImportResult,
 	UserDetail,
 	UserRole,
 	UserUpdateRequest,
@@ -78,7 +79,7 @@ export const accessRightsToUserRole = (accessRights: Member["access_rights"] = [
 export const userDetailToMember = (user: UserDetail): Member => ({
 	id: user.id,
 	name: user.name,
-	email: user.contact_email || user.email,
+	email: user.contact_email || user.email || "",
 	phone: user.phone || undefined,
 	github_username: user.github_username || undefined,
 	slack_id: user.slack_id || undefined,
@@ -140,7 +141,9 @@ export function useMembers(cursor?: number, limit = 100, options: UseMembersQuer
 				await apiClient.getUsers(cursor, limit, name),
 				"회원 목록을 불러오는데 실패했습니다.",
 			)
-			return users.items.filter((user) => user.qualification !== "pending").map(userDetailToMember)
+			return users.items
+				.filter((user) => user.qualification !== "pending" || user.is_temporary)
+				.map(userDetailToMember)
 		},
 		placeholderData: keepPreviousData,
 		enabled: options.enabled ?? true,
@@ -174,6 +177,21 @@ export function useUpdateUserAdmin() {
 		onSuccess: (_user, variables) => {
 			queryClient.invalidateQueries({ queryKey: memberQueryKeys.all })
 			queryClient.invalidateQueries({ queryKey: memberQueryKeys.user(variables.userId) })
+		},
+	})
+}
+
+export function useImportTemporaryMembers() {
+	const queryClient = useQueryClient()
+
+	return useMutation<TemporaryMemberImportResult, Error, File>({
+		mutationFn: async (file) =>
+			getResponseData(
+				await apiClient.importTemporaryMembers(file),
+				"임시회원 명부를 처리하는 데 실패했습니다.",
+			),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: memberQueryKeys.all })
 		},
 	})
 }

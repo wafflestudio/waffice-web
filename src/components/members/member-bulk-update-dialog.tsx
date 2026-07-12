@@ -13,6 +13,7 @@ interface MemberBulkUpdateDialogProps {
 	onOpenChange: (open: boolean) => void
 	onSubmit?: (values: { effectiveDate: string; file: File | null }) => void | Promise<void>
 	onDownloadTemplate?: () => void
+	isSubmitting?: boolean
 }
 
 const XLSX_MIME_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -31,6 +32,7 @@ export function MemberBulkUpdateDialog({
 	onOpenChange,
 	onSubmit,
 	onDownloadTemplate,
+	isSubmitting = false,
 }: MemberBulkUpdateDialogProps) {
 	const [effectiveDate, setEffectiveDate] = useState("2025.10.01")
 	const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -48,6 +50,7 @@ export function MemberBulkUpdateDialog({
 	}
 
 	const handleOpenChange = (nextOpen: boolean) => {
+		if (isSubmitting && !nextOpen) return
 		onOpenChange(nextOpen)
 		if (!nextOpen) reset()
 	}
@@ -69,8 +72,13 @@ export function MemberBulkUpdateDialog({
 	}
 
 	const handleSubmit = async () => {
+		if (!selectedFile || isSubmitting) return
 		await onSubmit?.({ effectiveDate, file: selectedFile })
-		handleOpenChange(false)
+		if (onSubmit) {
+			reset()
+		} else {
+			handleOpenChange(false)
+		}
 	}
 
 	return (
@@ -79,6 +87,7 @@ export function MemberBulkUpdateDialog({
 				<div className="flex w-full flex-col items-end gap-[10px] px-[10px] pt-[10px] pb-[40px]">
 					<DialogClose
 						onClick={handleCancel}
+						disabled={isSubmitting}
 						className="flex size-[35px] shrink-0 items-center justify-center text-black-800 transition-colors hover:text-black-900"
 					>
 						<XIcon className="size-[28px]" strokeWidth={2.4} />
@@ -181,10 +190,12 @@ export function MemberBulkUpdateDialog({
 							</div>
 
 							<div className="flex h-[50px] items-center gap-[10px]">
-								<DialogActionButton variant="cancel" onClick={handleCancel}>
+								<DialogActionButton variant="cancel" onClick={handleCancel} disabled={isSubmitting}>
 									취소
 								</DialogActionButton>
-								<DialogActionButton onClick={handleSubmit}>확인</DialogActionButton>
+								<DialogActionButton onClick={handleSubmit} disabled={!selectedFile || isSubmitting}>
+									{isSubmitting ? "처리 중..." : "확인"}
+								</DialogActionButton>
 							</div>
 						</div>
 					</div>

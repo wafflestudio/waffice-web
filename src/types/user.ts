@@ -16,7 +16,7 @@ export interface Website {
 
 export interface UserDetail {
 	id: number
-	email: string
+	email: string | null
 	name: string
 	generation: string
 	qualification: Qualification
@@ -35,6 +35,7 @@ export interface UserDetail {
 	department: string | null
 	contact_email: string | null
 	notification_channel: NotificationChannel
+	is_temporary: boolean
 	created_at: number
 	current_projects: CurrentProject[]
 }
@@ -42,8 +43,29 @@ export interface UserDetail {
 export interface UserBrief {
 	id: number
 	name: string
-	email: string
+	email: string | null
 	avatar_url: string | null
+}
+
+export type TemporaryMemberSkipReason =
+	| "already_exists"
+	| "duplicate_in_request"
+	| "missing_student_id"
+	| "missing_name"
+	| "invalid"
+
+export interface SkippedTemporaryMember {
+	name: string
+	student_id: string
+	reason: TemporaryMemberSkipReason
+	message: string
+}
+
+export interface TemporaryMemberImportResult {
+	created_count: number
+	skipped_count: number
+	created: UserBrief[]
+	skipped: SkippedTemporaryMember[]
 }
 
 export interface ApproveRequest {

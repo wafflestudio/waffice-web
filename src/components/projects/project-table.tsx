@@ -73,24 +73,24 @@ export function ProjectTable({ projects, onUpdate, onDelete }: ProjectTableProps
 
 	return (
 		<>
-			<div className="rounded-md border">
-				<Table>
+			<div className="w-full overflow-hidden rounded-md border [&_[data-slot=table-container]]:overflow-hidden">
+				<Table className="w-full table-fixed text-[13px] xl:text-sm">
 					<TableHeader>
 						<TableRow>
-							<TableHead>이름</TableHead>
+							<TableHead className="w-[100px] xl:w-[140px]">이름</TableHead>
 							<TableHead>설명</TableHead>
-							<TableHead>예산</TableHead>
-							<TableHead>상태</TableHead>
-							<TableHead>멤버</TableHead>
-							<TableHead>생성일</TableHead>
+							<TableHead className="w-[100px]">예산</TableHead>
+							<TableHead className="w-[90px]">상태</TableHead>
+							<TableHead className="w-[70px]">멤버</TableHead>
+							<TableHead className="w-[110px]">생성일</TableHead>
 							<TableHead className="w-[50px]">작업</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
 						{projects.map((project) => (
 							<TableRow key={project.id}>
-								<TableCell className="font-medium">{project.name}</TableCell>
-								<TableCell className="max-w-xs truncate">{project.description || "-"}</TableCell>
+								<TableCell className="truncate font-medium">{project.name}</TableCell>
+								<TableCell className="max-w-0 truncate">{project.description || "-"}</TableCell>
 								<TableCell>
 									{project.budget ? `${project.budget.toLocaleString()}원` : "-"}
 								</TableCell>
@@ -105,7 +105,9 @@ export function ProjectTable({ projects, onUpdate, onDelete }: ProjectTableProps
 										<span>{project.members.length}</span>
 									</div>
 								</TableCell>
-								<TableCell>{new Date(project.created_at).toLocaleDateString()}</TableCell>
+								<TableCell className="truncate">
+									{new Date(project.created_at).toLocaleDateString()}
+								</TableCell>
 								<TableCell>
 									<DropdownMenu>
 										<DropdownMenuTrigger asChild>

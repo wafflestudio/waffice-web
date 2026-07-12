@@ -379,17 +379,21 @@ function ActivityMembersSection({
 				</h3>
 				<div
 					className={cn(
-						"overflow-x-auto bg-white transition-all duration-300",
+						"w-full overflow-hidden bg-white transition-all duration-300",
 						showPastMembers && "translate-y-[2px]",
 					)}
 				>
-					<DesignTable className="w-[1456px]">
+					<DesignTable className="w-full">
 						<thead>
 							<DesignTableHeaderRow>
-								<DesignTableHeaderCell className="w-[120px]">이름</DesignTableHeaderCell>
-								<DesignTableHeaderCell className="w-[200px]">포지션</DesignTableHeaderCell>
-								<DesignTableHeaderCell className="w-[388px]">이메일</DesignTableHeaderCell>
-								<DesignTableHeaderCell className="w-[388px]">Github 아이디</DesignTableHeaderCell>
+								<DesignTableHeaderCell className="w-[100px] xl:w-[120px]">
+									이름
+								</DesignTableHeaderCell>
+								<DesignTableHeaderCell className="w-[120px] xl:w-[160px] 2xl:w-[200px]">
+									포지션
+								</DesignTableHeaderCell>
+								<DesignTableHeaderCell>이메일</DesignTableHeaderCell>
+								<DesignTableHeaderCell>Github 아이디</DesignTableHeaderCell>
 								<DesignTableHeaderCell className="w-[100px]">
 									<div className="flex items-center gap-[6px]">
 										활동 상태
@@ -399,26 +403,28 @@ function ActivityMembersSection({
 										/>
 									</div>
 								</DesignTableHeaderCell>
-								<DesignTableHeaderCell className="w-[180px]">활동 기간</DesignTableHeaderCell>
-								<DesignTableHeaderCell className="w-[80px] text-center">수정</DesignTableHeaderCell>
+								<DesignTableHeaderCell className="w-[130px] xl:w-[150px] 2xl:w-[180px]">
+									활동 기간
+								</DesignTableHeaderCell>
+								<DesignTableHeaderCell className="w-[60px] text-center 2xl:w-[80px]">
+									수정
+								</DesignTableHeaderCell>
 							</DesignTableHeaderRow>
 						</thead>
 						<tbody>
 							{paginatedMembers.map((member) => (
 								<DesignTableRow key={member.id} className="h-[50px]">
-									<DesignTableBodyCell className="w-[120px]">
+									<DesignTableBodyCell className="truncate">
 										<div className="flex min-w-0 items-center gap-[6px]">
 											<span className="truncate">{member.name}</span>
 											{member.isLeader && <TagBadge>팀장</TagBadge>}
 										</div>
 									</DesignTableBodyCell>
-									<DesignTableBodyCell className="w-[200px] truncate">
-										{member.position}
-									</DesignTableBodyCell>
-									<DesignTableBodyCell className="w-[388px] truncate">
+									<DesignTableBodyCell className="truncate">{member.position}</DesignTableBodyCell>
+									<DesignTableBodyCell className="max-w-0 truncate">
 										{member.email}
 									</DesignTableBodyCell>
-									<DesignTableBodyCell className="w-[388px] truncate">
+									<DesignTableBodyCell className="max-w-0 truncate">
 										{member.githubId}
 									</DesignTableBodyCell>
 									<DesignTableBodyCell className="w-[100px]">
@@ -428,10 +434,10 @@ function ActivityMembersSection({
 											onChange={(status) => onStatusChange(member.id, status)}
 										/>
 									</DesignTableBodyCell>
-									<DesignTableBodyCell className="w-[180px] truncate">
+									<DesignTableBodyCell className="truncate">
 										{member.startDate} - {member.endDate}
 									</DesignTableBodyCell>
-									<DesignTableBodyCell className="w-[80px] px-0">
+									<DesignTableBodyCell className="px-0">
 										<button
 											type="button"
 											aria-label={`${member.name} 팀원 수정`}
