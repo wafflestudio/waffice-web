@@ -1,4 +1,10 @@
-import type { GraduationStatus, NotificationChannel, Qualification, UserRole } from "./common"
+import type {
+	GraduationStatus,
+	NotificationChannel,
+	Qualification,
+	UserRole,
+	UserRoleFlags,
+} from "./common"
 import type { MemberCreate, MemberUpdate } from "./member"
 import type { CurrentProject } from "./project"
 
@@ -16,6 +22,8 @@ export interface UserDetail {
 	qualification: Qualification
 	graduation_status: GraduationStatus
 	role: UserRole
+	// TODO(API): 백엔드 역할 boolean 적용 전까지 optional로 유지하고 AuthProvider의 호환 변환을 사용한다.
+	role_flags?: Partial<UserRoleFlags> | null
 	phone: string | null
 	affiliation: string | null
 	bio: string | null
