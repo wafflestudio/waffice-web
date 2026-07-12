@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Forbidden } from "@/components/error/forbidden"
 import { MemberBulkUpdateDialog } from "@/components/members/member-bulk-update-dialog"
+import { MemberBulkUpdateResultDialog } from "@/components/members/member-bulk-update-result-dialog"
 import { MemberTable } from "@/components/members/member-table"
 import { QualificationChangeDialog } from "@/components/members/qualification-change-dialog"
 import { useAuth } from "@/components/providers/auth-provider"
@@ -12,9 +13,14 @@ import { Button } from "@/components/ui/button"
 import { FilterResetButton, FilterTag, FilterTagGroup } from "@/components/ui/filter-tag"
 import { SearchInput } from "@/components/ui/search-input"
 import { Toast } from "@/components/ui/toast"
-import { roleToQualification, useMembers, useUpdateUserAdmin } from "@/hooks/use-members"
+import {
+	roleToQualification,
+	useImportTemporaryMembers,
+	useMembers,
+	useUpdateUserAdmin,
+} from "@/hooks/use-members"
 import { canManageMembers } from "@/lib/permissions"
-import type { AccessRight, MemberCreate, MemberUpdate } from "@/types"
+import type { AccessRight, MemberCreate, MemberUpdate, TemporaryMemberImportResult } from "@/types"
 import { toUserUpdateRequest } from "@/types"
 
 export default function MembersPage() {
@@ -27,6 +33,8 @@ export default function MembersPage() {
 	const [isBulkUpdateDialogOpen, setIsBulkUpdateDialogOpen] = useState(false)
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState("")
+	const [toastVariant, setToastVariant] = useState<"default" | "error">("default")
+	const [bulkUpdateResult, setBulkUpdateResult] = useState<TemporaryMemberImportResult | null>(null)
 	const [generationSort, setGenerationSort] = useState<"desc" | "asc" | null>(null)
 	const [roleFilter, setRoleFilter] = useState("전체")
 	const [enrollmentFilter, setEnrollmentFilter] = useState("전체")
@@ -42,6 +50,7 @@ export default function MembersPage() {
 		name: debouncedSearchQuery,
 	})
 	const updateUserMutation = useUpdateUserAdmin()
+	const importTemporaryMembersMutation = useImportTemporaryMembers()
 	const isForbidden = error?.message.includes("403") ?? false
 
 	useEffect(() => {
@@ -102,6 +111,30 @@ export default function MembersPage() {
 			return
 		}
 		setIsDialogOpen(true)
+	}
+
+	const handleBulkUpdateSubmit = async ({ file }: { effectiveDate: string; file: File | null }) => {
+		if (!file) return
+		setShowToast(false)
+
+		try {
+			const result = await importTemporaryMembersMutation.mutateAsync(file)
+			setIsBulkUpdateDialogOpen(false)
+
+			if (result.skipped.length > 0) {
+				setBulkUpdateResult(result)
+				return
+			}
+
+			setToastVariant("default")
+			setToastMessage(`${result.created_count}명의 활동회원 명부가 반영되었습니다.`)
+			setShowToast(true)
+		} catch (err) {
+			setToastVariant("error")
+			setToastMessage(err instanceof Error ? err.message : "활동회원 명부 갱신에 실패했습니다.")
+			setShowToast(true)
+			throw err
+		}
 	}
 
 	const handleDialogSubmit = async (role: string, reason: string) => {
@@ -171,10 +204,10 @@ export default function MembersPage() {
 				</h2>
 
 				<div className="flex flex-col gap-[12px]">
-					<div className="flex items-center justify-between">
-						<div className="flex items-center gap-[15px]">
+					<div className="flex flex-col gap-[12px] xl:flex-row xl:items-center xl:justify-between">
+						<div className="flex flex-wrap items-center gap-[10px] xl:gap-[15px]">
 							<SearchInput
-								containerClassName="w-[300px]"
+								containerClassName="w-full sm:w-[300px]"
 								placeholder="검색어를 입력해 주세요"
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
@@ -191,7 +224,7 @@ export default function MembersPage() {
 							</ActionButton>
 						</div>
 						{activeFilterTags.length > 0 && (
-							<FilterTagGroup>
+							<FilterTagGroup className="flex-wrap xl:justify-end">
 								{activeFilterTags.map((tag) => (
 									<FilterTag key={tag.label} label={tag.label} onClick={tag.onRemove} />
 								))}
@@ -229,10 +262,25 @@ export default function MembersPage() {
 			<MemberBulkUpdateDialog
 				open={isBulkUpdateDialogOpen}
 				onOpenChange={setIsBulkUpdateDialogOpen}
+				onSubmit={handleBulkUpdateSubmit}
+				isSubmitting={importTemporaryMembersMutation.isPending}
+			/>
+			<MemberBulkUpdateResultDialog
+				open={bulkUpdateResult !== null}
+				onOpenChange={(open) => {
+					if (!open) setBulkUpdateResult(null)
+				}}
+				createdCount={bulkUpdateResult?.created_count ?? 0}
+				skipped={bulkUpdateResult?.skipped ?? []}
 			/>
 
 			{/* 성공 토스트 알림 */}
-			<Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />
+			<Toast
+				message={toastMessage}
+				isVisible={showToast}
+				onClose={() => setShowToast(false)}
+				variant={toastVariant}
+			/>
 		</div>
 	)
 }

@@ -10,14 +10,19 @@ export class ApiClient {
 
 	async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
 		const url = `${this.baseUrl}${endpoint}`
+		const headers = new Headers(options.headers)
+
+		if (!(options.body instanceof FormData) && !headers.has("Content-Type")) {
+			headers.set("Content-Type", "application/json")
+		}
+		if (!headers.has("X-Requested-With")) {
+			headers.set("X-Requested-With", "XMLHttpRequest")
+		}
+
 		const response = await fetch(url, {
 			credentials: "include",
-			headers: {
-				"Content-Type": "application/json",
-				"X-Requested-With": "XMLHttpRequest",
-				...options.headers,
-			},
 			...options,
+			headers,
 		})
 
 		if (!response.ok) {

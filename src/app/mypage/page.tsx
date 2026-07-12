@@ -202,7 +202,7 @@ export default function MyPage() {
 		onSuccess: (result) => {
 			setUser(result.user)
 			setAuthUser(result.user)
-			form.setValue("email", result.user.email)
+			form.setValue("email", result.user.email ?? "")
 			setToastMessage("연동 계정이 변경되었습니다.")
 			setShowToast(true)
 		},

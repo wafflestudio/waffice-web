@@ -62,7 +62,7 @@ const userDetailToApplication = (user: UserDetail): Application => ({
 	id: user.id,
 	name: user.name,
 	generation: user.generation,
-	email: user.email,
+	email: user.email ?? "",
 	github_username: user.github_username || "",
 	application_date: new Date(user.created_at * 1000).toISOString(),
 	role: qualificationToRole(user.qualification),
