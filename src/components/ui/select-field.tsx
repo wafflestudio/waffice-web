@@ -22,6 +22,7 @@ interface SelectFieldProps<T extends string> {
 	triggerClassName?: string
 	contentClassName?: string
 	itemClassName?: string
+	indicatorClassName?: string
 }
 
 function SelectField<T extends string>({
@@ -36,6 +37,7 @@ function SelectField<T extends string>({
 	triggerClassName,
 	contentClassName,
 	itemClassName,
+	indicatorClassName,
 }: SelectFieldProps<T>) {
 	const control = (
 		<DropdownMenu>
@@ -67,6 +69,7 @@ function SelectField<T extends string>({
 							key={option}
 							value={option}
 							className={cn("h-[50px] px-[16px] text-[15px]", itemClassName)}
+							indicatorClassName={indicatorClassName}
 						>
 							{option}
 						</DropdownMenuFilterRadioItem>

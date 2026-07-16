@@ -7,8 +7,7 @@ import { DialogActionButton } from "@/components/ui/dialog-action-button"
 import { Input } from "@/components/ui/input"
 import { SelectField } from "@/components/ui/select-field"
 import { Textarea } from "@/components/ui/textarea"
-import type { ProjectCreateFormValues } from "@/types"
-import { PROJECT_STATUS_OPTIONS } from "./project-status-filter"
+import type { ProjectCreateFormValues, ProjectCreateStatus } from "@/types"
 
 interface ProjectCreateDialogProps {
 	open: boolean
@@ -21,6 +20,13 @@ const initialValues: ProjectCreateFormValues = {
 	status: "",
 	description: "",
 }
+
+const PROJECT_CREATE_STATUS_OPTIONS = [
+	"활동",
+	"종결",
+	"말소",
+	"제명",
+] satisfies ProjectCreateStatus[]
 
 const fieldClass =
 	"h-[50px] w-[360px] rounded-[5px] border-black-300 bg-white px-[15px] text-[14px] font-normal tracking-[-0.28px] text-black-900 shadow-none outline-none placeholder:text-black-600 focus-visible:border-peach-300 focus-visible:ring-0"
@@ -76,9 +82,10 @@ export function ProjectCreateDialog({ open, onOpenChange, onSubmit }: ProjectCre
 							<ProjectCreateField label="운영 상태">
 								<SelectField
 									value={values.status}
-									options={PROJECT_STATUS_OPTIONS}
+									options={PROJECT_CREATE_STATUS_OPTIONS}
 									onChange={(status) => setValues((prev) => ({ ...prev, status }))}
 									placeholder="선택"
+									indicatorClassName="ml-[10px] size-[20px]"
 								/>
 							</ProjectCreateField>
 							<ProjectCreateField label="설명">
