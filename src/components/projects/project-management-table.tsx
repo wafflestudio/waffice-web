@@ -1,6 +1,7 @@
 "use client"
 
 import { Minus } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { Pagination } from "@/components/ui/pagination"
 import { DotStatusBadge } from "@/components/ui/status-badge"
 import {
@@ -55,7 +56,11 @@ function ProjectLinkSummary({ project }: { project: ProjectManagementRow }) {
 		<div className="truncate text-[15px] leading-[1.4] text-black-900">
 			{project.links.map((link, index) => (
 				<span key={`${project.id}-${link.label}`}>
-					<a href={link.url ?? "#project-link"} className="underline underline-offset-[2px]">
+					<a
+						href={link.url ?? "#project-link"}
+						onClick={(event) => event.stopPropagation()}
+						className="underline underline-offset-[2px]"
+					>
 						{link.label}({link.count})
 					</a>
 					{index < project.links.length - 1 && ", "}
@@ -77,6 +82,7 @@ export function ProjectManagementTable({
 	showActions = true,
 	showPagination = true,
 }: ProjectManagementTableProps) {
+	const router = useRouter()
 	const filteredProjects = projects
 		.filter((project) => statusFilter === "전체" || project.status === statusFilter)
 		.filter((project) => {
@@ -94,6 +100,9 @@ export function ProjectManagementTable({
 	)
 	const showAdminAction = viewMode === "admin"
 	const visibleProjects = showPagination ? paginatedProjects : filteredProjects
+	const openProjectDetail = (projectId: number) => {
+		router.push(`/projects/detail?projectId=${projectId}`)
+	}
 
 	return (
 		<div className="flex flex-col gap-[20px]">
@@ -118,7 +127,17 @@ export function ProjectManagementTable({
 						{visibleProjects.map((project) => (
 							<TableRow
 								key={project.id}
-								className="h-[60px] border-black-300 border-b hover:bg-black-100"
+								tabIndex={0}
+								role="link"
+								aria-label={`${project.name} 프로젝트 상세로 이동`}
+								onClick={() => openProjectDetail(project.id)}
+								onKeyDown={(event) => {
+									if (event.key === "Enter" || event.key === " ") {
+										event.preventDefault()
+										openProjectDetail(project.id)
+									}
+								}}
+								className="h-[60px] cursor-pointer border-black-300 border-b hover:bg-black-100 focus-visible:bg-black-100 focus-visible:outline-none"
 							>
 								<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>{project.name}</TableCell>
 								<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>{project.leader}</TableCell>
@@ -143,7 +162,10 @@ export function ProjectManagementTable({
 													? `${project.name} 프로젝트 삭제`
 													: `${project.name} 프로젝트 상세`
 											}
-											onClick={() => onProjectAction?.(project)}
+											onClick={(event) => {
+												event.stopPropagation()
+												onProjectAction?.(project)
+											}}
 											className="flex size-[32px] items-center justify-center rounded-[4px] border border-black-900 bg-white text-black-900 hover:bg-black-100"
 										>
 											<Minus className="size-[16px]" strokeWidth={1.8} />
