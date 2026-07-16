@@ -1,9 +1,9 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2, UserRound } from "lucide-react"
+import { Camera, Loader2, UserRound } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { type ChangeEvent, useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useAuth } from "@/components/providers/auth-provider"
@@ -20,6 +20,7 @@ import { apiClient } from "@/lib/api"
 import type { Qualification, UserDetail, UserRole } from "@/types"
 
 const STUDENT_ID_REGEX = /^\d{4}-\d{5}$/
+const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024
 
 const mypageSchema = z.object({
 	name: z.string().optional(),
@@ -179,6 +180,8 @@ export default function MyPage() {
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState("")
 	const [showSuccessDialog, setShowSuccessDialog] = useState(false)
+	const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+	const profileImageInputRef = useRef<HTMLInputElement>(null)
 
 	const form = useForm<MypageFormValues>({
 		resolver: zodResolver(mypageSchema),
@@ -288,6 +291,46 @@ export default function MyPage() {
 		}
 	}
 
+	const handleProfileImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0]
+		event.target.value = ""
+
+		if (!file) return
+
+		if (!file.type.startsWith("image/")) {
+			setToastMessage("이미지 파일만 선택할 수 있습니다.")
+			setShowToast(true)
+			return
+		}
+
+		if (file.size > MAX_PROFILE_IMAGE_SIZE) {
+			setToastMessage("프로필 이미지는 5MB 이하만 업로드할 수 있습니다.")
+			setShowToast(true)
+			return
+		}
+
+		setIsUploadingAvatar(true)
+		setShowToast(false)
+
+		try {
+			const profileResponse = await apiClient.uploadProfileImage(file)
+
+			if (!profileResponse.ok || !profileResponse.data) {
+				throw new Error(profileResponse.message || "프로필 이미지 변경에 실패했습니다.")
+			}
+
+			setUser(profileResponse.data)
+			setAuthUser(profileResponse.data)
+			setToastMessage("프로필 이미지가 변경되었습니다.")
+			setShowToast(true)
+		} catch (err) {
+			setToastMessage(err instanceof Error ? err.message : "프로필 이미지 변경에 실패했습니다.")
+			setShowToast(true)
+		} finally {
+			setIsUploadingAvatar(false)
+		}
+	}
+
 	const handleCancel = () => {
 		router.back()
 	}
@@ -313,12 +356,26 @@ export default function MyPage() {
 
 	return (
 		<div className="flex w-full flex-col items-start">
-			<div className="flex w-full max-w-[1162px] flex-col gap-[40px]">
+			<div className="flex w-full max-w-[1140px] flex-col gap-[40px]">
 				<h1 className="text-[28px] font-medium leading-normal text-black-900">마이페이지</h1>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-[30px]">
 						<div className="flex items-center gap-[30px]">
-							<div className="flex size-[100px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-black-300 text-white">
+							<input
+								ref={profileImageInputRef}
+								type="file"
+								accept="image/*"
+								onChange={handleProfileImageChange}
+								className="sr-only"
+								aria-label="프로필 이미지 파일 선택"
+							/>
+							<button
+								type="button"
+								onClick={() => profileImageInputRef.current?.click()}
+								disabled={isUploadingAvatar}
+								aria-label="프로필 이미지 변경"
+								className="group relative flex size-[100px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-black-300 text-white outline-none focus-visible:ring-2 focus-visible:ring-peach-500 focus-visible:ring-offset-2 disabled:cursor-wait"
+							>
 								{user?.avatar_url ? (
 									<div
 										aria-label={`${user.name} 프로필`}
@@ -329,7 +386,14 @@ export default function MyPage() {
 								) : (
 									<UserRound className="size-[48px]" strokeWidth={1.8} />
 								)}
-							</div>
+								<span className="absolute inset-0 flex items-center justify-center bg-black-900/45 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 group-disabled:opacity-100">
+									{isUploadingAvatar ? (
+										<Loader2 className="size-[24px] animate-spin" />
+									) : (
+										<Camera className="size-[24px]" strokeWidth={1.8} />
+									)}
+								</span>
+							</button>
 							<div className="flex flex-col gap-[10px]">
 								<div className="flex w-[157px] flex-col gap-[6px]">
 									<p className="text-[18px] font-medium leading-normal text-black-900">
