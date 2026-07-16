@@ -15,7 +15,7 @@ function DesignTableRow({ className, ...props }: React.ComponentProps<"tr">) {
 	return (
 		<tr
 			className={cn(
-				"border-black-300 border-b text-[14px] text-black-900 transition-colors hover:bg-black-100",
+				"border-black-300 border-b text-[15px] text-black-900 transition-colors hover:bg-black-100",
 				className,
 			)}
 			{...props}
@@ -27,7 +27,7 @@ function DesignTableHeaderCell({ className, ...props }: React.ComponentProps<"th
 	return (
 		<th
 			className={cn(
-				"overflow-hidden px-[20px] text-left text-[14px] font-medium leading-[17px] whitespace-nowrap text-black-900 text-ellipsis tracking-[-0.28px]",
+				"overflow-hidden px-[20px] text-left text-[15px] font-medium leading-[18px] whitespace-nowrap text-black-900 text-ellipsis tracking-[-0.3px]",
 				className,
 			)}
 			{...props}
