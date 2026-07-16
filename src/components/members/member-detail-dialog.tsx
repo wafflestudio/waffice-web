@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, UserRound, X as XIcon } from "lucide-react"
+import { UserRound, X as XIcon } from "lucide-react"
 import type * as React from "react"
 import { useEffect, useState } from "react"
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog"
@@ -8,8 +8,9 @@ import { DialogActionButton } from "@/components/ui/dialog-action-button"
 import { Input } from "@/components/ui/input"
 import { SelectField } from "@/components/ui/select-field"
 import { Toast } from "@/components/ui/toast"
+import { useUserActivities, useUserAuditLog } from "@/hooks/use-members"
 import { cn } from "@/lib/utils"
-import type { AccessRight, Member, MemberUpdate, Website } from "@/types"
+import type { Member, MemberUpdate, Website } from "@/types"
 
 interface MemberDetailDialogProps {
 	member: Member | null
@@ -18,9 +19,7 @@ interface MemberDetailDialogProps {
 	onMemberUpdate?: (id: number, data: MemberUpdate) => Promise<void>
 }
 
-const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "가입대기"] as const
 const ENROLLMENT_OPTIONS = ["학부생", "대학원생", "휴학생", "졸업생"] as const
-const ACCESS_RIGHT_OPTIONS = ["운영진", "팀장"] satisfies AccessRight[]
 const FIELD_ROW_CLASS = "relative flex h-[60px] w-[500px] items-center pl-[140px] py-[10px]"
 const FIELD_LABEL_CLASS =
 	"absolute left-0 top-1/2 flex -translate-y-1/2 items-center text-[14px] font-medium text-black-900"
@@ -57,6 +56,113 @@ const formatDate = (value?: string | number) => {
 	return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(
 		date.getDate(),
 	).padStart(2, "0")}`
+}
+
+const QUALIFICATION_LABELS: Record<string, string> = {
+	active: "활동회원",
+	regular: "정회원",
+	associate: "준회원",
+	pending: "가입대기",
+}
+
+const formatUnixDate = (value?: number | null) => {
+	if (value == null) return "-"
+
+	const date = new Date(value * 1000)
+	if (Number.isNaN(date.getTime())) return "-"
+
+	return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(
+		date.getDate(),
+	).padStart(2, "0")}`
+}
+
+const getPayloadText = (payload: Record<string, unknown>, key: string) => {
+	const value = payload[key]
+	return typeof value === "string" || typeof value === "number" ? String(value) : ""
+}
+
+interface HistoryColumn {
+	label: string
+	width?: number
+}
+
+interface HistoryRow {
+	id: string | number
+	cells: React.ReactNode[]
+}
+
+function HistorySection({
+	title,
+	columns,
+	rows,
+	isLoading = false,
+	isError = false,
+}: {
+	title: string
+	columns: HistoryColumn[]
+	rows: HistoryRow[]
+	isLoading?: boolean
+	isError?: boolean
+}) {
+	const statusMessage = isLoading
+		? "불러오는 중입니다."
+		: isError
+			? "이력을 불러오지 못했습니다."
+			: "(해당 사항 없음.)"
+
+	return (
+		<section className="flex w-full flex-col gap-[20px]">
+			<h2 className="text-[20px] font-medium leading-normal tracking-[-0.4px] text-black-900">
+				{title}
+			</h2>
+			<div className="w-full overflow-x-auto">
+				<table className="w-full min-w-[760px] table-fixed border-collapse bg-white">
+					<colgroup>
+						{columns.map((column) => (
+							<col key={column.label} style={column.width ? { width: column.width } : undefined} />
+						))}
+					</colgroup>
+					<thead>
+						<tr className="h-[40px] border-black-300 border-y bg-black-100">
+							{columns.map((column) => (
+								<th
+									key={column.label}
+									className="overflow-hidden px-[20px] text-left text-[14px] font-medium leading-normal whitespace-nowrap text-black-900 tracking-[-0.28px]"
+								>
+									{column.label}
+								</th>
+							))}
+						</tr>
+					</thead>
+					<tbody>
+						{rows.length > 0 && !isLoading && !isError ? (
+							rows.map((row) => (
+								<tr key={row.id} className="h-[50px] border-black-300 border-b">
+									{row.cells.map((cell, index) => (
+										<td
+											key={`${row.id}-${columns[index]?.label ?? index}`}
+											className="overflow-hidden px-[20px] text-[14px] leading-normal whitespace-nowrap text-black-900 text-ellipsis tracking-[-0.28px]"
+										>
+											{cell || "-"}
+										</td>
+									))}
+								</tr>
+							))
+						) : (
+							<tr className="h-[50px] border-black-300 border-b">
+								<td
+									colSpan={columns.length}
+									className="px-[20px] text-center text-[14px] font-normal text-black-700 tracking-[-0.28px]"
+								>
+									{statusMessage}
+								</td>
+							</tr>
+						)}
+					</tbody>
+				</table>
+			</div>
+		</section>
+	)
 }
 
 function FieldRow({
@@ -104,30 +210,6 @@ function TextField({
 	)
 }
 
-function AccessRightToggle({
-	right,
-	checked,
-	onToggle,
-}: {
-	right: AccessRight
-	checked: boolean
-	onToggle: () => void
-}) {
-	return (
-		<button type="button" onClick={onToggle} className="flex items-center gap-[16px]">
-			<span
-				className={cn(
-					"flex size-[16px] items-center justify-center rounded-[3.5px]",
-					checked ? "bg-peach-300 text-white" : "border border-black-500 bg-white text-transparent",
-				)}
-			>
-				{checked && <Check className="size-[10px]" strokeWidth={3} />}
-			</span>
-			<span className="text-[14px] font-normal tracking-[-0.28px] text-black-700">{right}</span>
-		</button>
-	)
-}
-
 function ConfirmDialog({
 	open,
 	onOpenChange,
@@ -165,7 +247,6 @@ export function MemberDetailDialog({
 	onOpenChange,
 	onMemberUpdate,
 }: MemberDetailDialogProps) {
-	const [role, setRole] = useState<(typeof ROLE_OPTIONS)[number]>("활동회원")
 	const [generation, setGeneration] = useState("")
 	const [email, setEmail] = useState("")
 	const [githubId, setGithubId] = useState("")
@@ -174,18 +255,15 @@ export function MemberDetailDialog({
 	const [studentId, setStudentId] = useState("")
 	const [department, setDepartment] = useState("")
 	const [phone, setPhone] = useState("")
-	const [accessRights, setAccessRights] = useState<AccessRight[]>([])
 	const [confirmOpen, setConfirmOpen] = useState(false)
 	const [showRequiredToast, setShowRequiredToast] = useState(false)
+	const historyUserId = open && member ? member.id : null
+	const auditLogQuery = useUserAuditLog(historyUserId)
+	const activitiesQuery = useUserActivities(historyUserId)
 
 	useEffect(() => {
 		if (!member || !open) return
 
-		setRole(
-			ROLE_OPTIONS.includes(member.role as (typeof ROLE_OPTIONS)[number])
-				? (member.role as (typeof ROLE_OPTIONS)[number])
-				: "활동회원",
-		)
 		setGeneration(member.generation || "")
 		setEmail(member.user?.contact_email || member.email || "")
 		setGithubId(member.github_username || "")
@@ -198,21 +276,54 @@ export function MemberDetailDialog({
 		setStudentId(member.user?.student_id || "")
 		setDepartment(member.user?.department || "")
 		setPhone(member.phone || "")
-		setAccessRights(member.access_rights || [])
 		setConfirmOpen(false)
 		setShowRequiredToast(false)
 	}, [member, open])
 
 	if (!member) return null
 
-	const toggleAccessRight = (right: AccessRight) => {
-		setAccessRights((prev) =>
-			prev.includes(right) ? prev.filter((item) => item !== right) : [...prev, right],
-		)
-	}
+	const qualificationRows: HistoryRow[] = (auditLogQuery.data ?? [])
+		.filter((entry) => entry.action === "qualification_changed")
+		.map((entry) => {
+			const from = getPayloadText(entry.payload, "from")
+			const to = getPayloadText(entry.payload, "to")
+			const reason =
+				getPayloadText(entry.payload, "reason") || getPayloadText(entry.payload, "description")
 
-	const hasRequiredFields = () =>
-		Boolean(role.trim() && generation.trim() && email.trim() && enrollment.trim())
+			return {
+				id: entry.id,
+				cells: [
+					formatUnixDate(entry.created_at),
+					`${QUALIFICATION_LABELS[from] ?? (from || "-")} → ${QUALIFICATION_LABELS[to] ?? (to || "-")}`,
+					reason || "-",
+				],
+			}
+		})
+	const projectRows: HistoryRow[] = (activitiesQuery.data ?? [])
+		.filter((activity) => activity.project_id !== null || activity.project_name !== null)
+		.map((activity) => ({
+			id: activity.id,
+			cells: [
+				activity.project_name || "-",
+				`${formatUnixDate(activity.start_date)} - ${
+					activity.end_date ? formatUnixDate(activity.end_date) : "현재"
+				}`,
+				activity.position || "-",
+			],
+		}))
+	const operationRows: HistoryRow[] = (activitiesQuery.data ?? [])
+		.filter((activity) => activity.project_id === null && activity.project_name === null)
+		.map((activity) => ({
+			id: activity.id,
+			cells: [
+				`${formatUnixDate(activity.start_date)} - ${
+					activity.end_date ? formatUnixDate(activity.end_date) : "현재"
+				}`,
+				activity.position || "-",
+			],
+		}))
+
+	const hasRequiredFields = () => Boolean(generation.trim() && email.trim() && enrollment.trim())
 
 	const handleSubmitClick = () => {
 		if (!hasRequiredFields()) {
@@ -230,11 +341,9 @@ export function MemberDetailDialog({
 			await onMemberUpdate?.(member.id, {
 				name: member.name,
 				email,
-				role,
 				generation,
 				github_username: githubId,
 				affiliation: enrollment,
-				access_rights: accessRights,
 				student_id: studentId,
 				department,
 				phone,
@@ -252,7 +361,7 @@ export function MemberDetailDialog({
 		<>
 			<Dialog open={open} onOpenChange={onOpenChange}>
 				<DialogContent
-					className="!block !w-[1500px] !max-w-none max-h-[calc(100vh-40px)] overflow-y-auto rounded-[12px] border-0 bg-white p-0 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
+					className="!block !w-[1300px] !max-w-[calc(100vw-40px)] max-h-[calc(100vh-40px)] overflow-y-auto rounded-[12px] border-0 bg-white p-0 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
 					showCloseButton={false}
 				>
 					<div className="flex min-h-[782px] w-full flex-col items-center bg-white pb-[40px]">
@@ -284,20 +393,19 @@ export function MemberDetailDialog({
 								</header>
 
 								<section className="flex w-full flex-col gap-[30px]">
-									<div className="flex w-[1100px] items-start justify-between pt-[10px]">
+									<div className="flex w-full items-start justify-between pt-[10px]">
 										<div className="flex flex-col">
-											<SelectField
-												label="자격"
-												value={role}
-												options={ROLE_OPTIONS}
-												onChange={setRole}
-												required
-												className={FIELD_ROW_CLASS}
-												labelClassName={FIELD_LABEL_CLASS}
-												triggerClassName={FIELD_CLASS}
-												contentClassName="w-[360px]"
-												itemClassName="h-[40px] px-[16px] text-[14px]"
-											/>
+											<FieldRow label="자격">
+												<Input
+													value={member.role || "활동회원"}
+													disabled
+													readOnly
+													className={cn(
+														FIELD_CLASS,
+														"cursor-not-allowed bg-black-100 text-black-900 opacity-100",
+													)}
+												/>
+											</FieldRow>
 											<TextField
 												label="기수"
 												value={generation}
@@ -317,24 +425,22 @@ export function MemberDetailDialog({
 												onChange={setEmail}
 												placeholder="example@gmail.com"
 											/>
-											<div className={cn(FIELD_ROW_CLASS, "gap-[30px]")}>
-												<p className={FIELD_LABEL_CLASS}>접근 권한</p>
-												<div className="flex items-center gap-[37px]">
-													{ACCESS_RIGHT_OPTIONS.map((right) => (
-														<AccessRightToggle
-															key={right}
-															right={right}
-															checked={accessRights.includes(right)}
-															onToggle={() => toggleAccessRight(right)}
-														/>
-													))}
-												</div>
-											</div>
+											<FieldRow label="계정 생성일">
+												<Input
+													value={formatDate(member.created_at)}
+													disabled
+													readOnly
+													className={cn(
+														FIELD_CLASS,
+														"cursor-not-allowed bg-black-100 text-black-500 opacity-100",
+													)}
+												/>
+											</FieldRow>
 										</div>
 
 										<div className="flex flex-col">
 											<SelectField
-												label="재학여부"
+												label="학적 상태"
 												value={enrollment}
 												options={ENROLLMENT_OPTIONS}
 												onChange={setEnrollment}
@@ -373,19 +479,51 @@ export function MemberDetailDialog({
 												onChange={setPhone}
 												placeholder="010-1234-5678"
 											/>
-											<FieldRow label="계정 생성일">
-												<Input
-													value={formatDate(member.created_at)}
-													disabled
-													readOnly
-													className={cn(
-														FIELD_CLASS,
-														"cursor-not-allowed bg-black-100 text-black-500 opacity-100",
-													)}
-												/>
-											</FieldRow>
 										</div>
 									</div>
+
+									<HistorySection
+										title="회원 자격 변경 이력"
+										columns={[
+											{ label: "기준일", width: 220 },
+											{ label: "내용" },
+											{ label: "사유" },
+										]}
+										rows={qualificationRows}
+										isLoading={auditLogQuery.isLoading}
+										isError={auditLogQuery.isError}
+									/>
+
+									<HistorySection
+										title="프로젝트 활동 이력"
+										columns={[
+											{ label: "소속 프로젝트명", width: 220 },
+											{ label: "기간", width: 220 },
+											{ label: "역할" },
+										]}
+										rows={projectRows}
+										isLoading={activitiesQuery.isLoading}
+										isError={activitiesQuery.isError}
+									/>
+
+									<HistorySection
+										title="운영팀 활동 이력"
+										columns={[{ label: "기간", width: 220 }, { label: "역할" }]}
+										rows={operationRows}
+										isLoading={activitiesQuery.isLoading}
+										isError={activitiesQuery.isError}
+									/>
+
+									<HistorySection
+										title="징계 이력"
+										columns={[
+											{ label: "징계" },
+											{ label: "이유" },
+											{ label: "의결일", width: 220 },
+											{ label: "개시일", width: 220 },
+										]}
+										rows={[]}
+									/>
 
 									<div className="flex w-full justify-end">
 										<div className="flex h-[50px] items-center gap-[10px]">
