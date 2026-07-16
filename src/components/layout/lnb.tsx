@@ -17,6 +17,7 @@ import {
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { useState } from "react"
 import { useAuth } from "@/components/providers/auth-provider"
 import {
 	DropdownMenu,
@@ -98,33 +99,55 @@ const isMenuActive = (pathname: string, href: string) => {
 	return pathname === href || pathname.startsWith(`${href}/`)
 }
 
+function DockToRightIcon() {
+	return (
+		<svg
+			aria-hidden="true"
+			className="size-[14px]"
+			viewBox="0 0 14 14"
+			fill="none"
+			xmlns="http://www.w3.org/2000/svg"
+		>
+			<path
+				d="M1.39583 14C1.01194 14 0.683333 13.8633 0.41 13.59C0.136667 13.3167 0 12.9881 0 12.6042V1.39583C0 1.01194 0.136667 0.683333 0.41 0.41C0.683333 0.136667 1.01194 0 1.39583 0H12.6042C12.9881 0 13.3167 0.136667 13.59 0.41C13.8633 0.683333 14 1.01194 14 1.39583V12.6042C14 12.9881 13.8633 13.3167 13.59 13.59C13.3167 13.8633 12.9881 14 12.6042 14H1.39583ZM4 12.5V1.5H1.5V12.5H4ZM5.5 12.5H12.5V1.5H5.5V12.5Z"
+				fill="currentColor"
+			/>
+		</svg>
+	)
+}
+
 interface NavMenuItemProps {
 	item: NavItem
 	pathname: string
+	isCollapsed: boolean
 }
 
-function NavMenuItem({ item, pathname }: NavMenuItemProps) {
+function NavMenuItem({ item, pathname, isCollapsed }: NavMenuItemProps) {
 	const active = isMenuActive(pathname, item.href)
 	const Icon = item.icon
 
 	return (
-		<>
+		<div className={cn("flex flex-col", isCollapsed ? "w-[40px]" : "w-[180px]")}>
 			<Link
 				href={item.href}
+				title={isCollapsed ? item.name : undefined}
 				className={cn(
-					"relative flex h-[40px] w-[180px] items-center rounded-[4px] py-[6px] pr-[8px] pl-[40px]",
+					"relative flex h-[40px] items-center rounded-[4px] py-[6px] transition-[width,padding] duration-200",
+					isCollapsed ? "w-[40px] justify-center px-[8px]" : "w-[180px] pr-[8px] pl-[40px]",
 					active ? "bg-peach-100" : "bg-white hover:bg-black-100",
 				)}
 			>
 				<Icon
 					className={cn(
-						"absolute left-[10px] size-[16px]",
+						"size-[16px] shrink-0",
+						!isCollapsed && "absolute left-[10px]",
 						active ? "text-peach-500" : "text-black-900",
 					)}
 				/>
 				<span
 					className={cn(
 						"min-w-0 flex-1 truncate text-[15px] leading-[20px]",
+						isCollapsed && "sr-only",
 						active ? "font-semibold text-peach-500" : "font-medium text-black-900",
 					)}
 				>
@@ -132,7 +155,7 @@ function NavMenuItem({ item, pathname }: NavMenuItemProps) {
 				</span>
 			</Link>
 
-			{active && item.subItems && (
+			{!isCollapsed && active && item.subItems && (
 				<div className="flex w-[180px] flex-col">
 					{item.subItems.map((sub) => {
 						const subActive = pathname === sub.href
@@ -154,7 +177,7 @@ function NavMenuItem({ item, pathname }: NavMenuItemProps) {
 					})}
 				</div>
 			)}
-		</>
+		</div>
 	)
 }
 
@@ -162,6 +185,7 @@ export function Lnb() {
 	const pathname = usePathname()
 	const router = useRouter()
 	const { user, logout, activeRole, availableRoles, setActiveRole } = useAuth()
+	const [isCollapsed, setIsCollapsed] = useState(false)
 	const profileImage = user?.avatar_url || "/profile.png"
 	const navItems = getNavItems(activeRole)
 
@@ -174,37 +198,81 @@ export function Lnb() {
 	}
 
 	return (
-		<aside className="flex h-full w-[220px] shrink-0 flex-col border-[#ebecf0] border-r bg-white px-[20px] pt-[30px] pb-0">
+		<aside
+			className={cn(
+				"flex h-full shrink-0 flex-col overflow-hidden border-[#ebecf0] border-r bg-white pt-[30px] pb-0 transition-[width,padding] duration-200",
+				isCollapsed ? "w-[60px] px-[10px]" : "w-[220px] px-[20px]",
+			)}
+		>
 			<div className="flex flex-col gap-[30px]">
-				<Link
-					href="/"
-					aria-label="WAFFICE 홈"
-					className="flex h-[20px] w-[180px] items-center px-[20px]"
+				<div
+					className={cn(
+						"relative flex h-[20px] items-center",
+						isCollapsed ? "w-[40px]" : "w-[180px]",
+					)}
 				>
-					<Image
-						src="/waffle.svg"
-						alt="WAFFICE"
-						width={83}
-						height={20}
-						priority
-						className="h-[20px] w-[83px] object-contain"
-					/>
-				</Link>
+					{!isCollapsed && (
+						<Link
+							href="/"
+							aria-label="WAFFICE 홈"
+							className="flex h-[20px] w-[140px] items-center px-[20px]"
+						>
+							<Image
+								src="/waffle.svg"
+								alt="WAFFICE"
+								width={83}
+								height={20}
+								priority
+								className="h-[20px] w-[83px] object-contain"
+							/>
+						</Link>
+					)}
+					<button
+						type="button"
+						onClick={() => setIsCollapsed((collapsed) => !collapsed)}
+						aria-label={isCollapsed ? "LNB 펼치기" : "LNB 접기"}
+						aria-expanded={!isCollapsed}
+						className={cn(
+							"flex size-[20px] shrink-0 items-center justify-center rounded-[3px] text-black-400 outline-none hover:bg-black-100 focus-visible:ring-2 focus-visible:ring-peach-500",
+							isCollapsed ? "mx-auto" : "absolute right-0",
+						)}
+					>
+						<DockToRightIcon />
+					</button>
+				</div>
 
-				<nav className="flex w-[180px] flex-col gap-[8px]" aria-label="사이드 메뉴">
+				<nav
+					className={cn("flex flex-col gap-[8px]", isCollapsed ? "w-[40px]" : "w-[180px]")}
+					aria-label="사이드 메뉴"
+				>
 					{navItems.map((item) => (
-						<NavMenuItem key={item.name} item={item} pathname={pathname} />
+						<NavMenuItem
+							key={item.name}
+							item={item}
+							pathname={pathname}
+							isCollapsed={isCollapsed}
+						/>
 					))}
 				</nav>
 			</div>
 
-			<div className="-mx-[20px] mt-auto flex h-[63px] w-[220px] items-center border-[#ebecf0] border-t px-[30px]">
+			<div
+				className={cn(
+					"mt-auto flex h-[63px] items-center border-[#ebecf0] border-t transition-[width,padding,margin] duration-200",
+					isCollapsed
+						? "-mx-[10px] w-[60px] justify-center px-[15px]"
+						: "-mx-[20px] w-[220px] px-[30px]",
+				)}
+			>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<button
 							type="button"
 							aria-label="프로필 메뉴 열기"
-							className="flex min-w-0 flex-1 items-center rounded-[4px] text-left outline-none"
+							className={cn(
+								"flex min-w-0 items-center rounded-[4px] text-left outline-none",
+								isCollapsed ? "flex-none" : "flex-1",
+							)}
 						>
 							<div
 								aria-label={`${user?.name || "사용자"} 프로필`}
@@ -212,7 +280,12 @@ export function Lnb() {
 								role="img"
 								style={{ backgroundImage: `url(${profileImage})` }}
 							/>
-							<span className="ml-[8px] min-w-0 flex-1 truncate text-[15px] font-medium text-black-900 leading-normal">
+							<span
+								className={cn(
+									"ml-[8px] min-w-0 flex-1 truncate text-[15px] font-medium text-black-900 leading-normal",
+									isCollapsed && "sr-only",
+								)}
+							>
 								{user?.name || "사용자"}
 							</span>
 						</button>
@@ -242,40 +315,42 @@ export function Lnb() {
 					)}
 				</DropdownMenu>
 
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<button
-							type="button"
-							aria-label="LNB 역할 선택"
-							className="ml-[8px] flex h-[20px] shrink-0 items-center gap-[3px] rounded-[20px] border border-black-400 px-[8px] text-center text-[12px] font-medium text-black-400 leading-normal tracking-[-0.36px] outline-none"
-						>
-							{ROLE_LABELS[activeRole]}
-							<ChevronDown className="h-[5px] w-[8px]" strokeWidth={2} />
-						</button>
-					</DropdownMenuTrigger>
-					{user && (
-						<DropdownMenuContent
-							align="end"
-							side="top"
-							sideOffset={14}
-							className="w-[120px] rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
-						>
-							{availableRoles.map((role) => (
-								<DropdownMenuItem
-									key={role}
-									onSelect={() => setActiveRole(role)}
-									className={cn(
-										"h-[40px] cursor-pointer rounded-[3px] px-[8px] text-[14px] font-medium focus:bg-peach-100",
-										activeRole === role ? "text-peach-500" : "text-black-600",
-									)}
-								>
-									<span className="flex-1">{ROLE_LABELS[role]}</span>
-									{activeRole === role && <Check className="size-[12px]" strokeWidth={2.5} />}
-								</DropdownMenuItem>
-							))}
-						</DropdownMenuContent>
-					)}
-				</DropdownMenu>
+				{!isCollapsed && (
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<button
+								type="button"
+								aria-label="LNB 역할 선택"
+								className="ml-[8px] flex h-[20px] shrink-0 items-center gap-[3px] rounded-[20px] border border-black-400 px-[8px] text-center text-[12px] font-medium text-black-400 leading-normal tracking-[-0.36px] outline-none"
+							>
+								{ROLE_LABELS[activeRole]}
+								<ChevronDown className="h-[5px] w-[8px]" strokeWidth={2} />
+							</button>
+						</DropdownMenuTrigger>
+						{user && (
+							<DropdownMenuContent
+								align="end"
+								side="top"
+								sideOffset={14}
+								className="w-[120px] rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
+							>
+								{availableRoles.map((role) => (
+									<DropdownMenuItem
+										key={role}
+										onSelect={() => setActiveRole(role)}
+										className={cn(
+											"h-[40px] cursor-pointer rounded-[3px] px-[8px] text-[14px] font-medium focus:bg-peach-100",
+											activeRole === role ? "text-peach-500" : "text-black-600",
+										)}
+									>
+										<span className="flex-1">{ROLE_LABELS[role]}</span>
+										{activeRole === role && <Check className="size-[12px]" strokeWidth={2.5} />}
+									</DropdownMenuItem>
+								))}
+							</DropdownMenuContent>
+						)}
+					</DropdownMenu>
+				)}
 			</div>
 		</aside>
 	)

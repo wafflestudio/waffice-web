@@ -321,7 +321,7 @@ function ActivityMembersSection({
 
 	return (
 		<SectionRow title={showPastMembers ? "과거 활동 팀원" : "활동 팀원"}>
-			<div className="flex max-w-[1456px] flex-col gap-[20px]">
+			<div className="flex min-w-0 flex-col gap-[20px]">
 				<div className="flex h-[36px] items-center justify-between">
 					<div className="flex items-center gap-[15px]">
 						<SearchInput
@@ -379,19 +379,15 @@ function ActivityMembersSection({
 				</h3>
 				<div
 					className={cn(
-						"w-full overflow-hidden bg-white transition-all duration-300",
+						"w-full overflow-x-auto bg-white transition-all duration-300",
 						showPastMembers && "translate-y-[2px]",
 					)}
 				>
-					<DesignTable className="w-full">
+					<DesignTable className="w-full min-w-[1000px]">
 						<thead>
 							<DesignTableHeaderRow>
-								<DesignTableHeaderCell className="w-[100px] xl:w-[120px]">
-									이름
-								</DesignTableHeaderCell>
-								<DesignTableHeaderCell className="w-[120px] xl:w-[160px] 2xl:w-[200px]">
-									포지션
-								</DesignTableHeaderCell>
+								<DesignTableHeaderCell className="w-[120px]">이름</DesignTableHeaderCell>
+								<DesignTableHeaderCell className="w-[200px]">포지션</DesignTableHeaderCell>
 								<DesignTableHeaderCell>이메일</DesignTableHeaderCell>
 								<DesignTableHeaderCell>Github 아이디</DesignTableHeaderCell>
 								<DesignTableHeaderCell className="w-[100px]">
@@ -403,12 +399,8 @@ function ActivityMembersSection({
 										/>
 									</div>
 								</DesignTableHeaderCell>
-								<DesignTableHeaderCell className="w-[130px] xl:w-[150px] 2xl:w-[180px]">
-									활동 기간
-								</DesignTableHeaderCell>
-								<DesignTableHeaderCell className="w-[60px] text-center 2xl:w-[80px]">
-									수정
-								</DesignTableHeaderCell>
+								<DesignTableHeaderCell className="w-[180px]">활동 기간</DesignTableHeaderCell>
+								<DesignTableHeaderCell className="w-[80px] text-center">수정</DesignTableHeaderCell>
 							</DesignTableHeaderRow>
 						</thead>
 						<tbody>

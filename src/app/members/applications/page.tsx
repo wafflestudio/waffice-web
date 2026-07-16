@@ -310,7 +310,7 @@ export default function MemberApplicationsPage() {
 	}
 
 	return (
-		<div className="space-y-6 p-8">
+		<div className="flex flex-col gap-[30px]">
 			{/* 헤더 */}
 			<div>
 				<h1 className="text-[36px] font-medium text-[#121212]">가입 신청 관리</h1>
@@ -318,7 +318,7 @@ export default function MemberApplicationsPage() {
 
 			{/* 검색 영역 */}
 			<div className="space-y-4">
-				<div className="flex items-center justify-between">
+				<div className="flex flex-wrap items-center justify-between gap-[12px]">
 					<h2 className="flex items-baseline gap-[4px]">
 						<span className="text-[20px] font-medium text-[#121212]">전체 신청</span>
 						<span className="text-[14px] font-medium text-[#121212]">

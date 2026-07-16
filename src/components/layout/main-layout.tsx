@@ -27,8 +27,8 @@ export function MainLayout({ children }: MainLayoutProps) {
 	return (
 		<div className="flex h-screen overflow-hidden bg-white">
 			<Lnb />
-			<main className="flex-1 overflow-auto bg-white">
-				<div className="px-[40px] py-[30px]">{children}</div>
+			<main className="min-w-0 flex-1 overflow-auto bg-white">
+				<div className="w-full px-[40px] py-[30px]">{children}</div>
 			</main>
 		</div>
 	)
