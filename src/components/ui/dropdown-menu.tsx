@@ -208,9 +208,12 @@ function DropdownMenuSubContent({
 // Figma 스타일 — 체크 아이콘이 텍스트 바로 옆에 붙는 라디오/체크박스 아이템
 function DropdownMenuFilterRadioItem({
 	className,
+	indicatorClassName,
 	children,
 	...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem>) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem> & {
+	indicatorClassName?: string
+}) {
 	return (
 		<DropdownMenuPrimitive.RadioItem
 			data-slot="dropdown-menu-filter-radio-item"
@@ -225,7 +228,7 @@ function DropdownMenuFilterRadioItem({
 		>
 			{children}
 			<DropdownMenuPrimitive.ItemIndicator>
-				<CheckIcon className="ml-[6px] size-[12px]" strokeWidth={2.5} />
+				<CheckIcon className={cn("ml-[6px] size-[12px]", indicatorClassName)} strokeWidth={2.5} />
 			</DropdownMenuPrimitive.ItemIndicator>
 		</DropdownMenuPrimitive.RadioItem>
 	)

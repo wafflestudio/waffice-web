@@ -1,6 +1,7 @@
 export type ProjectManagementStatus = "활성화" | "유지보수" | "종결"
 export type ProjectManagementStatusFilter = "전체" | ProjectManagementStatus
 export type ProjectManagementViewMode = "admin" | "member"
+export type ProjectCreateStatus = "활동" | "종결" | "말소" | "제명"
 
 export interface ProjectManagementLink {
 	label: string
@@ -20,6 +21,6 @@ export interface ProjectManagementRow {
 
 export interface ProjectCreateFormValues {
 	name: string
-	status: ProjectManagementStatus | ""
+	status: ProjectCreateStatus | ""
 	description: string
 }

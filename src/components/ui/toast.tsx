@@ -64,12 +64,12 @@ export function Toast({ message, isVisible, onClose, variant = "default" }: Toas
 			>
 				<div className="flex items-center gap-[15px] rounded-[10px] bg-black-700 px-[30px] py-[20px]">
 					<svg
-						width="24"
-						height="24"
+						width="20"
+						height="20"
 						viewBox="0 0 24 24"
 						fill="none"
 						aria-hidden="true"
-						className="shrink-0"
+						className="size-[20px] shrink-0"
 					>
 						<circle cx="12" cy="12" r="10" fill="#FFC342" stroke="#FFC342" strokeWidth="2" />
 						<line
@@ -83,7 +83,7 @@ export function Toast({ message, isVisible, onClose, variant = "default" }: Toas
 						/>
 						<circle cx="12" cy="16" r="1" fill="black" />
 					</svg>
-					<p className="whitespace-nowrap text-[17px] font-normal leading-[1.4] tracking-[-0.34px] text-white">
+					<p className="whitespace-nowrap text-[14px] font-medium leading-[1.4] tracking-[-0.28px] text-white">
 						{message}
 					</p>
 				</div>

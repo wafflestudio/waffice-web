@@ -13,6 +13,7 @@ import type {
 import { ProjectCreateDialog } from "./project-create-dialog"
 import { ProjectDeleteDialog } from "./project-delete-dialog"
 import { ProjectManagementTable } from "./project-management-table"
+import { ProjectMemberBulkUpdateDialog } from "./project-member-bulk-update-dialog"
 
 interface ProjectManagementViewProps {
 	projects: ProjectManagementRow[]
@@ -26,6 +27,7 @@ export function ProjectManagementView({ projects, viewMode }: ProjectManagementV
 	const [currentPage, setCurrentPage] = useState(1)
 	const [statusFilter, setStatusFilter] = useState<ProjectManagementStatusFilter>("전체")
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+	const [isBulkUpdateDialogOpen, setIsBulkUpdateDialogOpen] = useState(false)
 	const [deleteTargetProject, setDeleteTargetProject] = useState<ProjectManagementRow | null>(null)
 	const [toastMessage, setToastMessage] = useState("")
 	const [showToast, setShowToast] = useState(false)
@@ -44,6 +46,8 @@ export function ProjectManagementView({ projects, viewMode }: ProjectManagementV
 
 	const handleCreateProject = (values: ProjectCreateFormValues) => {
 		// TODO(API): createProject mutation 성공 응답으로 row를 갱신.
+		// 생성 폼의 활동/종결/말소/제명은 API 응답 상태가 확정되면 이 임시 변환을 제거한다.
+		const mockManagementStatus = values.status === "활동" ? "활성화" : "종결"
 		setProjectRows((prev) => [
 			{
 				id: Math.max(0, ...prev.map((project) => project.id)) + 1,
@@ -53,7 +57,7 @@ export function ProjectManagementView({ projects, viewMode }: ProjectManagementV
 				memberCount: 0,
 				members: [],
 				links: [],
-				status: values.status || "활성화",
+				status: mockManagementStatus,
 			},
 			...prev,
 		])
@@ -70,8 +74,16 @@ export function ProjectManagementView({ projects, viewMode }: ProjectManagementV
 		setShowToast(true)
 	}
 
-	const handleBulkMemberUpdate = () => {
-		setToastMessage("팀원 일괄 수정 API 연결 후 활성화됩니다.")
+	const handleBulkMemberUpdateSubmit = async (files: File[]) => {
+		// TODO(API): 팀원 일괄 수정 API가 준비되면 files를 multipart 요청으로 전송한다.
+		setIsBulkUpdateDialogOpen(false)
+		setToastMessage(`${files.length}개 파일이 선택되었습니다. API 연결 후 반영됩니다.`)
+		setShowToast(true)
+	}
+
+	const handleBulkUpdateTemplateDownload = () => {
+		// TODO(API): 백엔드 또는 정적 asset으로 제공되는 실제 xlsx 양식 다운로드로 교체한다.
+		setToastMessage("팀원 명부 양식은 API 연결 후 제공됩니다.")
 		setShowToast(true)
 	}
 
@@ -108,7 +120,7 @@ export function ProjectManagementView({ projects, viewMode }: ProjectManagementV
 								<ActionButton
 									variant="primary"
 									size="inline"
-									onClick={handleBulkMemberUpdate}
+									onClick={() => setIsBulkUpdateDialogOpen(true)}
 									className="h-[36px] text-[14px] leading-[24px] tracking-normal"
 								>
 									팀원 일괄 수정
@@ -134,6 +146,12 @@ export function ProjectManagementView({ projects, viewMode }: ProjectManagementV
 				open={isCreateDialogOpen}
 				onOpenChange={setIsCreateDialogOpen}
 				onSubmit={handleCreateProject}
+			/>
+			<ProjectMemberBulkUpdateDialog
+				open={isBulkUpdateDialogOpen}
+				onOpenChange={setIsBulkUpdateDialogOpen}
+				onSubmit={handleBulkMemberUpdateSubmit}
+				onDownloadTemplate={handleBulkUpdateTemplateDownload}
 			/>
 			<ProjectDeleteDialog
 				project={deleteTargetProject}
