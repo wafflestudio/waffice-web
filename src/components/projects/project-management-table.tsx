@@ -36,9 +36,9 @@ interface ProjectManagementTableProps {
 const ITEMS_PER_PAGE = 11
 
 const HEADER_CELL_CLASS =
-	"h-[50px] px-[10px] text-[14px] font-medium tracking-[-0.3px] text-black-900 xl:px-[12px] 2xl:px-[20px] 2xl:text-[15px]"
+	"h-[50px] px-[20px] text-[15px] font-medium tracking-[-0.3px] text-black-900"
 const BODY_CELL_CLASS =
-	"h-[60px] overflow-hidden px-[10px] text-[14px] font-normal tracking-[-0.3px] text-ellipsis text-black-900 xl:px-[12px] 2xl:px-[20px] 2xl:text-[15px]"
+	"h-[60px] overflow-hidden px-[20px] text-[15px] font-normal tracking-[-0.3px] text-ellipsis text-black-900"
 
 const STATUS_DOT_CLASS: Record<ProjectManagementStatus, string> = {
 	활성화: "bg-[#7aee7f]",
@@ -97,30 +97,20 @@ export function ProjectManagementTable({
 
 	return (
 		<div className="flex flex-col gap-[20px]">
-			<div className="w-full overflow-hidden bg-white [&_[data-slot=table-container]]:overflow-hidden">
-				<Table className="w-full table-fixed">
+			<div className="w-full overflow-hidden bg-white">
+				<Table className="min-w-[1140px] table-fixed">
 					<TableHeader>
 						<TableRow className="h-[50px] border-black-300 border-y bg-black-100 hover:bg-black-100">
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[110px] xl:w-[125px] 2xl:w-[140px]")}>
-								프로젝트 이름
-							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[80px] xl:w-[90px] 2xl:w-[100px]")}>
-								팀장
-							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[65px] 2xl:w-[80px]")}>
-								팀원 수
-							</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>프로젝트 이름</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>팀장</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[80px]")}>팀원 수</TableHead>
 							<TableHead className={HEADER_CELL_CLASS}>활동 팀원</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[160px] xl:w-[210px] 2xl:w-[270px]")}>
-								관련 링크
-							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[105px] 2xl:w-[120px]")}>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[270px]")}>관련 링크</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[120px]")}>
 								<ProjectStatusFilter value={statusFilter} onChange={onStatusFilterChange} />
 							</TableHead>
 							{showActions && (
-								<TableHead className={cn(HEADER_CELL_CLASS, "w-[64px] 2xl:w-[100px]")}>
-									편집
-								</TableHead>
+								<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>편집</TableHead>
 							)}
 						</TableRow>
 					</TableHeader>
@@ -145,7 +135,7 @@ export function ProjectManagementTable({
 									<ProjectStatusBadge status={project.status} />
 								</TableCell>
 								{showActions && (
-									<TableCell className="h-[60px] w-[64px] px-[10px] 2xl:w-[100px] 2xl:px-[20px]">
+									<TableCell className="h-[60px] w-[100px] px-[20px]">
 										<button
 											type="button"
 											aria-label={

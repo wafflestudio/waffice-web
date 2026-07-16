@@ -47,9 +47,9 @@ const ITEMS_PER_PAGE = 10
 const DROPDOWN_CONTENT_CLASS =
 	"min-w-0 rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
 const HEADER_CELL_CLASS =
-	"h-[50px] px-[10px] text-[14px] font-medium text-[#121212] tracking-[-0.3px] xl:px-[12px] 2xl:px-[20px] 2xl:text-[15px]"
+	"h-[50px] px-[20px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]"
 const BODY_CELL_CLASS =
-	"h-[60px] overflow-hidden px-[10px] text-[14px] font-normal text-[#121212] text-ellipsis xl:px-[12px] 2xl:px-[20px] 2xl:text-[15px]"
+	"h-[60px] overflow-hidden px-[20px] text-[15px] font-normal text-[#121212] text-ellipsis"
 const FILTER_TRIGGER_CLASS =
 	"h-auto w-auto gap-[6px] rounded-none p-0 text-[15px] font-medium tracking-[-0.3px] text-[#121212] hover:bg-transparent"
 const TABLE_CHECKBOX_CLASS =
@@ -137,29 +137,25 @@ export function MemberTable({
 	return (
 		<div className="space-y-4">
 			{/* 테이블 */}
-			<div className="w-full overflow-hidden border-[#dbdfe0] border-t border-b bg-white [&_[data-slot=table-container]]:overflow-hidden">
-				<Table className="w-full table-fixed">
+			<div className="w-full overflow-hidden border-[#dbdfe0] border-t border-b bg-white">
+				<Table className="min-w-[1140px] table-fixed">
 					<TableHeader>
 						<TableRow className="h-[50px] bg-[#f7f7f7] hover:bg-[#f7f7f7]">
-							<TableHead className="h-[50px] w-[44px] px-[10px] 2xl:w-[56px] 2xl:px-[20px]">
+							<TableHead className="h-[50px] w-[56px] px-[20px]">
 								<Checkbox
 									checked={isAllSelected}
 									onCheckedChange={handleSelectAll}
 									className={TABLE_CHECKBOX_CLASS}
 								/>
 							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[90px] xl:w-[110px] 2xl:w-[140px]")}>
-								이름
-							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[80px] xl:w-[100px] 2xl:w-[140px]")}>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>이름</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<GenerationSortHeader sort={generationSort} onSortChange={onGenerationSortChange} />
 							</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "min-w-0")}>이메일</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "min-w-0")}>Github 아이디</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[120px] xl:w-[150px] 2xl:w-[200px]")}>
-								활동 프로젝트
-							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[105px] xl:w-[120px] 2xl:w-[140px]")}>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[200px]")}>활동 프로젝트</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<FilterTrigger
@@ -187,7 +183,7 @@ export function MemberTable({
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[105px] xl:w-[120px] 2xl:w-[140px]")}>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<FilterTrigger
@@ -217,7 +213,7 @@ export function MemberTable({
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[110px] xl:w-[125px] 2xl:w-[140px]")}>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<FilterTrigger
@@ -263,7 +259,7 @@ export function MemberTable({
 									className="h-[60px] cursor-pointer hover:bg-black-100"
 								>
 									<TableCell
-										className="h-[60px] w-[44px] px-[10px] 2xl:w-[56px] 2xl:px-[20px]"
+										className="h-[60px] w-[56px] px-[20px]"
 										onClick={(event) => event.stopPropagation()}
 									>
 										<Checkbox
