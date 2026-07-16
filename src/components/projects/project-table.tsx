@@ -73,11 +73,11 @@ export function ProjectTable({ projects, onUpdate, onDelete }: ProjectTableProps
 
 	return (
 		<>
-			<div className="w-full overflow-hidden rounded-md border [&_[data-slot=table-container]]:overflow-hidden">
-				<Table className="w-full table-fixed text-[13px] xl:text-sm">
+			<div className="w-full overflow-hidden rounded-md border">
+				<Table className="min-w-[900px] table-fixed text-[15px]">
 					<TableHeader>
 						<TableRow>
-							<TableHead className="w-[100px] xl:w-[140px]">이름</TableHead>
+							<TableHead className="w-[140px]">이름</TableHead>
 							<TableHead>설명</TableHead>
 							<TableHead className="w-[100px]">예산</TableHead>
 							<TableHead className="w-[90px]">상태</TableHead>
