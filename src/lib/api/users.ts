@@ -74,6 +74,10 @@ export function createUsersApi(client: ApiClient) {
 			return client.request<ApiResponse<ActivityDetail[]>>(`/users/${userId}/activities`)
 		},
 
+		getMyActivities(): Promise<ApiResponse<ActivityDetail[]>> {
+			return client.request<ApiResponse<ActivityDetail[]>>("/users/me/activities")
+		},
+
 		createUserActivity(
 			userId: number,
 			request: ActivityCreateRequest,

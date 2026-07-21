@@ -1,6 +1,4 @@
-import type { UserDetail, UserRole } from "@/types"
+import type { UserDetail } from "@/types"
 
-export const isAdminRole = (role?: UserRole | null) =>
-	role === "admin" || role === "admin_and_leader"
-
-export const canManageMembers = (user?: Pick<UserDetail, "role"> | null) => isAdminRole(user?.role)
+export const canManageMembers = (user?: Pick<UserDetail, "is_admin" | "is_president"> | null) =>
+	Boolean(user?.is_admin || user?.is_president)

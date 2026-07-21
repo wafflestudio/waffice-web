@@ -1,10 +1,4 @@
-import type {
-	GraduationStatus,
-	NotificationChannel,
-	Qualification,
-	UserRole,
-	UserRoleFlags,
-} from "./common"
+import type { GraduationStatus, NotificationChannel, Qualification } from "./common"
 import type { MemberCreate, MemberUpdate } from "./member"
 import type { CurrentProject } from "./project"
 
@@ -21,9 +15,9 @@ export interface UserDetail {
 	generation: string
 	qualification: Qualification
 	graduation_status: GraduationStatus
-	role: UserRole
-	// TODO(API): 백엔드 역할 boolean 적용 전까지 optional로 유지하고 AuthProvider의 호환 변환을 사용한다.
-	role_flags?: Partial<UserRoleFlags> | null
+	is_leader: boolean
+	is_admin: boolean
+	is_president: boolean
 	phone: string | null
 	affiliation: string | null
 	bio: string | null
@@ -92,7 +86,9 @@ export interface MyPageProfileUpdateRequest extends ProfileUpdateRequest {}
 
 export interface UserUpdateRequest extends ProfileUpdateRequest {
 	qualification?: Qualification | null
-	role?: UserRole | null
+	is_leader?: boolean | null
+	is_admin?: boolean | null
+	is_president?: boolean | null
 	generation?: string | null
 }
 
@@ -109,16 +105,6 @@ const roleToQualification = (role: string): Qualification => {
 		default:
 			return "pending"
 	}
-}
-
-const accessRightsToUserRole = (accessRights: MemberUpdate["access_rights"] = []): UserRole => {
-	const isAdmin = accessRights.includes("운영진")
-	const isLeader = accessRights.includes("팀장")
-
-	if (isAdmin && isLeader) return "admin_and_leader"
-	if (isAdmin) return "admin"
-	if (isLeader) return "leader"
-	return "member"
 }
 
 // 회원 관리 UI 수정값을 관리자 회원 수정 API 요청 형식으로 변환한다.
@@ -140,7 +126,8 @@ export function toUserUpdateRequest(data: MemberCreate | MemberUpdate): UserUpda
 		...(data.generation !== undefined && { generation: emptyToNull(data.generation) }),
 		...(data.role !== undefined && { qualification: roleToQualification(data.role) }),
 		...(data.access_rights !== undefined && {
-			role: accessRightsToUserRole(data.access_rights),
+			is_leader: data.access_rights.includes("팀장"),
+			is_admin: data.access_rights.includes("운영진"),
 		}),
 	}
 }

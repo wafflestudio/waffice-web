@@ -10,7 +10,6 @@ import type {
 	Qualification,
 	TemporaryMemberImportResult,
 	UserDetail,
-	UserRole,
 	UserUpdateRequest,
 } from "@/types"
 
@@ -23,6 +22,7 @@ export const memberQueryKeys = {
 	user: (userId: number) => [...memberQueryKeys.all, "user", userId] as const,
 	auditLog: (userId: number) => [...memberQueryKeys.all, "audit-log", userId] as const,
 	activities: (userId: number) => [...memberQueryKeys.all, "activities", userId] as const,
+	myActivities: () => [...memberQueryKeys.all, "me", "activities"] as const,
 }
 
 export const qualificationToRole = (qualification: Qualification): string => {
@@ -53,28 +53,12 @@ export const roleToQualification = (role: string): Qualification => {
 	}
 }
 
-export const userRoleToAccessRights = (role: UserRole): Member["access_rights"] => {
-	switch (role) {
-		case "admin_and_leader":
-			return ["운영진", "팀장"]
-		case "admin":
-			return ["운영진"]
-		case "leader":
-			return ["팀장"]
-		case "member":
-			return []
-	}
-}
-
-export const accessRightsToUserRole = (accessRights: Member["access_rights"] = []): UserRole => {
-	const isAdmin = accessRights.includes("운영진")
-	const isLeader = accessRights.includes("팀장")
-
-	if (isAdmin && isLeader) return "admin_and_leader"
-	if (isAdmin) return "admin"
-	if (isLeader) return "leader"
-	return "member"
-}
+export const userRoleFlagsToAccessRights = (
+	user: Pick<UserDetail, "is_admin" | "is_leader">,
+): Member["access_rights"] => [
+	...(user.is_admin ? (["운영진"] as const) : []),
+	...(user.is_leader ? (["팀장"] as const) : []),
+]
 
 export const userDetailToMember = (user: UserDetail): Member => ({
 	id: user.id,
@@ -86,7 +70,7 @@ export const userDetailToMember = (user: UserDetail): Member => ({
 	generation: user.generation,
 	role: qualificationToRole(user.qualification),
 	affiliation: user.graduation_status,
-	access_rights: userRoleToAccessRights(user.role),
+	access_rights: userRoleFlagsToAccessRights(user),
 	current_projects: user.current_projects ?? [],
 	user,
 	status: user.qualification === "pending" ? "inactive" : "active",
@@ -227,6 +211,14 @@ export function useUserActivities(userId: number | null) {
 			)
 		},
 		enabled: userId != null,
+	})
+}
+
+export function useMyActivities() {
+	return useQuery({
+		queryKey: memberQueryKeys.myActivities(),
+		queryFn: async () =>
+			getResponseData(await apiClient.getMyActivities(), "내 활동 이력을 불러오는데 실패했습니다."),
 	})
 }
 
