@@ -14,7 +14,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select"
 import { authClient } from "@/lib/auth"
-import type { AuthResult, DevSigninRequest, UserRole } from "@/types"
+import type { AuthResult, DevSigninRequest } from "@/types"
 
 type Qualification = DevSigninRequest["qualification"]
 
@@ -22,7 +22,9 @@ interface PresetUser {
 	label: string
 	email: string
 	name: string
-	role: UserRole
+	is_leader?: boolean
+	is_admin?: boolean
+	is_president?: boolean
 	qualification: Qualification
 }
 
@@ -31,35 +33,33 @@ const PRESET_USERS: PresetUser[] = [
 		label: "Admin User",
 		email: "admin@example.com",
 		name: "Admin User",
-		role: "admin",
+		is_leader: true,
+		is_admin: true,
+		is_president: true,
 		qualification: "active",
 	},
 	{
 		label: "Active User",
 		email: "active@example.com",
 		name: "Active User",
-		role: "member",
 		qualification: "active",
 	},
 	{
 		label: "Regular User",
 		email: "regular@example.com",
 		name: "Regular User",
-		role: "member",
 		qualification: "regular",
 	},
 	{
 		label: "Associate User",
 		email: "associate@example.com",
 		name: "Associate User",
-		role: "member",
 		qualification: "associate",
 	},
 	{
 		label: "Pending User",
 		email: "pending@example.com",
 		name: "Pending User",
-		role: "member",
 		qualification: "pending",
 	},
 ]
@@ -114,7 +114,9 @@ export function DevSigninForm({ onSuccess, onError }: DevSigninFormProps) {
 			{
 				email: preset.email,
 				name: preset.name,
-				role: preset.role,
+				is_leader: preset.is_leader ?? false,
+				is_admin: preset.is_admin ?? false,
+				is_president: preset.is_president ?? false,
 				qualification: preset.qualification,
 			},
 			preset.label,
@@ -130,7 +132,7 @@ export function DevSigninForm({ onSuccess, onError }: DevSigninFormProps) {
 		handleSignin({
 			email,
 			name,
-			role: isAdmin ? "admin" : "member",
+			is_admin: isAdmin,
 			qualification,
 		})
 	}

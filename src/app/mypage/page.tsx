@@ -17,7 +17,7 @@ import { SelectField } from "@/components/ui/select-field"
 import { Toast } from "@/components/ui/toast"
 import { useGoogleRelink } from "@/hooks/use-google-relink"
 import { apiClient } from "@/lib/api"
-import type { Qualification, UserDetail, UserRole } from "@/types"
+import type { Qualification, UserDetail } from "@/types"
 
 const STUDENT_ID_REGEX = /^\d{4}-\d{5}$/
 const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024
@@ -56,19 +56,18 @@ const qualificationToKorean = (qualification: Qualification): string => {
 	}
 }
 
-const userRoleToKorean = (role?: UserRole): string => {
-	switch (role) {
-		case "admin_and_leader":
-			return "운영진, 팀장"
-		case "admin":
-			return "운영진"
-		case "leader":
-			return "팀장"
-		case "member":
-			return "정회원"
-		default:
-			return ""
-	}
+const userRoleFlagsToKorean = (
+	user?: Pick<UserDetail, "is_leader" | "is_admin" | "is_president"> | null,
+): string => {
+	if (!user) return ""
+
+	const roles = [
+		...(user.is_president ? ["와장"] : []),
+		...(user.is_admin ? ["운영진"] : []),
+		...(user.is_leader ? ["팀장"] : []),
+	]
+
+	return roles.length > 0 ? roles.join(", ") : "정회원"
 }
 
 const fieldClass =
@@ -451,7 +450,7 @@ export default function MyPage() {
 										<Input
 											aria-disabled
 											readOnly
-											value={userRoleToKorean(user?.role)}
+											value={userRoleFlagsToKorean(user)}
 											className={inactiveFieldClass}
 										/>
 									</FieldRow>

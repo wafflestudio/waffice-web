@@ -2,7 +2,6 @@
 
 import type { LucideIcon } from "lucide-react"
 import {
-	Calculator,
 	Check,
 	ChevronDown,
 	ClipboardList,
@@ -11,6 +10,7 @@ import {
 	GraduationCap,
 	Home,
 	LogOut,
+	SquarePen,
 	UserRound,
 	Users,
 } from "lucide-react"
@@ -61,11 +61,27 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
 			{ name: "나에게 온 요청", href: "/projects/requests" },
 		],
 	},
+	{
+		name: "활동증명서 관리",
+		href: "/certificate-management",
+		icon: SquarePen,
+		subItems: [{ name: "활동증명서 발급 이력", href: "/certificate-management" }],
+	},
 	{ name: "내 활동 이력 관리", href: "/activities", icon: ClipboardList },
-	{ name: "증명서 발급", href: "/certificates", icon: FileText },
-	{ name: "회계 관리", href: "/accounting", icon: Calculator },
-	{ name: "세미나 수강신청", href: "/seminars", icon: GraduationCap },
+	{ name: "내 활동증명서 발급", href: "/certificates", icon: FileText },
 ]
+
+const PRESIDENT_NAV_ITEMS: NavItem[] = ADMIN_NAV_ITEMS.map((item) =>
+	item.href === "/certificate-management"
+		? {
+				...item,
+				subItems: [
+					{ name: "활동증명서 발급 이력", href: "/certificate-management" },
+					{ name: "내 서명 등록", href: "/certificate-management/signature" },
+				],
+			}
+		: item,
+)
 
 const REGULAR_NAV_ITEMS: NavItem[] = [
 	{ name: "대시보드", href: "/", icon: Home },
@@ -91,6 +107,7 @@ const ROLE_LABELS: Record<UserLnbRole, string> = {
 const getNavItems = (role: UserLnbRole) => {
 	if (role === "regular") return REGULAR_NAV_ITEMS
 	if (role === "leader") return LEADER_NAV_ITEMS
+	if (role === "waffle_leader") return PRESIDENT_NAV_ITEMS
 	return ADMIN_NAV_ITEMS
 }
 
@@ -125,6 +142,13 @@ interface NavMenuItemProps {
 function NavMenuItem({ item, pathname, isCollapsed }: NavMenuItemProps) {
 	const active = isMenuActive(pathname, item.href)
 	const Icon = item.icon
+	const matchedSubItem =
+		item.subItems?.find((sub) => pathname === sub.href) ??
+		[...(item.subItems ?? [])]
+			.sort((a, b) => b.href.length - a.href.length)
+			.find((sub) => pathname.startsWith(`${sub.href}/`))
+	const activeSubHref =
+		matchedSubItem?.href ?? (pathname === item.href ? item.subItems?.[0]?.href : null)
 
 	return (
 		<div className={cn("flex flex-col", isCollapsed ? "w-[40px]" : "w-[180px]")}>
@@ -158,7 +182,7 @@ function NavMenuItem({ item, pathname, isCollapsed }: NavMenuItemProps) {
 			{!isCollapsed && active && item.subItems && (
 				<div className="flex w-[180px] flex-col">
 					{item.subItems.map((sub) => {
-						const subActive = pathname === sub.href
+						const subActive = sub.href === activeSubHref
 
 						return (
 							<Link

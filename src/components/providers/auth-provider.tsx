@@ -17,23 +17,21 @@ const toRoleFlags = (user: UserDetail | null): UserRoleFlags => {
 		}
 	}
 
-	// TODO(API): role_flags가 정식 응답 필드가 되면 아래 legacy role/qualification fallback을 제거한다.
+	const isAdminTestUser = user.email === "admin@example.com"
+
 	return {
-		is_regular_member:
-			user.role_flags?.is_regular_member ?? ["regular", "active"].includes(user.qualification),
-		is_team_leader:
-			user.role_flags?.is_team_leader ?? ["leader", "admin_and_leader"].includes(user.role),
-		is_waffle_leader: user.role_flags?.is_waffle_leader ?? false,
-		is_operations_member:
-			user.role_flags?.is_operations_member ?? ["admin", "admin_and_leader"].includes(user.role),
+		is_regular_member: ["regular", "active"].includes(user.qualification),
+		// TODO(TEST): Admin User 역할별 LNB 검증이 끝나면 isAdminTestUser fallback을 제거한다.
+		is_team_leader: user.is_leader || isAdminTestUser,
+		is_waffle_leader: user.is_president,
+		is_operations_member: user.is_admin,
 	}
 }
 
 const getAvailableRoles = (flags: UserRoleFlags): UserLnbRole[] => {
 	const roleMap: Record<UserLnbRole, boolean> = {
 		regular: flags.is_regular_member,
-		// TODO(API): 역할별 LNB 테스트가 끝나면 flags.is_team_leader만 사용한다.
-		leader: true,
+		leader: flags.is_team_leader,
 		waffle_leader: flags.is_waffle_leader,
 		operations: flags.is_operations_member,
 	}
