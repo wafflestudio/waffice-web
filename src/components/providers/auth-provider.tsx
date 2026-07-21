@@ -17,9 +17,12 @@ const toRoleFlags = (user: UserDetail | null): UserRoleFlags => {
 		}
 	}
 
+	const isAdminTestUser = user.email === "admin@example.com"
+
 	return {
 		is_regular_member: ["regular", "active"].includes(user.qualification),
-		is_team_leader: user.is_leader,
+		// TODO(TEST): Admin User 역할별 LNB 검증이 끝나면 isAdminTestUser fallback을 제거한다.
+		is_team_leader: user.is_leader || isAdminTestUser,
 		is_waffle_leader: user.is_president,
 		is_operations_member: user.is_admin,
 	}

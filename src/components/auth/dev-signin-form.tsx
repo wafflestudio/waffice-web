@@ -33,7 +33,9 @@ const PRESET_USERS: PresetUser[] = [
 		label: "Admin User",
 		email: "admin@example.com",
 		name: "Admin User",
+		is_leader: true,
 		is_admin: true,
+		is_president: true,
 		qualification: "active",
 	},
 	{
