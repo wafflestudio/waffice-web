@@ -1,15 +1,23 @@
 "use client"
 
 import * as React from "react"
+import { cn } from "@/lib/utils"
 
 export interface ToastProps {
 	message: string
 	isVisible: boolean
 	onClose: () => void
 	variant?: "default" | "error"
+	positionClassName?: string
 }
 
-export function Toast({ message, isVisible, onClose, variant = "default" }: ToastProps) {
+export function Toast({
+	message,
+	isVisible,
+	onClose,
+	variant = "default",
+	positionClassName,
+}: ToastProps) {
 	const onCloseRef = React.useRef(onClose)
 	onCloseRef.current = onClose
 	const [rendered, setRendered] = React.useState(isVisible)
@@ -59,7 +67,10 @@ export function Toast({ message, isVisible, onClose, variant = "default" }: Toas
 
 		return (
 			<div
-				className="pointer-events-none fixed top-[61px] left-1/2 z-[100] -translate-x-1/2 transition-opacity duration-300"
+				className={cn(
+					"pointer-events-none fixed top-[61px] left-1/2 z-[100] -translate-x-1/2 transition-opacity duration-300",
+					positionClassName,
+				)}
 				style={{ opacity: opacity ? 1 : 0 }}
 			>
 				<div className="flex items-center gap-[15px] rounded-[10px] bg-black-700 px-[30px] py-[20px]">
