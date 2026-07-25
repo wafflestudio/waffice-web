@@ -15,9 +15,9 @@ import {
 import { cn } from "@/lib/utils"
 import type {
 	ProjectManagementRow,
-	ProjectManagementStatus,
 	ProjectManagementStatusFilter,
 	ProjectManagementViewMode,
+	ProjectStatus,
 } from "@/types"
 import { ProjectStatusFilter } from "./project-status-filter"
 
@@ -41,32 +41,21 @@ const HEADER_CELL_CLASS =
 const BODY_CELL_CLASS =
 	"h-[60px] overflow-hidden px-[20px] text-[15px] font-normal tracking-[-0.3px] text-ellipsis text-black-900"
 
-const STATUS_DOT_CLASS: Record<ProjectManagementStatus, string> = {
-	활성화: "bg-[#7aee7f]",
-	유지보수: "bg-[#caa8f6]",
-	종결: "bg-black-400",
+const STATUS_DOT_CLASS: Record<ProjectStatus, string> = {
+	active: "bg-[#7aee7f]",
+	maintenance: "bg-[#caa8f6]",
+	ended: "bg-black-400",
 }
 
-function ProjectStatusBadge({ status }: { status: ProjectManagementStatus }) {
-	return <DotStatusBadge dotClassName={STATUS_DOT_CLASS[status]}>{status}</DotStatusBadge>
+const STATUS_LABEL: Record<ProjectStatus, string> = {
+	active: "활성화",
+	maintenance: "유지보수",
+	ended: "종결",
 }
 
-function ProjectLinkSummary({ project }: { project: ProjectManagementRow }) {
+function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
 	return (
-		<div className="truncate text-[15px] leading-[1.4] text-black-900">
-			{project.links.map((link, index) => (
-				<span key={`${project.id}-${link.label}`}>
-					<a
-						href={link.url ?? "#project-link"}
-						onClick={(event) => event.stopPropagation()}
-						className="underline underline-offset-[2px]"
-					>
-						{link.label}({link.count})
-					</a>
-					{index < project.links.length - 1 && ", "}
-				</span>
-			))}
-		</div>
+		<DotStatusBadge dotClassName={STATUS_DOT_CLASS[status]}>{STATUS_LABEL[status]}</DotStatusBadge>
 	)
 }
 
@@ -89,7 +78,11 @@ export function ProjectManagementTable({
 			const normalizedQuery = searchQuery.trim().toLowerCase()
 			if (!normalizedQuery) return true
 
-			const searchableText = [project.name, project.leader, project.members.join(" ")].join(" ")
+			const searchableText = [
+				project.name,
+				project.leader_names.join(" "),
+				project.active_member_names.join(" "),
+			].join(" ")
 			return searchableText.toLowerCase().includes(normalizedQuery)
 		})
 
@@ -114,7 +107,6 @@ export function ProjectManagementTable({
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>팀장</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[80px]")}>팀원 수</TableHead>
 							<TableHead className={HEADER_CELL_CLASS}>활동 팀원</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[270px]")}>관련 링크</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[120px]")}>
 								<ProjectStatusFilter value={statusFilter} onChange={onStatusFilterChange} />
 							</TableHead>
@@ -140,15 +132,14 @@ export function ProjectManagementTable({
 								className="h-[60px] cursor-pointer border-black-300 border-b hover:bg-black-100 focus-visible:bg-black-100 focus-visible:outline-none"
 							>
 								<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>{project.name}</TableCell>
-								<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>{project.leader}</TableCell>
-								<TableCell className={BODY_CELL_CLASS}>{project.memberCount}</TableCell>
+								<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>
+									{project.leader_names.join(", ")}
+								</TableCell>
+								<TableCell className={BODY_CELL_CLASS}>{project.member_count}</TableCell>
 								<TableCell className={cn(BODY_CELL_CLASS, "max-w-0")}>
 									<div className="max-w-[700px] truncate leading-[1.4]">
-										{project.members.join(", ")}
+										{project.active_member_names.join(", ")}
 									</div>
-								</TableCell>
-								<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>
-									<ProjectLinkSummary project={project} />
 								</TableCell>
 								<TableCell className={BODY_CELL_CLASS}>
 									<ProjectStatusBadge status={project.status} />

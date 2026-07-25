@@ -1,62 +1,119 @@
-import type { Member, MemberCreate, MemberUpdate } from "@/types/member"
-import type { Project, ProjectCreate, ProjectUpdate } from "@/types/project"
+import type { ApiResponse, CursorPage } from "@/types/common"
+import type {
+	MemberActivityStatus,
+	MemberDetail,
+	MemberInput,
+	MemberUpdateRequest,
+	ProjectCreateRequest,
+	ProjectDetail,
+	ProjectListItem,
+	ProjectUpdateRequest,
+} from "@/types/project"
 import type { ApiClient } from "./client"
 
 export function createProjectsApi(client: ApiClient) {
 	return {
-		getMembers(skip = 0, limit = 100): Promise<Member[]> {
-			return client.request<Member[]>(`/members?skip=${skip}&limit=${limit}`)
+		getProjects(cursor?: number, limit = 20): Promise<ApiResponse<CursorPage<ProjectListItem>>> {
+			const params = new URLSearchParams()
+			if (cursor) params.append("cursor", cursor.toString())
+			params.append("limit", limit.toString())
+			return client.request<ApiResponse<CursorPage<ProjectListItem>>>(
+				`/projects?${params.toString()}`,
+			)
 		},
 
-		getMember(id: number): Promise<Member> {
-			return client.request<Member>(`/members/${id}`)
+		getProject(projectId: number): Promise<ApiResponse<ProjectDetail>> {
+			return client.request<ApiResponse<ProjectDetail>>(`/projects/${projectId}`)
 		},
 
-		createMember(member: MemberCreate): Promise<Member> {
-			return client.request<Member>("/members", {
+		getProjectMembers(
+			projectId: number,
+			options: {
+				cursor?: number
+				limit?: number
+				status?: MemberActivityStatus
+				keyword?: string
+			} = {},
+		): Promise<ApiResponse<CursorPage<MemberDetail>>> {
+			const { cursor, limit = 20, status, keyword } = options
+			const params = new URLSearchParams()
+			if (cursor) params.append("cursor", cursor.toString())
+			params.append("limit", limit.toString())
+			if (status) params.append("status", status)
+			if (keyword?.trim()) params.append("keyword", keyword.trim())
+			return client.request<ApiResponse<CursorPage<MemberDetail>>>(
+				`/projects/${projectId}/members?${params.toString()}`,
+			)
+		},
+
+		getMyProjects(): Promise<ApiResponse<ProjectListItem[]>> {
+			return client.request<ApiResponse<ProjectListItem[]>>("/users/me/projects")
+		},
+
+		createProject(request: ProjectCreateRequest): Promise<ApiResponse<ProjectDetail>> {
+			return client.request<ApiResponse<ProjectDetail>>("/projects", {
 				method: "POST",
-				body: JSON.stringify(member),
+				body: JSON.stringify(request),
 			})
 		},
 
-		updateMember(id: number, member: MemberUpdate): Promise<Member> {
-			return client.request<Member>(`/members/${id}`, {
-				method: "PUT",
-				body: JSON.stringify(member),
+		updateProject(
+			projectId: number,
+			request: ProjectUpdateRequest,
+		): Promise<ApiResponse<ProjectDetail>> {
+			return client.request<ApiResponse<ProjectDetail>>(`/projects/${projectId}`, {
+				method: "PATCH",
+				body: JSON.stringify(request),
 			})
 		},
 
-		deleteMember(id: number): Promise<void> {
-			return client.request<void>(`/members/${id}`, {
+		deleteProject(projectId: number): Promise<ApiResponse<null>> {
+			return client.request<ApiResponse<null>>(`/projects/${projectId}`, {
 				method: "DELETE",
 			})
 		},
 
-		getProjects(skip = 0, limit = 100): Promise<Project[]> {
-			return client.request<Project[]>(`/projects?skip=${skip}&limit=${limit}`)
-		},
-
-		getProject(id: number): Promise<Project> {
-			return client.request<Project>(`/projects/${id}`)
-		},
-
-		createProject(project: ProjectCreate): Promise<Project> {
-			return client.request<Project>("/projects", {
+		addProjectMember(projectId: number, request: MemberInput): Promise<ApiResponse<ProjectDetail>> {
+			return client.request<ApiResponse<ProjectDetail>>(`/projects/${projectId}/members`, {
 				method: "POST",
-				body: JSON.stringify(project),
+				body: JSON.stringify(request),
 			})
 		},
 
-		updateProject(id: number, project: ProjectUpdate): Promise<Project> {
-			return client.request<Project>(`/projects/${id}`, {
+		updateProjectMember(
+			projectId: number,
+			userId: number,
+			request: MemberUpdateRequest,
+		): Promise<ApiResponse<ProjectDetail>> {
+			return client.request<ApiResponse<ProjectDetail>>(
+				`/projects/${projectId}/members/${userId}`,
+				{
+					method: "PATCH",
+					body: JSON.stringify(request),
+				},
+			)
+		},
+
+		removeProjectMember(projectId: number, userId: number): Promise<ApiResponse<ProjectDetail>> {
+			return client.request<ApiResponse<ProjectDetail>>(
+				`/projects/${projectId}/members/${userId}`,
+				{
+					method: "DELETE",
+				},
+			)
+		},
+
+		getProjectMemberTemplate(projectId: number): Promise<Blob> {
+			return client.requestBlob(`/projects/${projectId}/members/template`)
+		},
+
+		replaceProjectMembers(projectId: number, file: File): Promise<ApiResponse<ProjectDetail>> {
+			const formData = new FormData()
+			formData.append("file", file)
+
+			return client.request<ApiResponse<ProjectDetail>>(`/projects/${projectId}/members/bulk`, {
 				method: "PUT",
-				body: JSON.stringify(project),
-			})
-		},
-
-		deleteProject(id: number): Promise<void> {
-			return client.request<void>(`/projects/${id}`, {
-				method: "DELETE",
+				body: formData,
 			})
 		},
 	}

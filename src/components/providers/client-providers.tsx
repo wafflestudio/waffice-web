@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { MainLayout } from "@/components/layout/main-layout"
 import { AuthProvider } from "@/components/providers/auth-provider"
+import { MockModeProvider } from "@/hooks/use-mock-mode"
 
 interface ClientProvidersProps {
 	children: React.ReactNode
@@ -22,9 +23,11 @@ export function ClientProviders({ children }: ClientProvidersProps) {
 
 	return (
 		<QueryClientProvider client={queryClient}>
-			<AuthProvider enabled={!isAuthPage}>
-				{isAuthPage ? children : <MainLayout>{children}</MainLayout>}
-			</AuthProvider>
+			<MockModeProvider>
+				<AuthProvider enabled={!isAuthPage}>
+					{isAuthPage ? children : <MainLayout>{children}</MainLayout>}
+				</AuthProvider>
+			</MockModeProvider>
 		</QueryClientProvider>
 	)
 }
