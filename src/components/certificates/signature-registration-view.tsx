@@ -5,6 +5,7 @@ import { Forbidden } from "@/components/error/forbidden"
 import { useAuth } from "@/components/providers/auth-provider"
 import { DialogActionButton } from "@/components/ui/dialog-action-button"
 import { Toast } from "@/components/ui/toast"
+import { useMySignature, useUpsertMySignature } from "@/hooks/use-certificates"
 import { canRegisterCertificateSignature } from "@/lib/permissions"
 
 const PNG_ACCEPT = ".png,image/png"
@@ -51,20 +52,28 @@ export function SignatureRegistrationView() {
 	const fileInputId = useId()
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const [selectedFile, setSelectedFile] = useState<File | null>(null)
-	const [currentSignatureFile, setCurrentSignatureFile] = useState<File | null>(null)
 	const [toastMessage, setToastMessage] = useState("")
 	const [showErrorToast, setShowErrorToast] = useState(false)
 	const selectedPreviewUrl = useObjectUrl(selectedFile)
-	const currentSignatureUrl = useObjectUrl(currentSignatureFile)
 
-	if (!canRegisterCertificateSignature(user)) {
+	const canRegister = canRegisterCertificateSignature(user)
+	const { data: signature, isLoading: isSignatureLoading } = useMySignature()
+	const upsertSignature = useUpsertMySignature()
+
+	if (!canRegister) {
 		return <Forbidden message="서명을 등록할 수 있는 와장 권한이 없습니다." />
+	}
+
+	const showError = (message: string) => {
+		setToastMessage(message)
+		setShowErrorToast(true)
 	}
 
 	const selectFile = (file?: File) => {
 		if (!file) return
 
 		if (!isPngFile(file)) {
+			showError(".png 파일이 맞는지 확인해주세요.")
 			if (fileInputRef.current) fileInputRef.current.value = ""
 			return
 		}
@@ -78,18 +87,19 @@ export function SignatureRegistrationView() {
 		if (fileInputRef.current) fileInputRef.current.value = ""
 	}
 
-	const handleSubmit = () => {
+	const handleSubmit = async () => {
 		if (!selectedFile) {
-			setToastMessage("회원들의 활동증명서에 삽입될 내 서명을 등록해주세요.")
-			setShowErrorToast(true)
+			showError("회원들의 활동증명서에 삽입될 내 서명을 등록해주세요.")
 			return
 		}
 
-		// TODO(API): 서명 업로드 API가 준비되면 PNG 파일을 multipart mutation으로 전송하고
-		// 서버가 반환한 현재 서명 URL로 query cache를 갱신한다.
-		setCurrentSignatureFile(selectedFile)
-		setSelectedFile(null)
-		if (fileInputRef.current) fileInputRef.current.value = ""
+		try {
+			await upsertSignature.mutateAsync(selectedFile)
+			setSelectedFile(null)
+			if (fileInputRef.current) fileInputRef.current.value = ""
+		} catch (error) {
+			showError(error instanceof Error ? error.message : "서명 등록에 실패했습니다.")
+		}
 	}
 
 	return (
@@ -105,7 +115,10 @@ export function SignatureRegistrationView() {
 				<div className="mx-auto mt-[80px] flex min-h-[550px] w-[460px] max-w-full flex-col rounded-[10px] border border-black-300 bg-white px-[49px] py-[48px]">
 					<div className="flex flex-col gap-[10px]">
 						<p className="text-[15px] font-medium leading-normal text-black-900">현재 서명</p>
-						<SignaturePreview url={currentSignatureUrl} emptyText="등록된 서명이 없습니다." />
+						<SignaturePreview
+							url={isSignatureLoading ? null : (signature?.url ?? null)}
+							emptyText={isSignatureLoading ? "불러오는 중..." : "등록된 서명이 없습니다."}
+						/>
 					</div>
 
 					<div className="mt-[65px] flex flex-col gap-[10px]">
@@ -145,10 +158,16 @@ export function SignatureRegistrationView() {
 					</div>
 
 					<div className="mt-auto flex justify-end gap-[10px] pt-[40px]">
-						<DialogActionButton variant="cancel" onClick={handleCancel}>
+						<DialogActionButton
+							variant="cancel"
+							onClick={handleCancel}
+							disabled={upsertSignature.isPending}
+						>
 							취소
 						</DialogActionButton>
-						<DialogActionButton onClick={handleSubmit}>확인</DialogActionButton>
+						<DialogActionButton onClick={handleSubmit} disabled={upsertSignature.isPending}>
+							{upsertSignature.isPending ? "등록 중..." : "확인"}
+						</DialogActionButton>
 					</div>
 				</div>
 			</div>

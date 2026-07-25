@@ -1,3 +1,4 @@
+import { createCertificatesApi } from "./certificates"
 import { API_BASE_URL, ApiClient } from "./client"
 import { createMypageApi } from "./mypage"
 import { createProjectsApi } from "./projects"
@@ -9,4 +10,5 @@ export const apiClient = {
 	...createUsersApi(client),
 	...createMypageApi(client),
 	...createProjectsApi(client),
+	...createCertificatesApi(client),
 }

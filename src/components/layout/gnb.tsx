@@ -46,7 +46,7 @@ export function Gnb({ isLoggedIn, onLogout }: GnbProps) {
 							<button
 								type="button"
 								onClick={handleLogout}
-								className="flex items-center justify-center rounded-[3px] px-[14px] py-[6px] font-['Pretendard'] text-[14px] font-medium leading-[1.5] tracking-[-0.14px] text-[#121212] hover:bg-[#F7F7F7]"
+								className="flex items-center justify-center rounded-[3px] px-[14px] py-[6px] text-[14px] font-medium leading-[1.5] tracking-[-0.14px] text-[#121212] hover:bg-[#F7F7F7]"
 							>
 								로그아웃
 							</button>
