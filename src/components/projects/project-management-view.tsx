@@ -1,9 +1,11 @@
 "use client"
 
 import { useState } from "react"
+import { useAuth } from "@/components/providers/auth-provider"
 import { ActionButton } from "@/components/ui/action-button"
 import { SearchInput } from "@/components/ui/search-input"
 import { Toast } from "@/components/ui/toast"
+import { useCreateProject, useDeleteProject, useProjects } from "@/hooks/use-projects"
 import type {
 	ProjectCreateFormValues,
 	ProjectManagementRow,
@@ -13,26 +15,27 @@ import type {
 import { ProjectCreateDialog } from "./project-create-dialog"
 import { ProjectDeleteDialog } from "./project-delete-dialog"
 import { ProjectManagementTable } from "./project-management-table"
-import { ProjectMemberBulkUpdateDialog } from "./project-member-bulk-update-dialog"
 
 interface ProjectManagementViewProps {
-	projects: ProjectManagementRow[]
 	viewMode: ProjectManagementViewMode
 }
 
-export function ProjectManagementView({ projects, viewMode }: ProjectManagementViewProps) {
-	// TODO(API): 프로젝트 목록 API가 생기면 이 local state 대신 React Query hook 결과를 사용.
-	const [projectRows, setProjectRows] = useState(projects)
+export function ProjectManagementView({ viewMode }: ProjectManagementViewProps) {
+	const { user } = useAuth()
+	const { data, isLoading, error } = useProjects(undefined, 100)
+	const createProject = useCreateProject()
+	const deleteProject = useDeleteProject()
+
 	const [searchQuery, setSearchQuery] = useState("")
 	const [currentPage, setCurrentPage] = useState(1)
 	const [statusFilter, setStatusFilter] = useState<ProjectManagementStatusFilter>("전체")
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-	const [isBulkUpdateDialogOpen, setIsBulkUpdateDialogOpen] = useState(false)
 	const [deleteTargetProject, setDeleteTargetProject] = useState<ProjectManagementRow | null>(null)
 	const [toastMessage, setToastMessage] = useState("")
 	const [showToast, setShowToast] = useState(false)
 
 	const isAdminView = viewMode === "admin"
+	const projectRows = data?.items ?? []
 
 	const handleSearchChange = (value: string) => {
 		setSearchQuery(value)
@@ -44,47 +47,49 @@ export function ProjectManagementView({ projects, viewMode }: ProjectManagementV
 		setCurrentPage(1)
 	}
 
-	const handleCreateProject = (values: ProjectCreateFormValues) => {
-		// TODO(API): createProject mutation 성공 응답으로 row를 갱신.
-		// 생성 폼의 활동/종결/말소/제명은 API 응답 상태가 확정되면 이 임시 변환을 제거한다.
-		const mockManagementStatus = values.status === "활동" ? "활성화" : "종결"
-		setProjectRows((prev) => [
-			{
-				id: Math.max(0, ...prev.map((project) => project.id)) + 1,
+	const handleCreateProject = async (values: ProjectCreateFormValues) => {
+		if (!values.status || !user) return
+
+		try {
+			await createProject.mutateAsync({
 				name: values.name,
-				// TODO(API): 생성 응답에 포함될 팀장/팀원 정보를 그대로 매핑.
-				leader: "미정",
-				memberCount: 0,
-				members: [],
-				links: [],
-				status: mockManagementStatus,
-			},
-			...prev,
-		])
-		setIsCreateDialogOpen(false)
-		setToastMessage("프로젝트가 생성되었습니다.")
-		setShowToast(true)
+				description: values.description || null,
+				status: values.status,
+				started_at: new Date().toISOString().slice(0, 10),
+				members: [{ user_id: user.id, role: "leader" }],
+			})
+			setIsCreateDialogOpen(false)
+			setToastMessage("프로젝트가 생성되었습니다.")
+			setShowToast(true)
+		} catch (submitError) {
+			setToastMessage(
+				submitError instanceof Error ? submitError.message : "프로젝트 생성에 실패했습니다.",
+			)
+			setShowToast(true)
+		}
 	}
 
-	const handleDeleteProject = (project: ProjectManagementRow) => {
-		// TODO(API): deleteProject mutation 성공 후 invalidateQueries로 목록 갱신.
-		setProjectRows((prev) => prev.filter((row) => row.id !== project.id))
-		setDeleteTargetProject(null)
-		setToastMessage("프로젝트가 삭제되었습니다.")
-		setShowToast(true)
+	const handleDeleteProject = async (project: ProjectManagementRow) => {
+		try {
+			await deleteProject.mutateAsync(project.id)
+			setDeleteTargetProject(null)
+			setToastMessage("프로젝트가 삭제되었습니다.")
+			setShowToast(true)
+		} catch (deleteError) {
+			setDeleteTargetProject(null)
+			setToastMessage(
+				deleteError instanceof Error ? deleteError.message : "프로젝트 삭제에 실패했습니다.",
+			)
+			setShowToast(true)
+		}
 	}
 
-	const handleBulkMemberUpdateSubmit = async (files: File[]) => {
-		// TODO(API): 팀원 일괄 수정 API가 준비되면 files를 multipart 요청으로 전송한다.
-		setIsBulkUpdateDialogOpen(false)
-		setToastMessage(`${files.length}개 파일이 선택되었습니다. API 연결 후 반영됩니다.`)
-		setShowToast(true)
+	if (isLoading) {
+		return <div className="py-[100px] text-center text-black-600">불러오는 중...</div>
 	}
 
-	const handleBulkUpdateTemplateDownload = () => {
-		// TODO(API): 백엔드 또는 정적 asset으로 제공되는 실제 xlsx 양식 다운로드로 교체한다.
-		setToastMessage("팀원 명부 양식은 API 연결 후 제공됩니다.")
-		setShowToast(true)
+	if (error) {
+		return <div className="py-[100px] text-center text-black-600">{error.message}</div>
 	}
 
 	return (
@@ -108,24 +113,14 @@ export function ProjectManagementView({ projects, viewMode }: ProjectManagementV
 							onChange={(event) => handleSearchChange(event.target.value)}
 						/>
 						{isAdminView && (
-							<>
-								<ActionButton
-									variant="primary"
-									size="inline"
-									onClick={() => setIsCreateDialogOpen(true)}
-									className="h-[36px] text-[14px] leading-[24px] tracking-normal"
-								>
-									새 프로젝트 생성
-								</ActionButton>
-								<ActionButton
-									variant="primary"
-									size="inline"
-									onClick={() => setIsBulkUpdateDialogOpen(true)}
-									className="h-[36px] text-[14px] leading-[24px] tracking-normal"
-								>
-									팀원 일괄 수정
-								</ActionButton>
-							</>
+							<ActionButton
+								variant="primary"
+								size="inline"
+								onClick={() => setIsCreateDialogOpen(true)}
+								className="h-[36px] text-[14px] leading-[24px] tracking-normal"
+							>
+								새 프로젝트 생성
+							</ActionButton>
 						)}
 					</div>
 
@@ -146,12 +141,6 @@ export function ProjectManagementView({ projects, viewMode }: ProjectManagementV
 				open={isCreateDialogOpen}
 				onOpenChange={setIsCreateDialogOpen}
 				onSubmit={handleCreateProject}
-			/>
-			<ProjectMemberBulkUpdateDialog
-				open={isBulkUpdateDialogOpen}
-				onOpenChange={setIsBulkUpdateDialogOpen}
-				onSubmit={handleBulkMemberUpdateSubmit}
-				onDownloadTemplate={handleBulkUpdateTemplateDownload}
 			/>
 			<ProjectDeleteDialog
 				project={deleteTargetProject}

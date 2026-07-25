@@ -8,13 +8,15 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { FilterTrigger } from "@/components/ui/filter-tag"
-import type { ProjectManagementStatus, ProjectManagementStatusFilter } from "@/types"
+import type { ProjectManagementStatusFilter, ProjectStatus } from "@/types"
 
-export const PROJECT_STATUS_OPTIONS = [
-	"활성화",
-	"유지보수",
-	"종결",
-] satisfies ProjectManagementStatus[]
+export const PROJECT_STATUS_OPTIONS = ["active", "maintenance", "ended"] satisfies ProjectStatus[]
+
+export const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
+	active: "활성화",
+	maintenance: "유지보수",
+	ended: "종결",
+}
 
 interface ProjectStatusFilterProps {
 	value: ProjectManagementStatusFilter
@@ -44,7 +46,7 @@ export function ProjectStatusFilter({ value, onChange }: ProjectStatusFilterProp
 					<DropdownMenuFilterRadioItem value="전체">전체</DropdownMenuFilterRadioItem>
 					{PROJECT_STATUS_OPTIONS.map((status) => (
 						<DropdownMenuFilterRadioItem key={status} value={status}>
-							{status}
+							{PROJECT_STATUS_LABEL[status]}
 						</DropdownMenuFilterRadioItem>
 					))}
 				</DropdownMenuRadioGroup>
