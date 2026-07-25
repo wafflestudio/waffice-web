@@ -29,17 +29,15 @@
 - 현재 프론트 처리: 그룹 구분 없이 `websites` 배열을 단일 리스트로 표시한다
   (`type` + `description`/`url`만 노출).
 
-## 3. 프로젝트 목록/일괄 수정 API — `feat/get-projects-list` 브랜치 기준 반영 완료
+## 3. 프로젝트 목록/일괄 수정 API — PR #23 `feat/get-projects-list`, main 머지 완료 (2026-07-25)
 
-- 2026-07-25 기준, GitHub PR #23·#24는 여전히 OPEN(미머지)이고 로컬 `openapi.json`도
-  갱신되지 않았다. `waffice-fastapi`를 직접 클론해서 원격 브랜치 최종 상태로 확인함
-  (`Coding/WaffleStudio/waffice-fastapi`, `origin/feat/get-projects-list`).
-- 이 브랜치에 구현되어 있고 프론트에 반영 완료:
+- `waffice-fastapi` PR #23(`feat: 프로젝트 멤버 관리 기능 개선 및 예외 처리 추가`)이 main에 머지됨.
+- main에 실제로 존재하며 프론트에 반영 완료:
   - `GET /projects` 응답이 `ProjectListItem{id, name, leader_names, member_count, active_member_names, status}`로 변경
   - `PUT /projects/{project_id}/members/bulk` — xlsx/csv 업로드로 팀원 전체 교체 (`useReplaceProjectMembers`)
   - `GET /projects/{project_id}/members/template` — 업로드용 템플릿 다운로드 (`useDownloadProjectMemberTemplate`)
-- **주의**: `main`에는 아직 머지되지 않았으므로 실제 배포 백엔드에는 없을 수 있다.
-  머지 시점에 응답 형태가 브랜치와 달라지면 재확인 필요.
+- 위 3개는 정상 동작 확인됨. **다만 `feat/project-more`(항목 5)는 별개 브랜치이며 아직 main에
+  없다** — 아래 5번 항목이 이 프로젝트 상세 화면의 실제 장애 원인이니 최우선으로 볼 것.
 
 ## 4. 팀원 추가 시 회원 검색
 
@@ -51,26 +49,34 @@
   `add_project_member`에는 이 가드가 아직 남아있어 — 두 브랜치가 함께 머지될 때 조정이 필요한
   충돌 지점 중 하나.
 
-## 5. 프로젝트 상세 응답에서 팀원 분리 — `feat/project-more` 브랜치 기준 반영 완료
+## 5. [진행 중 장애] 프로젝트 상세 팀원 조회 404 — `feat/project-more` 브랜치가 아직 main에 없음
 
-- `origin/feat/project-more`에서 `GET /projects/{project_id}` 응답 스키마가
-  `ProjectDetail` → `ProjectPageDetail`로 바뀌고 **`members` 필드가 제거되었다.**
-  팀원은 별도 엔드포인트로 분리:
-  - `GET /projects/{project_id}/members` — 커서 페이지네이션(`cursor`, `limit`),
+- **2026-07-26 재현 확인**: 프로젝트 상세 화면에서 "활동 팀원" 목록이 아예 뜨지 않음.
+  팀원 추가(`POST /projects/{id}/members`)는 정상 동작하지만, 목록 조회가 실패함.
+- **원인**: 프론트(`useProjectMembers` 훅, `src/lib/api/projects.ts`의 `getProjectMembers`)는
+  `GET /projects/{project_id}/members`를 호출하도록 구현되어 있는데, 이 엔드포인트는
+  `origin/feat/project-more` 브랜치에만 있고 **main에는 아직 머지되지 않았다**
+  (`app/routes/projects.py` main 버전에는 해당 라우트 자체가 없음, 2026-07-26 기준
+  `waffice-fastapi` 클론에서 직접 확인). 그 결과 실제 배포 환경에서 이 요청은 404가 나고
+  화면에는 빈 목록만 표시된다.
+- 현재 main 기준 실제 팀원 데이터는 `GET /projects/{project_id}`(`ProjectDetail.members`)
+  응답 안에만 존재한다.
+- `origin/feat/project-more`에 구현되어 있고(머지되면 프론트가 다시 전환할 사항):
+  - `GET /projects/{project_id}` 응답에서 `members` 필드 제거, 팀원은
+    `GET /projects/{project_id}/members`로 분리 — 커서 페이지네이션(`cursor`, `limit`),
     `status`(`active`/`inactive`) 필터, `keyword`(이름/포지션/이메일/github 부분일치) 검색 지원
   - `MemberDetail.user`에 `github_username` 추가(`ProjectMemberUser`), `activity_status`
     (`"active"|"inactive"`)를 서버가 계산해서 내려줌
-- 프론트 반영 내용:
-  - `src/types/project.ts`: `ProjectDetail`에서 `members` 제거, `MemberDetail`에
-    `activity_status`/`ProjectMemberUser(github_username)` 추가
-  - `src/lib/api/projects.ts`: `getProjectMembers(projectId, {cursor, limit, status, keyword})` 추가
-  - `src/hooks/use-projects.ts`: `useProjectMembers()` 훅 추가, 관련 mutation들의
-    invalidate 대상에 `members` 쿼리키 포함
-  - `project-detail-view.tsx`: `project.members`를 클라이언트에서 `left_at`으로 필터링하던
-    로직을 `useProjectMembers(projectId, {status: "active"|"inactive"})` 서버 필터링으로 교체.
-    검색어(`keyword`)는 서버 파라미터를 아직 쓰지 않고 클라이언트 필터를 유지 중
-    (타이핑마다 서버 호출하는 건 과함 — 디바운스 도입 시 서버 keyword로 전환 고려)
-- **주의**: `feat/project-more`와 `feat/get-projects-list`를 실제로 병합해보면
-  `app/routes/projects.py`, `app/schemas/project.py` 등에서 충돌이 난다(직접 확인함).
-  두 브랜치가 함께 머지될 때 `ProjectDetail`/`TemporaryMemberProjectError` 가드 등
-  스키마가 지금과 달라질 수 있음.
+- 프론트는 이미 `feat/project-more` 스펙을 가정하고 구현되어 있음(`useProjectMembers`,
+  `getProjectMembers`, `project-detail-view.tsx`의 팀원 섹션). **요청: `feat/project-more`를
+  main에 우선 머지해달라.** 머지 전까지는 프론트를 임시로 `ProjectDetail.members` 방식으로
+  되돌리지 않기로 함(사용자 확인, 2026-07-26) — 백엔드 머지를 기다린다.
+- **2026-07-26 확인**: `waffice-fastapi` PR #24("feat: 프로젝트 멤버 목록 페이지네이션 및
+  필터링 기능 추가", `feat/project-more`)가 정확히 이 기능이며 아직 OPEN 상태.
+  PR 설명에 `GET /projects/{id}` / `GET /projects/{id}/members` 분리, 키워드 검색
+  (이름/이메일/포지션/github ID) 지원이 명시되어 있어 프론트 구현과 정합함 — 이 PR을
+  머지해달라고 요청하면 된다.
+- **주의**: `feat/project-more`와 `feat/get-projects-list`(항목 3, 이미 머지됨)를 실제로
+  병합해보면 `app/routes/projects.py`, `app/schemas/project.py` 등에서 충돌이 난다
+  (직접 확인함). 머지 시 `ProjectDetail`/`TemporaryMemberProjectError` 가드 등 스키마가
+  브랜치 상태와 달라질 수 있으니 재확인 필요.

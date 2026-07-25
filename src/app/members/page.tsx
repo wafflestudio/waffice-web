@@ -245,6 +245,12 @@ export default function MembersPage() {
 				onOpenChange={setIsBulkUpdateDialogOpen}
 				onSubmit={handleBulkUpdateSubmit}
 				isSubmitting={importTemporaryMembersMutation.isPending}
+				onDownloadTemplate={() => {
+					const link = document.createElement("a")
+					link.href = "/templates/active-member-roster-template.xlsx"
+					link.download = "활동회원_명부_양식.xlsx"
+					link.click()
+				}}
 			/>
 			<MemberBulkUpdateResultDialog
 				open={bulkUpdateResult !== null}
