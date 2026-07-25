@@ -19,6 +19,9 @@ const applicationSchema = z.object({
 	includedContents: z.array(z.string()),
 })
 
+/** 지도교수 서명은 아직 지원하지 않는다 — 운영진에게 별도 문의하도록 안내만 하고 선택은 막는다. */
+const DISABLED_SIGNERS: readonly CertificateSigner[] = ["지도교수"]
+
 interface CertificateApplicationDialogProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
@@ -32,6 +35,7 @@ export function CertificateApplicationDialog({
 }: CertificateApplicationDialogProps) {
 	const formId = useId()
 	const [showErrorToast, setShowErrorToast] = useState(false)
+	const [showAdvisorNotice, setShowAdvisorNotice] = useState(false)
 	const form = useForm<CertificateApplicationFormValues>({
 		resolver: zodResolver(applicationSchema),
 		defaultValues: {
@@ -57,6 +61,7 @@ export function CertificateApplicationDialog({
 		if (!nextOpen) {
 			form.reset()
 			setShowErrorToast(false)
+			setShowAdvisorNotice(false)
 		}
 	}
 
@@ -88,26 +93,56 @@ export function CertificateApplicationDialog({
 						<div className="flex flex-col gap-[10px]">
 							<p className="text-[15px] font-medium text-black-900">서명 주체</p>
 							<div className="flex items-center gap-[50px]">
-								{(["와플스튜디오 회장", "지도교수"] as CertificateSigner[]).map((option) => (
-									<label
-										key={option}
-										className={cn(
-											"flex cursor-pointer items-center gap-[8px] text-[14px] font-medium",
-											signer === option ? "text-black-900" : "text-black-400",
-										)}
-									>
-										<input
-											type="radio"
-											name={`${formId}-signer`}
-											value={option}
-											checked={signer === option}
-											onChange={() => form.setValue("signer", option)}
-											className="size-[16px] accent-black-900"
-										/>
-										{option}
-									</label>
-								))}
+								{(["와플스튜디오 회장", "지도교수"] as CertificateSigner[]).map((option) => {
+									const isDisabled = DISABLED_SIGNERS.includes(option)
+
+									if (isDisabled) {
+										return (
+											<button
+												key={option}
+												type="button"
+												onClick={() => setShowAdvisorNotice(true)}
+												className="flex cursor-not-allowed items-center gap-[8px] text-[14px] font-medium text-black-400"
+											>
+												<input
+													type="radio"
+													aria-disabled
+													checked={false}
+													readOnly
+													className="size-[16px] cursor-not-allowed accent-black-900"
+												/>
+												{option}
+											</button>
+										)
+									}
+
+									return (
+										<label
+											key={option}
+											className={cn(
+												"flex cursor-pointer items-center gap-[8px] text-[14px] font-medium",
+												signer === option ? "text-black-900" : "text-black-400",
+											)}
+										>
+											<input
+												type="radio"
+												name={`${formId}-signer`}
+												value={option}
+												checked={signer === option}
+												onChange={() => form.setValue("signer", option)}
+												className="size-[16px] accent-black-900"
+											/>
+											{option}
+										</label>
+									)
+								})}
 							</div>
+							{showAdvisorNotice && (
+								<p className="text-[13px] tracking-[-0.26px] text-black-600">
+									지도교수 서명은 아직 지원하지 않습니다. 필요하신 경우 운영진에게 별도로 연락해
+									주세요.
+								</p>
+							)}
 						</div>
 
 						<div className="flex flex-col gap-[10px]">

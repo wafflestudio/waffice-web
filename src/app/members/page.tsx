@@ -131,18 +131,7 @@ export default function MembersPage() {
 		}
 	}
 
-	const handleDialogSubmit = async (role: string, reason: string) => {
-		if (!role) {
-			setToastMessage("자격을 선택해주세요.")
-			setShowToast(true)
-			return
-		}
-		if (!reason.trim()) {
-			setToastMessage("변경 사유를 입력해주세요.")
-			setShowToast(true)
-			return
-		}
-
+	const handleDialogSubmit = async (role: string) => {
 		try {
 			const qualification = roleToQualification(role)
 			const updatePromises = selectedMembers.map((userId) =>
