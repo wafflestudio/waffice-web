@@ -23,3 +23,11 @@ export interface CertificateApplicationFormValues {
 	purpose: string
 	includedContents: string[]
 }
+
+export interface SignatureDetail {
+	id: number
+	user_id: number
+	url: string
+	created_at: number
+	updated_at: number
+}
