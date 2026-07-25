@@ -1,7 +1,11 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useAuth } from "@/components/providers/auth-provider"
 import { apiClient } from "@/lib/api"
+import { canManageMembers } from "@/lib/permissions"
 import type {
 	ActivityCreateRequest,
+	ActivityHistoryAdminItem,
+	ActivityHistoryItem,
 	ActivityUpdateRequest,
 	ApiResponse,
 	AuditLogDetail,
@@ -23,6 +27,8 @@ export const memberQueryKeys = {
 	auditLog: (userId: number) => [...memberQueryKeys.all, "audit-log", userId] as const,
 	activities: (userId: number) => [...memberQueryKeys.all, "activities", userId] as const,
 	myActivities: () => [...memberQueryKeys.all, "me", "activities"] as const,
+	allActivities: (cursor?: number, limit = 20) =>
+		[...memberQueryKeys.all, "all-activities", cursor, limit] as const,
 }
 
 export const qualificationToRole = (qualification: Qualification): string => {
@@ -199,7 +205,11 @@ export function useUserAuditLog(userId: number | null) {
 	})
 }
 
+/** GET /users/{id}/activities는 Admin 전용(has_admin_access) — 운영진/회장이 아니면 호출하지 않는다. */
 export function useUserActivities(userId: number | null) {
+	const { user } = useAuth()
+	const canView = canManageMembers(user)
+
 	return useQuery({
 		queryKey:
 			userId == null
@@ -212,35 +222,58 @@ export function useUserActivities(userId: number | null) {
 				"회원 활동 이력을 불러오는데 실패했습니다.",
 			)
 		},
-		enabled: userId != null,
+		enabled: userId != null && canView,
 	})
 }
 
 export function useMyActivities() {
-	return useQuery({
+	return useQuery<ActivityHistoryItem[], Error>({
 		queryKey: memberQueryKeys.myActivities(),
 		queryFn: async () =>
 			getResponseData(await apiClient.getMyActivities(), "내 활동 이력을 불러오는데 실패했습니다."),
 	})
 }
 
+/** GET /activities — 운영진 전용 전체 회원 활동 통합 조회.
+ * PR #36(agent/activity-history-management, 2026-07-26 기준 미머지) 이후 사용 가능. */
+export function useActivities(cursor?: number, limit = 20) {
+	const { user } = useAuth()
+	const canView = canManageMembers(user)
+
+	return useQuery<CursorPage<ActivityHistoryAdminItem>, Error>({
+		queryKey: memberQueryKeys.allActivities(cursor, limit),
+		queryFn: async () =>
+			getResponseData(
+				await apiClient.getActivities(cursor, limit),
+				"전체 활동 이력을 불러오는데 실패했습니다.",
+			),
+		enabled: canView,
+	})
+}
+
+/** POST /users/{id}/activities는 Admin 전용 — 호출 전 프론트에서도 권한을 확인해 불필요한 403을 막는다. */
 export function useCreateUserActivity() {
 	const queryClient = useQueryClient()
+	const { user } = useAuth()
 
 	return useMutation({
-		mutationFn: async ({ userId, data }: { userId: number; data: ActivityCreateRequest }) =>
-			getResponseData(
+		mutationFn: async ({ userId, data }: { userId: number; data: ActivityCreateRequest }) => {
+			if (!canManageMembers(user)) throw new Error("회원 활동 이력을 추가할 권한이 없습니다.")
+			return getResponseData(
 				await apiClient.createUserActivity(userId, data),
 				"회원 활동 이력 추가에 실패했습니다.",
-			),
+			)
+		},
 		onSuccess: (_activity, variables) => {
 			queryClient.invalidateQueries({ queryKey: memberQueryKeys.activities(variables.userId) })
 		},
 	})
 }
 
+/** PATCH /users/{id}/activities/{activity_id}는 Admin 전용. */
 export function useUpdateUserActivity() {
 	const queryClient = useQueryClient()
+	const { user } = useAuth()
 
 	return useMutation({
 		mutationFn: async ({
@@ -251,26 +284,32 @@ export function useUpdateUserActivity() {
 			userId: number
 			activityId: number
 			data: ActivityUpdateRequest
-		}) =>
-			getResponseData(
+		}) => {
+			if (!canManageMembers(user)) throw new Error("회원 활동 이력을 수정할 권한이 없습니다.")
+			return getResponseData(
 				await apiClient.updateUserActivity(userId, activityId, data),
 				"회원 활동 이력 수정에 실패했습니다.",
-			),
+			)
+		},
 		onSuccess: (_activity, variables) => {
 			queryClient.invalidateQueries({ queryKey: memberQueryKeys.activities(variables.userId) })
 		},
 	})
 }
 
+/** DELETE /users/{id}/activities/{activity_id}는 Admin 전용. */
 export function useDeleteUserActivity() {
 	const queryClient = useQueryClient()
+	const { user } = useAuth()
 
 	return useMutation({
-		mutationFn: async ({ userId, activityId }: { userId: number; activityId: number }) =>
-			assertSuccessfulResponse(
+		mutationFn: async ({ userId, activityId }: { userId: number; activityId: number }) => {
+			if (!canManageMembers(user)) throw new Error("회원 활동 이력을 삭제할 권한이 없습니다.")
+			return assertSuccessfulResponse(
 				await apiClient.deleteUserActivity(userId, activityId),
 				"회원 활동 이력 삭제에 실패했습니다.",
-			),
+			)
+		},
 		onSuccess: (_data, variables) => {
 			queryClient.invalidateQueries({ queryKey: memberQueryKeys.activities(variables.userId) })
 		},

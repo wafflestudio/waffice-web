@@ -2,6 +2,7 @@ import { createCertificatesApi } from "./certificates"
 import { API_BASE_URL, ApiClient } from "./client"
 import { createMypageApi } from "./mypage"
 import { createProjectsApi } from "./projects"
+import { createRequestsApi } from "./requests"
 import { createUsersApi } from "./users"
 
 const client = new ApiClient(API_BASE_URL)
@@ -11,4 +12,5 @@ export const apiClient = {
 	...createMypageApi(client),
 	...createProjectsApi(client),
 	...createCertificatesApi(client),
+	...createRequestsApi(client),
 }

@@ -1,4 +1,10 @@
-import type { ActivityCreateRequest, ActivityDetail, ActivityUpdateRequest } from "@/types/activity"
+import type {
+	ActivityCreateRequest,
+	ActivityDetail,
+	ActivityHistoryAdminItem,
+	ActivityHistoryItem,
+	ActivityUpdateRequest,
+} from "@/types/activity"
 import type { ApiResponse, CursorPage } from "@/types/common"
 import type { AuditLogDetail, HistoryDetail } from "@/types/history"
 import type {
@@ -74,8 +80,10 @@ export function createUsersApi(client: ApiClient) {
 			return client.request<ApiResponse<ActivityDetail[]>>(`/users/${userId}/activities`)
 		},
 
-		getMyActivities(): Promise<ApiResponse<ActivityDetail[]>> {
-			return client.request<ApiResponse<ActivityDetail[]>>("/users/me/activities")
+		/** PR #36(agent/activity-history-management, 2026-07-26 기준 미머지) 이후 응답 스키마.
+		 * 실제 활동과 승인 대기 중인 추가 요청을 통합해 ActivityHistoryItem[]로 반환한다. */
+		getMyActivities(): Promise<ApiResponse<ActivityHistoryItem[]>> {
+			return client.request<ApiResponse<ActivityHistoryItem[]>>("/users/me/activities")
 		},
 
 		createUserActivity(
@@ -106,6 +114,20 @@ export function createUsersApi(client: ApiClient) {
 			return client.request<ApiResponse<null>>(`/users/${userId}/activities/${activityId}`, {
 				method: "DELETE",
 			})
+		},
+
+		/** GET /activities — 운영진 전용, 전체 회원 활동 통합 조회.
+		 * PR #36(agent/activity-history-management, 2026-07-26 기준 미머지)에서 신규 추가. */
+		getActivities(
+			cursor?: number,
+			limit = 20,
+		): Promise<ApiResponse<CursorPage<ActivityHistoryAdminItem>>> {
+			const params = new URLSearchParams()
+			if (cursor) params.append("cursor", cursor.toString())
+			params.append("limit", limit.toString())
+			return client.request<ApiResponse<CursorPage<ActivityHistoryAdminItem>>>(
+				`/activities?${params.toString()}`,
+			)
 		},
 	}
 }
