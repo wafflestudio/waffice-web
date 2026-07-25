@@ -22,6 +22,8 @@ export interface Member {
 	join_date: string
 	created_at: string
 	updated_at: string
+	student_id?: string
+	department?: string
 }
 
 export interface MemberCreate {

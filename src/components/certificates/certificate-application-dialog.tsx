@@ -11,12 +11,7 @@ import { DialogActionButton } from "@/components/ui/dialog-action-button"
 import { Toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
 import type { CertificateApplicationFormValues, CertificateSigner } from "@/types"
-
-const INCLUDED_CONTENT_OPTIONS = [
-	"회원 자격 취득, 변동 및 상실의 각 기준일 및 사유",
-	"구성원으로서 활동한 소속 프로젝트의 명칭, 기간 및 역할",
-	"임원 또는 집행부원으로 활동한 기간 및 역할",
-] as const
+import { CERTIFICATE_INCLUDED_CONTENT_OPTIONS } from "@/types"
 
 const applicationSchema = z.object({
 	signer: z.enum(["와플스튜디오 회장", "지도교수"]),
@@ -146,7 +141,7 @@ export function CertificateApplicationDialog({
 								</p>
 							</div>
 							<div className="flex flex-col gap-[4px] pl-[25px]">
-								{INCLUDED_CONTENT_OPTIONS.map((option, index) => {
+								{CERTIFICATE_INCLUDED_CONTENT_OPTIONS.map((option, index) => {
 									const checkboxId = `${formId}-content-${index}`
 									return (
 										<label

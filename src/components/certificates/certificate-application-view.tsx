@@ -6,22 +6,24 @@ import {
 	type CertificateApplicationStatusFilter,
 	CertificateApplicationTable,
 } from "@/components/certificates/certificate-application-table"
+import { CertificatePreviewDialog } from "@/components/certificates/certificate-preview-dialog"
 import { FilterResetButton, FilterTag, FilterTagGroup } from "@/components/ui/filter-tag"
 import { Pagination } from "@/components/ui/pagination"
-import type { CertificateApplicationFormValues, MyCertificateApplication } from "@/types"
-
-interface CertificateApplicationViewProps {
-	initialRows: MyCertificateApplication[]
-}
+import { useMyCertificates } from "@/hooks/use-certificates"
+import type { CertificateApplicationFormValues, CertificateOptions } from "@/types"
+import { toCertificateOptions, toMyCertificateApplication } from "@/types"
 
 const ROWS_PER_PAGE = 2
 
-export function CertificateApplicationView({ initialRows }: CertificateApplicationViewProps) {
-	// TODO(API): 본인 신청 목록 query와 신청 mutation이 준비되면 local state를 교체한다.
-	const [rows, setRows] = useState(initialRows)
+export function CertificateApplicationView() {
 	const [statusFilter, setStatusFilter] = useState<CertificateApplicationStatusFilter>("전체")
 	const [currentPage, setCurrentPage] = useState(1)
 	const [isApplicationDialogOpen, setIsApplicationDialogOpen] = useState(false)
+	const [previewOptions, setPreviewOptions] = useState<CertificateOptions | null>(null)
+	const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false)
+
+	const { data, isLoading, error, refetch } = useMyCertificates(undefined, 100)
+	const rows = useMemo(() => (data?.items ?? []).map(toMyCertificateApplication), [data])
 
 	const filteredRows = useMemo(
 		() => rows.filter((row) => statusFilter === "전체" || row.status === statusFilter),
@@ -38,17 +40,14 @@ export function CertificateApplicationView({ initialRows }: CertificateApplicati
 		setCurrentPage(1)
 	}
 
-	const submitApplication = (_values: CertificateApplicationFormValues) => {
-		const today = new Date().toISOString().slice(0, 10).replaceAll("-", ".")
-		setRows((current) => [
-			{
-				id: Math.max(0, ...current.map((row) => row.id)) + 1,
-				applicationNumber: String(1234 + current.length),
-				appliedAt: today,
-				status: "대기",
-			},
-			...current,
-		])
+	const openPreview = (values: CertificateApplicationFormValues) => {
+		setPreviewOptions(toCertificateOptions(values))
+		setIsApplicationDialogOpen(false)
+		setIsPreviewDialogOpen(true)
+	}
+
+	const handleIssued = () => {
+		refetch()
 		setStatusFilter("전체")
 		setCurrentPage(1)
 	}
@@ -87,25 +86,43 @@ export function CertificateApplicationView({ initialRows }: CertificateApplicati
 						)}
 					</div>
 
-					<CertificateApplicationTable
-						rows={visibleRows}
-						statusFilter={statusFilter}
-						onStatusFilterChange={changeStatusFilter}
-					/>
+					{isLoading ? (
+						<div className="flex h-[200px] items-center justify-center text-[14px] text-black-600">
+							불러오는 중...
+						</div>
+					) : error ? (
+						<div className="flex h-[200px] items-center justify-center text-[14px] text-black-600">
+							{error.message}
+						</div>
+					) : (
+						<>
+							<CertificateApplicationTable
+								rows={visibleRows}
+								statusFilter={statusFilter}
+								onStatusFilterChange={changeStatusFilter}
+							/>
 
-					<Pagination
-						currentPage={currentPage}
-						totalPages={totalPages}
-						onPageChange={setCurrentPage}
-						className="mt-auto pb-[15px]"
-					/>
+							<Pagination
+								currentPage={currentPage}
+								totalPages={totalPages}
+								onPageChange={setCurrentPage}
+								className="mt-auto pb-[15px]"
+							/>
+						</>
+					)}
 				</div>
 			</div>
 
 			<CertificateApplicationDialog
 				open={isApplicationDialogOpen}
 				onOpenChange={setIsApplicationDialogOpen}
-				onSubmit={submitApplication}
+				onSubmit={openPreview}
+			/>
+			<CertificatePreviewDialog
+				open={isPreviewDialogOpen}
+				onOpenChange={setIsPreviewDialogOpen}
+				options={previewOptions}
+				onIssued={handleIssued}
 			/>
 		</>
 	)

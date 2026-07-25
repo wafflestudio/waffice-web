@@ -1,6 +1,7 @@
 "use client"
 
-import { Settings2 } from "lucide-react"
+import { Download, Settings2 } from "lucide-react"
+import { useState } from "react"
 import {
 	DesignTable,
 	DesignTableBodyCell,
@@ -16,6 +17,8 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { DotStatusBadge } from "@/components/ui/status-badge"
+import { Toast } from "@/components/ui/toast"
+import { useDownloadCertificate } from "@/hooks/use-certificates"
 import type { MyCertificateApplication, MyCertificateApplicationStatus } from "@/types"
 
 export type CertificateApplicationStatusFilter = "전체" | MyCertificateApplicationStatus
@@ -39,6 +42,32 @@ export function CertificateApplicationTable({
 	onStatusFilterChange,
 }: CertificateApplicationTableProps) {
 	const visibleRows = rows.filter((row) => statusFilter === "전체" || row.status === statusFilter)
+	const downloadCertificate = useDownloadCertificate()
+	const [downloadingId, setDownloadingId] = useState<number | null>(null)
+	const [toastMessage, setToastMessage] = useState("")
+	const [showErrorToast, setShowErrorToast] = useState(false)
+
+	const handleDownload = (row: MyCertificateApplication) => {
+		if (row.status !== "발급 완료" || downloadCertificate.isPending) return
+
+		setDownloadingId(row.id)
+		downloadCertificate.mutate(row.id, {
+			onSuccess: (blob) => {
+				const url = URL.createObjectURL(blob)
+				const link = document.createElement("a")
+				link.href = url
+				link.download = `certificate_${row.id}.pdf`
+				link.click()
+				URL.revokeObjectURL(url)
+				setDownloadingId(null)
+			},
+			onError: (error) => {
+				setToastMessage(error instanceof Error ? error.message : "다운로드에 실패했습니다.")
+				setShowErrorToast(true)
+				setDownloadingId(null)
+			},
+		})
+	}
 
 	return (
 		<div className="w-full overflow-hidden bg-white">
@@ -79,20 +108,37 @@ export function CertificateApplicationTable({
 								</DropdownMenuContent>
 							</DropdownMenu>
 						</DesignTableHeaderCell>
+						<DesignTableHeaderCell className="w-[100px] text-center text-[14px]">
+							다운로드
+						</DesignTableHeaderCell>
 					</DesignTableHeaderRow>
 				</thead>
 				<tbody>
-					{visibleRows.map((row) => (
-						<DesignTableRow key={row.id} className="h-[50px] text-[14px] hover:bg-white">
-							<DesignTableBodyCell>{row.applicationNumber}</DesignTableBodyCell>
-							<DesignTableBodyCell>{row.appliedAt}</DesignTableBodyCell>
-							<DesignTableBodyCell>
-								<DotStatusBadge dotClassName={STATUS_DOT_CLASS[row.status]}>
-									{row.status}
-								</DotStatusBadge>
-							</DesignTableBodyCell>
-						</DesignTableRow>
-					))}
+					{visibleRows.map((row) => {
+						const canDownload = row.status === "발급 완료"
+						return (
+							<DesignTableRow key={row.id} className="h-[50px] text-[14px] hover:bg-white">
+								<DesignTableBodyCell>{row.applicationNumber}</DesignTableBodyCell>
+								<DesignTableBodyCell>{row.appliedAt}</DesignTableBodyCell>
+								<DesignTableBodyCell>
+									<DotStatusBadge dotClassName={STATUS_DOT_CLASS[row.status]}>
+										{row.status}
+									</DotStatusBadge>
+								</DesignTableBodyCell>
+								<DesignTableBodyCell className="text-center">
+									<button
+										type="button"
+										aria-label={`${row.applicationNumber} 활동증명서 다운로드`}
+										onClick={() => handleDownload(row)}
+										disabled={!canDownload || downloadingId === row.id}
+										className="inline-flex size-[20px] items-center justify-center text-black-900 disabled:cursor-not-allowed disabled:text-black-300"
+									>
+										<Download className="size-[20px]" strokeWidth={1.8} />
+									</button>
+								</DesignTableBodyCell>
+							</DesignTableRow>
+						)
+					})}
 				</tbody>
 			</DesignTable>
 			{visibleRows.length === 0 && (
@@ -100,6 +146,12 @@ export function CertificateApplicationTable({
 					해당 상태의 발급 신청이 없습니다.
 				</div>
 			)}
+			<Toast
+				message={toastMessage}
+				isVisible={showErrorToast}
+				onClose={() => setShowErrorToast(false)}
+				variant="error"
+			/>
 		</div>
 	)
 }

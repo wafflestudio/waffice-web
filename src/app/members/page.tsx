@@ -20,7 +20,7 @@ import {
 	useUpdateUserAdmin,
 } from "@/hooks/use-members"
 import { canManageMembers } from "@/lib/permissions"
-import type { AccessRight, MemberCreate, MemberUpdate, TemporaryMemberImportResult } from "@/types"
+import type { MemberCreate, MemberUpdate, TemporaryMemberImportResult } from "@/types"
 import { toUserUpdateRequest } from "@/types"
 
 export default function MembersPage() {
@@ -38,7 +38,6 @@ export default function MembersPage() {
 	const [generationSort, setGenerationSort] = useState<"desc" | "asc" | null>(null)
 	const [roleFilter, setRoleFilter] = useState("전체")
 	const [enrollmentFilter, setEnrollmentFilter] = useState("전체")
-	const [accessRightsFilter, setAccessRightsFilter] = useState<AccessRight[]>([])
 	const canViewMembers = canManageMembers(user)
 	const {
 		data: members = [],
@@ -91,17 +90,12 @@ export default function MembersPage() {
 		...(enrollmentFilter !== "전체"
 			? [{ label: enrollmentFilter, onRemove: () => setEnrollmentFilter("전체") }]
 			: []),
-		...accessRightsFilter.map((right) => ({
-			label: right,
-			onRemove: () => setAccessRightsFilter((prev) => prev.filter((r) => r !== right)),
-		})),
 	]
 
 	const handleResetFilters = () => {
 		setGenerationSort(null)
 		setRoleFilter("전체")
 		setEnrollmentFilter("전체")
-		setAccessRightsFilter([])
 	}
 
 	const handleRoleChange = () => {
@@ -248,8 +242,6 @@ export default function MembersPage() {
 						onRoleFilterChange={setRoleFilter}
 						enrollmentFilter={enrollmentFilter}
 						onEnrollmentFilterChange={setEnrollmentFilter}
-						accessRightsFilter={accessRightsFilter}
-						onAccessRightsFilterChange={setAccessRightsFilter}
 					/>
 				</div>
 			</div>

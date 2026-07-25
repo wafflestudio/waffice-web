@@ -118,6 +118,59 @@ const isMenuActive = (pathname: string, href: string) => {
 	return pathname === href || pathname.startsWith(`${href}/`)
 }
 
+function MockModeMenuItem({
+	isCollapsed,
+	enabled,
+	onToggle,
+}: {
+	isCollapsed: boolean
+	enabled: boolean
+	onToggle: () => void
+}) {
+	return (
+		<button
+			type="button"
+			onClick={onToggle}
+			aria-pressed={enabled}
+			title={isCollapsed ? "Mock 활성화" : undefined}
+			className={cn(
+				"relative flex h-[40px] items-center rounded-[4px] py-[6px] outline-none transition-[width,padding] duration-200",
+				isCollapsed ? "w-[40px] justify-center px-[8px]" : "w-[180px] pr-[8px] pl-[40px]",
+				enabled ? "bg-peach-100" : "bg-white hover:bg-black-100",
+			)}
+		>
+			<FlaskConical
+				className={cn(
+					"size-[16px] shrink-0",
+					!isCollapsed && "absolute left-[10px]",
+					enabled ? "text-peach-500" : "text-black-900",
+				)}
+				strokeWidth={1.8}
+			/>
+			{!isCollapsed && (
+				<span
+					className={cn(
+						"min-w-0 flex-1 truncate text-left text-[15px] leading-[20px]",
+						enabled ? "font-semibold text-peach-500" : "font-medium text-black-900",
+					)}
+				>
+					Mock 활성화
+				</span>
+			)}
+			{!isCollapsed && (
+				<span
+					className={cn(
+						"flex h-[18px] w-[30px] shrink-0 items-center rounded-full px-[2px] transition-colors",
+						enabled ? "justify-end bg-peach-300" : "justify-start bg-black-300",
+					)}
+				>
+					<span className="size-[14px] rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,0.2)]" />
+				</span>
+			)}
+		</button>
+	)
+}
+
 function DockToRightIcon() {
 	return (
 		<svg
@@ -280,121 +333,111 @@ export function Lnb() {
 							isCollapsed={isCollapsed}
 						/>
 					))}
+					<MockModeMenuItem
+						isCollapsed={isCollapsed}
+						enabled={mockModeEnabled}
+						onToggle={toggleMockMode}
+					/>
 				</nav>
 			</div>
 
 			<div
 				className={cn(
-					"mt-auto flex h-[63px] items-center border-[#ebecf0] border-t transition-[width,padding,margin] duration-200",
-					isCollapsed
-						? "-mx-[10px] w-[60px] justify-center gap-[6px] px-[10px]"
-						: "-mx-[20px] w-[220px] px-[30px]",
+					"mt-auto flex items-center gap-[9px] border-[#ebecf0] border-t p-[16px] transition-[width,padding,margin] duration-200",
+					isCollapsed ? "-mx-[10px] w-[60px] justify-center" : "-mx-[20px] w-[220px]",
 				)}
 			>
-				<button
-					type="button"
-					onClick={toggleMockMode}
-					aria-pressed={mockModeEnabled}
-					aria-label={mockModeEnabled ? "목데이터 모드 끄기" : "목데이터 모드 켜기 (현재 페이지)"}
-					title={mockModeEnabled ? "목데이터 모드 끄기" : "목데이터 모드 켜기 (현재 페이지)"}
+				<div
 					className={cn(
-						"flex size-[26px] shrink-0 items-center justify-center rounded-[4px] outline-none transition-colors",
-						!isCollapsed && "mr-[8px]",
-						mockModeEnabled
-							? "bg-peach-100 text-peach-500"
-							: "text-black-400 hover:bg-black-100 hover:text-black-600",
+						"flex min-w-0 items-center",
+						isCollapsed ? "justify-center" : "flex-1 justify-between",
 					)}
 				>
-					<FlaskConical className="size-[16px]" strokeWidth={1.8} />
-				</button>
-
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<button
-							type="button"
-							aria-label="프로필 메뉴 열기"
-							className={cn(
-								"flex min-w-0 items-center rounded-[4px] text-left outline-none",
-								isCollapsed ? "flex-none" : "flex-1",
-							)}
-						>
-							<div
-								aria-label={`${user?.name || "사용자"} 프로필`}
-								className="size-[30px] shrink-0 rounded-full bg-black-300 bg-cover bg-center"
-								role="img"
-								style={{ backgroundImage: `url(${profileImage})` }}
-							/>
-							<span
-								className={cn(
-									"ml-[8px] min-w-0 flex-1 truncate text-[15px] font-medium text-black-900 leading-normal",
-									isCollapsed && "sr-only",
-								)}
-							>
-								{user?.name || "사용자"}
-							</span>
-						</button>
-					</DropdownMenuTrigger>
-					{user && (
-						<DropdownMenuContent
-							align="start"
-							side="top"
-							sideOffset={8}
-							className="w-[180px] rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
-						>
-							<DropdownMenuItem
-								onSelect={() => router.push("/mypage")}
-								className="h-[40px] cursor-pointer rounded-[3px] px-[8px] text-[14px] font-medium text-black-700 focus:bg-black-100"
-							>
-								<UserRound className="size-[16px] text-black-600" strokeWidth={1.8} />
-								마이페이지
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								onSelect={handleLogout}
-								className="h-[40px] cursor-pointer rounded-[3px] px-[8px] text-[14px] font-medium text-black-700 focus:bg-black-100"
-							>
-								<LogOut className="size-[16px] text-black-600" strokeWidth={1.8} />
-								로그아웃
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					)}
-				</DropdownMenu>
-
-				{!isCollapsed && (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<button
 								type="button"
-								aria-label="LNB 역할 선택"
-								className="ml-[8px] flex h-[20px] shrink-0 items-center gap-[3px] rounded-[20px] border border-black-400 px-[8px] text-center text-[12px] font-medium text-black-400 leading-normal tracking-[-0.36px] outline-none"
+								aria-label="프로필 메뉴 열기"
+								className="flex min-w-0 items-center gap-[4px] rounded-[4px] text-left outline-none"
 							>
-								{ROLE_LABELS[activeRole]}
-								<ChevronDown className="h-[5px] w-[8px]" strokeWidth={2} />
+								<div
+									aria-label={`${user?.name || "사용자"} 프로필`}
+									className="size-[30px] shrink-0 rounded-full bg-black-300 bg-cover bg-center"
+									role="img"
+									style={{ backgroundImage: `url(${profileImage})` }}
+								/>
+								<span
+									className={cn(
+										"min-w-0 flex-1 truncate text-[14px] font-medium text-black-900 leading-normal",
+										isCollapsed && "sr-only",
+									)}
+								>
+									{user?.name || "사용자"}
+								</span>
 							</button>
 						</DropdownMenuTrigger>
 						{user && (
 							<DropdownMenuContent
-								align="end"
+								align="start"
 								side="top"
-								sideOffset={14}
-								className="w-[120px] rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
+								sideOffset={8}
+								className="w-[180px] rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
 							>
-								{availableRoles.map((role) => (
-									<DropdownMenuItem
-										key={role}
-										onSelect={() => setActiveRole(role)}
-										className={cn(
-											"h-[40px] cursor-pointer rounded-[3px] px-[8px] text-[14px] font-medium focus:bg-peach-100",
-											activeRole === role ? "text-peach-500" : "text-black-600",
-										)}
-									>
-										<span className="flex-1">{ROLE_LABELS[role]}</span>
-										{activeRole === role && <Check className="size-[12px]" strokeWidth={2.5} />}
-									</DropdownMenuItem>
-								))}
+								<DropdownMenuItem
+									onSelect={() => router.push("/mypage")}
+									className="h-[40px] cursor-pointer rounded-[3px] px-[8px] text-[14px] font-medium text-black-700 focus:bg-black-100"
+								>
+									<UserRound className="size-[16px] text-black-600" strokeWidth={1.8} />
+									마이페이지
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									onSelect={handleLogout}
+									className="h-[40px] cursor-pointer rounded-[3px] px-[8px] text-[14px] font-medium text-black-700 focus:bg-black-100"
+								>
+									<LogOut className="size-[16px] text-black-600" strokeWidth={1.8} />
+									로그아웃
+								</DropdownMenuItem>
 							</DropdownMenuContent>
 						)}
 					</DropdownMenu>
-				)}
+
+					{!isCollapsed && (
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<button
+									type="button"
+									aria-label="LNB 역할 선택"
+									className="flex h-[20px] shrink-0 items-center gap-[3px] rounded-[20px] border border-black-400 px-[8px] text-center text-[12px] font-medium text-black-400 leading-normal tracking-[-0.36px] outline-none"
+								>
+									{ROLE_LABELS[activeRole]}
+									<ChevronDown className="h-[5px] w-[8px]" strokeWidth={2} />
+								</button>
+							</DropdownMenuTrigger>
+							{user && (
+								<DropdownMenuContent
+									align="end"
+									side="top"
+									sideOffset={14}
+									className="w-[120px] rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
+								>
+									{availableRoles.map((role) => (
+										<DropdownMenuItem
+											key={role}
+											onSelect={() => setActiveRole(role)}
+											className={cn(
+												"h-[40px] cursor-pointer rounded-[3px] px-[8px] text-[14px] font-medium focus:bg-peach-100",
+												activeRole === role ? "text-peach-500" : "text-black-600",
+											)}
+										>
+											<span className="flex-1">{ROLE_LABELS[role]}</span>
+											{activeRole === role && <Check className="size-[12px]" strokeWidth={2.5} />}
+										</DropdownMenuItem>
+									))}
+								</DropdownMenuContent>
+							)}
+						</DropdownMenu>
+					)}
+				</div>
 			</div>
 		</aside>
 	)
