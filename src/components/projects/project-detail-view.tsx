@@ -339,6 +339,20 @@ export function ProjectDetailView({ project, viewMode }: ProjectDetailViewProps)
 				}}
 				isSubmitting={replaceProjectMembers.isPending}
 			/>
+			<ProjectMemberBulkUpdateDialog
+				open={dialog === "member-bulk-update"}
+				onOpenChange={(open) => setDialog(open ? "member-bulk-update" : null)}
+				onSubmit={async (files) => {
+					// TODO(API): 프로젝트별 팀원 일괄 수정 API가 준비되면 project.id와 files를
+					// multipart mutation으로 전송하고 팀원 목록 query를 invalidate한다.
+					setDialog(null)
+					showMockToast(`${files.length}개 파일이 선택되었습니다. API 연결 후 반영됩니다.`)
+				}}
+				onDownloadTemplate={() => {
+					// TODO(API): 백엔드 또는 정적 asset의 실제 팀원 명부 양식 다운로드로 교체한다.
+					showMockToast("팀원 명부 양식은 API 연결 후 제공됩니다.")
+				}}
+			/>
 			<ProjectStatusHistoryDialog
 				open={dialog === "status-history"}
 				histories={MOCK_PROJECT_STATUS_HISTORIES}
