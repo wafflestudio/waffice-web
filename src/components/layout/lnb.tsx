@@ -6,6 +6,7 @@ import {
 	ChevronDown,
 	ClipboardList,
 	FileText,
+	FlaskConical,
 	FolderOpen,
 	GraduationCap,
 	Home,
@@ -25,6 +26,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useMockMode } from "@/hooks/use-mock-mode"
 import { cn } from "@/lib/utils"
 import type { UserLnbRole } from "@/types"
 
@@ -209,6 +211,7 @@ export function Lnb() {
 	const pathname = usePathname()
 	const router = useRouter()
 	const { user, logout, activeRole, availableRoles, setActiveRole } = useAuth()
+	const { enabled: mockModeEnabled, toggle: toggleMockMode } = useMockMode()
 	const [isCollapsed, setIsCollapsed] = useState(false)
 	const profileImage = user?.avatar_url || "/profile.png"
 	const navItems = getNavItems(activeRole)
@@ -284,10 +287,27 @@ export function Lnb() {
 				className={cn(
 					"mt-auto flex h-[63px] items-center border-[#ebecf0] border-t transition-[width,padding,margin] duration-200",
 					isCollapsed
-						? "-mx-[10px] w-[60px] justify-center px-[15px]"
+						? "-mx-[10px] w-[60px] justify-center gap-[6px] px-[10px]"
 						: "-mx-[20px] w-[220px] px-[30px]",
 				)}
 			>
+				<button
+					type="button"
+					onClick={toggleMockMode}
+					aria-pressed={mockModeEnabled}
+					aria-label={mockModeEnabled ? "목데이터 모드 끄기" : "목데이터 모드 켜기 (현재 페이지)"}
+					title={mockModeEnabled ? "목데이터 모드 끄기" : "목데이터 모드 켜기 (현재 페이지)"}
+					className={cn(
+						"flex size-[26px] shrink-0 items-center justify-center rounded-[4px] outline-none transition-colors",
+						!isCollapsed && "mr-[8px]",
+						mockModeEnabled
+							? "bg-peach-100 text-peach-500"
+							: "text-black-400 hover:bg-black-100 hover:text-black-600",
+					)}
+				>
+					<FlaskConical className="size-[16px]" strokeWidth={1.8} />
+				</button>
+
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<button

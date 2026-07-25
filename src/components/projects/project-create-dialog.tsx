@@ -1,13 +1,21 @@
 "use client"
 
+import { ChevronDown } from "lucide-react"
 import { useEffect, useState } from "react"
 import { DesignDialogContent } from "@/components/ui/design-dialog"
 import { Dialog, DialogTitle } from "@/components/ui/dialog"
 import { DialogActionButton } from "@/components/ui/dialog-action-button"
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuFilterRadioItem,
+	DropdownMenuRadioGroup,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-import { SelectField } from "@/components/ui/select-field"
 import { Textarea } from "@/components/ui/textarea"
-import type { ProjectCreateFormValues, ProjectCreateStatus } from "@/types"
+import { cn } from "@/lib/utils"
+import type { ProjectCreateFormValues, ProjectStatus } from "@/types"
 
 interface ProjectCreateDialogProps {
 	open: boolean
@@ -21,12 +29,13 @@ const initialValues: ProjectCreateFormValues = {
 	description: "",
 }
 
-const PROJECT_CREATE_STATUS_OPTIONS = [
-	"활동",
-	"종결",
-	"말소",
-	"제명",
-] satisfies ProjectCreateStatus[]
+const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
+	active: "활성화",
+	maintenance: "유지보수",
+	ended: "종결",
+}
+
+const PROJECT_CREATE_STATUS_OPTIONS = ["active", "maintenance", "ended"] satisfies ProjectStatus[]
 
 const fieldClass =
 	"h-[50px] w-[360px] rounded-[5px] border-black-300 bg-white px-[15px] text-[14px] font-normal tracking-[-0.28px] text-black-900 shadow-none outline-none placeholder:text-black-600 focus-visible:border-peach-300 focus-visible:ring-0"
@@ -80,13 +89,42 @@ export function ProjectCreateDialog({ open, onOpenChange, onSubmit }: ProjectCre
 								/>
 							</ProjectCreateField>
 							<ProjectCreateField label="운영 상태">
-								<SelectField
-									value={values.status}
-									options={PROJECT_CREATE_STATUS_OPTIONS}
-									onChange={(status) => setValues((prev) => ({ ...prev, status }))}
-									placeholder="선택"
-									indicatorClassName="ml-[10px] size-[20px]"
-								/>
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<button
+											type="button"
+											className={cn(
+												fieldClass,
+												"flex items-center justify-between",
+												!values.status && "text-black-600",
+											)}
+										>
+											<span>{values.status ? PROJECT_STATUS_LABEL[values.status] : "선택"}</span>
+											<ChevronDown className="ml-[10px] size-[20px] text-black-900" />
+										</button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent
+										align="start"
+										className="w-[360px] rounded-[5px] border-black-300 p-0 shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
+									>
+										<DropdownMenuRadioGroup
+											value={values.status}
+											onValueChange={(status) =>
+												setValues((prev) => ({ ...prev, status: status as ProjectStatus }))
+											}
+										>
+											{PROJECT_CREATE_STATUS_OPTIONS.map((status) => (
+												<DropdownMenuFilterRadioItem
+													key={status}
+													value={status}
+													className="h-[50px] px-[16px] text-[15px]"
+												>
+													{PROJECT_STATUS_LABEL[status]}
+												</DropdownMenuFilterRadioItem>
+											))}
+										</DropdownMenuRadioGroup>
+									</DropdownMenuContent>
+								</DropdownMenu>
 							</ProjectCreateField>
 							<ProjectCreateField label="설명">
 								<Textarea
