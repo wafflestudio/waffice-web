@@ -72,6 +72,8 @@ export const userDetailToMember = (user: UserDetail): Member => ({
 	affiliation: user.graduation_status,
 	access_rights: userRoleFlagsToAccessRights(user),
 	current_projects: user.current_projects ?? [],
+	student_id: user.student_id || undefined,
+	department: user.department || undefined,
 	user,
 	status: user.qualification === "pending" ? "inactive" : "active",
 	join_date: new Date(user.created_at * 1000).toISOString(),

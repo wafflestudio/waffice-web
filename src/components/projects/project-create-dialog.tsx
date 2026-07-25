@@ -2,6 +2,7 @@
 
 import { ChevronDown } from "lucide-react"
 import { useEffect, useState } from "react"
+import * as z from "zod"
 import { DesignDialogContent } from "@/components/ui/design-dialog"
 import { Dialog, DialogTitle } from "@/components/ui/dialog"
 import { DialogActionButton } from "@/components/ui/dialog-action-button"
@@ -16,6 +17,14 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import type { ProjectCreateFormValues, ProjectStatus } from "@/types"
+
+const projectCreateSchema = z.object({
+	name: z.string().trim().min(1, "프로젝트 이름을 입력해 주세요."),
+	status: z.enum(["active", "maintenance", "ended"], {
+		error: "운영 상태를 선택해 주세요.",
+	}),
+	description: z.string(),
+})
 
 interface ProjectCreateDialogProps {
 	open: boolean
@@ -51,18 +60,25 @@ function ProjectCreateField({ label, children }: { label: string; children: Reac
 
 export function ProjectCreateDialog({ open, onOpenChange, onSubmit }: ProjectCreateDialogProps) {
 	const [values, setValues] = useState<ProjectCreateFormValues>(initialValues)
+	const [statusError, setStatusError] = useState(false)
 
 	useEffect(() => {
 		if (!open) {
 			setValues(initialValues)
+			setStatusError(false)
 		}
 	}, [open])
 
 	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault()
-		if (!values.status) return
+		const result = projectCreateSchema.safeParse(values)
 
-		// TODO(API): 프로젝트 생성 API 스펙 확정 후 ProjectCreateFormValues를 요청 DTO에 맞춰 매핑.
+		if (!result.success) {
+			setStatusError(!values.status)
+			return
+		}
+
+		setStatusError(false)
 		onSubmit(values)
 	}
 
@@ -97,6 +113,7 @@ export function ProjectCreateDialog({ open, onOpenChange, onSubmit }: ProjectCre
 												fieldClass,
 												"flex items-center justify-between",
 												!values.status && "text-black-600",
+												statusError && "border-red-500",
 											)}
 										>
 											<span>{values.status ? PROJECT_STATUS_LABEL[values.status] : "선택"}</span>
@@ -109,9 +126,10 @@ export function ProjectCreateDialog({ open, onOpenChange, onSubmit }: ProjectCre
 									>
 										<DropdownMenuRadioGroup
 											value={values.status}
-											onValueChange={(status) =>
+											onValueChange={(status) => {
 												setValues((prev) => ({ ...prev, status: status as ProjectStatus }))
-											}
+												setStatusError(false)
+											}}
 										>
 											{PROJECT_CREATE_STATUS_OPTIONS.map((status) => (
 												<DropdownMenuFilterRadioItem
@@ -125,6 +143,9 @@ export function ProjectCreateDialog({ open, onOpenChange, onSubmit }: ProjectCre
 										</DropdownMenuRadioGroup>
 									</DropdownMenuContent>
 								</DropdownMenu>
+								{statusError && (
+									<p className="text-[12px] text-red-500">운영 상태를 선택해 주세요.</p>
+								)}
 							</ProjectCreateField>
 							<ProjectCreateField label="설명">
 								<Textarea

@@ -5,7 +5,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
-	DropdownMenuFilterCheckboxItem,
 	DropdownMenuFilterRadioItem,
 	DropdownMenuRadioGroup,
 	DropdownMenuTrigger,
@@ -21,7 +20,7 @@ import {
 	TableRow,
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
-import type { AccessRight, Member, MemberCreate, MemberUpdate } from "@/types"
+import type { Member, MemberCreate, MemberUpdate } from "@/types"
 import { MemberDetailDialog } from "./member-detail-dialog"
 
 interface MemberTableProps {
@@ -38,8 +37,6 @@ interface MemberTableProps {
 	onRoleFilterChange: (role: string) => void
 	enrollmentFilter: string
 	onEnrollmentFilterChange: (status: string) => void
-	accessRightsFilter: AccessRight[]
-	onAccessRightsFilterChange: (rights: AccessRight[]) => void
 }
 
 const ITEMS_PER_PAGE = 10
@@ -74,12 +71,9 @@ export function MemberTable({
 	onRoleFilterChange,
 	enrollmentFilter,
 	onEnrollmentFilterChange,
-	accessRightsFilter,
-	onAccessRightsFilterChange,
 }: MemberTableProps) {
 	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "미가입"]
 	const ENROLLMENT_OPTIONS = ["학부생", "휴학생", "졸업생", "대학원생"]
-	const ACCESS_RIGHT_OPTIONS = ["운영진", "팀장"] satisfies AccessRight[]
 
 	// 회원 상세 페이지 모달
 	const [selectedMember, setSelectedMember] = useState<Member | null>(null)
@@ -93,11 +87,6 @@ export function MemberTable({
 		.filter((member) => member.name.toLowerCase().includes(searchQuery.toLowerCase()))
 		.filter((member) => roleFilter === "전체" || (member.role || "활동회원") === roleFilter)
 		.filter((member) => enrollmentFilter === "전체" || member.affiliation === enrollmentFilter)
-		.filter((member) =>
-			accessRightsFilter.length === 0
-				? true
-				: accessRightsFilter.some((right) => member.access_rights?.includes(right)),
-		)
 
 	// 기수 정렬
 	const sortedMembers = generationSort
@@ -148,13 +137,46 @@ export function MemberTable({
 									className={TABLE_CHECKBOX_CLASS}
 								/>
 							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>이름</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>이름</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>
 								<GenerationSortHeader sort={generationSort} onSortChange={onGenerationSortChange} />
 							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "min-w-0")}>이메일</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "min-w-0")}>Github 아이디</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[200px]")}>활동 프로젝트</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>소속</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[120px]")}>학번</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<FilterTrigger
+											aria-label="학적 상태 필터"
+											className={FILTER_TRIGGER_CLASS}
+											iconClassName="size-4 text-[#121212]"
+										>
+											학적 상태
+										</FilterTrigger>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent
+										align="start"
+										className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}
+									>
+										<DropdownMenuRadioGroup
+											value={enrollmentFilter}
+											onValueChange={(v) =>
+												onEnrollmentFilterChange(v === enrollmentFilter ? "전체" : v)
+											}
+										>
+											{ENROLLMENT_OPTIONS.map((status) => (
+												<DropdownMenuFilterRadioItem key={status} value={status}>
+													{status}
+												</DropdownMenuFilterRadioItem>
+											))}
+										</DropdownMenuRadioGroup>
+									</DropdownMenuContent>
+								</DropdownMenu>
+							</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[220px]")}>
+								소식 수신용 이메일
+							</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "min-w-0")}>활동 프로젝트</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
@@ -180,69 +202,6 @@ export function MemberTable({
 												</DropdownMenuFilterRadioItem>
 											))}
 										</DropdownMenuRadioGroup>
-									</DropdownMenuContent>
-								</DropdownMenu>
-							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
-								<DropdownMenu>
-									<DropdownMenuTrigger asChild>
-										<FilterTrigger
-											aria-label="재학여부 필터"
-											className={FILTER_TRIGGER_CLASS}
-											iconClassName="size-4 text-[#121212]"
-										>
-											재학여부
-										</FilterTrigger>
-									</DropdownMenuTrigger>
-									<DropdownMenuContent
-										align="start"
-										className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}
-									>
-										<DropdownMenuRadioGroup
-											value={enrollmentFilter}
-											onValueChange={(v) =>
-												onEnrollmentFilterChange(v === enrollmentFilter ? "전체" : v)
-											}
-										>
-											{ENROLLMENT_OPTIONS.map((status) => (
-												<DropdownMenuFilterRadioItem key={status} value={status}>
-													{status}
-												</DropdownMenuFilterRadioItem>
-											))}
-										</DropdownMenuRadioGroup>
-									</DropdownMenuContent>
-								</DropdownMenu>
-							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
-								<DropdownMenu>
-									<DropdownMenuTrigger asChild>
-										<FilterTrigger
-											aria-label="접근 권한 필터"
-											className={FILTER_TRIGGER_CLASS}
-											iconClassName="size-4 text-[#121212]"
-										>
-											접근 권한
-										</FilterTrigger>
-									</DropdownMenuTrigger>
-									<DropdownMenuContent
-										align="start"
-										className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}
-									>
-										{ACCESS_RIGHT_OPTIONS.map((right) => (
-											<DropdownMenuFilterCheckboxItem
-												key={right}
-												checked={accessRightsFilter.includes(right)}
-												onCheckedChange={(checked: boolean) =>
-													onAccessRightsFilterChange(
-														checked
-															? [...accessRightsFilter, right]
-															: accessRightsFilter.filter((r) => r !== right),
-													)
-												}
-											>
-												{right}
-											</DropdownMenuFilterCheckboxItem>
-										))}
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</TableHead>
@@ -274,23 +233,23 @@ export function MemberTable({
 									<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>
 										{member.generation || "-"}
 									</TableCell>
-									<TableCell className={cn(BODY_CELL_CLASS, "max-w-0 truncate")}>
-										{member.email}
+									<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>
+										{member.department || "-"}
+									</TableCell>
+									<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>
+										{member.student_id || "-"}
+									</TableCell>
+									<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>
+										{member.affiliation || "학부생"}
 									</TableCell>
 									<TableCell className={cn(BODY_CELL_CLASS, "max-w-0 truncate")}>
-										{member.github_username || "-"}
+										{member.email}
 									</TableCell>
 									<TableCell className={cn(BODY_CELL_CLASS, "truncate")} title={currentProjects}>
 										{currentProjects}
 									</TableCell>
 									<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>
 										{member.role || "활동회원"}
-									</TableCell>
-									<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>
-										{member.affiliation || "학부생"}
-									</TableCell>
-									<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>
-										{member.access_rights?.length ? member.access_rights.join(", ") : "없음"}
 									</TableCell>
 								</TableRow>
 							)
