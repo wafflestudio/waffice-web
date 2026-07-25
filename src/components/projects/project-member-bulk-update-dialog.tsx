@@ -93,7 +93,6 @@ export function ProjectMemberBulkUpdateDialog({
 		if (selectedFiles.length === 0 || isSubmitting) return
 
 		try {
-			// TODO(API): 팀원 일괄 수정 API가 추가되면 파일 배열을 mutation에 전달한다.
 			await onSubmit?.(selectedFiles.map(({ file }) => file))
 			if (onSubmit) reset()
 		} catch (error) {
