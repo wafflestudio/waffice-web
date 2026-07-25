@@ -32,4 +32,19 @@ export class ApiClient {
 
 		return response.json()
 	}
+
+	async requestBlob(endpoint: string, options: RequestInit = {}): Promise<Blob> {
+		const url = `${this.baseUrl}${endpoint}`
+		const response = await fetch(url, {
+			credentials: "include",
+			...options,
+		})
+
+		if (!response.ok) {
+			const errorData = await response.json().catch(() => ({}))
+			throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`)
+		}
+
+		return response.blob()
+	}
 }

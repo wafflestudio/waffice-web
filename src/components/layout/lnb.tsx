@@ -2,15 +2,16 @@
 
 import type { LucideIcon } from "lucide-react"
 import {
-	Calculator,
 	Check,
 	ChevronDown,
 	ClipboardList,
 	FileText,
+	FlaskConical,
 	FolderOpen,
 	GraduationCap,
 	Home,
 	LogOut,
+	SquarePen,
 	UserRound,
 	Users,
 } from "lucide-react"
@@ -25,6 +26,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useMockMode } from "@/hooks/use-mock-mode"
 import { cn } from "@/lib/utils"
 import type { UserLnbRole } from "@/types"
 
@@ -61,11 +63,27 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
 			{ name: "나에게 온 요청", href: "/projects/requests" },
 		],
 	},
+	{
+		name: "활동증명서 관리",
+		href: "/certificate-management",
+		icon: SquarePen,
+		subItems: [{ name: "활동증명서 발급 이력", href: "/certificate-management" }],
+	},
 	{ name: "내 활동 이력 관리", href: "/activities", icon: ClipboardList },
-	{ name: "증명서 발급", href: "/certificates", icon: FileText },
-	{ name: "회계 관리", href: "/accounting", icon: Calculator },
-	{ name: "세미나 수강신청", href: "/seminars", icon: GraduationCap },
+	{ name: "내 활동증명서 발급", href: "/certificates", icon: FileText },
 ]
+
+const PRESIDENT_NAV_ITEMS: NavItem[] = ADMIN_NAV_ITEMS.map((item) =>
+	item.href === "/certificate-management"
+		? {
+				...item,
+				subItems: [
+					{ name: "활동증명서 발급 이력", href: "/certificate-management" },
+					{ name: "내 서명 등록", href: "/certificate-management/signature" },
+				],
+			}
+		: item,
+)
 
 const REGULAR_NAV_ITEMS: NavItem[] = [
 	{ name: "대시보드", href: "/", icon: Home },
@@ -91,6 +109,7 @@ const ROLE_LABELS: Record<UserLnbRole, string> = {
 const getNavItems = (role: UserLnbRole) => {
 	if (role === "regular") return REGULAR_NAV_ITEMS
 	if (role === "leader") return LEADER_NAV_ITEMS
+	if (role === "waffle_leader") return PRESIDENT_NAV_ITEMS
 	return ADMIN_NAV_ITEMS
 }
 
@@ -125,6 +144,13 @@ interface NavMenuItemProps {
 function NavMenuItem({ item, pathname, isCollapsed }: NavMenuItemProps) {
 	const active = isMenuActive(pathname, item.href)
 	const Icon = item.icon
+	const matchedSubItem =
+		item.subItems?.find((sub) => pathname === sub.href) ??
+		[...(item.subItems ?? [])]
+			.sort((a, b) => b.href.length - a.href.length)
+			.find((sub) => pathname.startsWith(`${sub.href}/`))
+	const activeSubHref =
+		matchedSubItem?.href ?? (pathname === item.href ? item.subItems?.[0]?.href : null)
 
 	return (
 		<div className={cn("flex flex-col", isCollapsed ? "w-[40px]" : "w-[180px]")}>
@@ -158,7 +184,7 @@ function NavMenuItem({ item, pathname, isCollapsed }: NavMenuItemProps) {
 			{!isCollapsed && active && item.subItems && (
 				<div className="flex w-[180px] flex-col">
 					{item.subItems.map((sub) => {
-						const subActive = pathname === sub.href
+						const subActive = sub.href === activeSubHref
 
 						return (
 							<Link
@@ -185,6 +211,7 @@ export function Lnb() {
 	const pathname = usePathname()
 	const router = useRouter()
 	const { user, logout, activeRole, availableRoles, setActiveRole } = useAuth()
+	const { enabled: mockModeEnabled, toggle: toggleMockMode } = useMockMode()
 	const [isCollapsed, setIsCollapsed] = useState(false)
 	const profileImage = user?.avatar_url || "/profile.png"
 	const navItems = getNavItems(activeRole)
@@ -260,10 +287,27 @@ export function Lnb() {
 				className={cn(
 					"mt-auto flex h-[63px] items-center border-[#ebecf0] border-t transition-[width,padding,margin] duration-200",
 					isCollapsed
-						? "-mx-[10px] w-[60px] justify-center px-[15px]"
+						? "-mx-[10px] w-[60px] justify-center gap-[6px] px-[10px]"
 						: "-mx-[20px] w-[220px] px-[30px]",
 				)}
 			>
+				<button
+					type="button"
+					onClick={toggleMockMode}
+					aria-pressed={mockModeEnabled}
+					aria-label={mockModeEnabled ? "목데이터 모드 끄기" : "목데이터 모드 켜기 (현재 페이지)"}
+					title={mockModeEnabled ? "목데이터 모드 끄기" : "목데이터 모드 켜기 (현재 페이지)"}
+					className={cn(
+						"flex size-[26px] shrink-0 items-center justify-center rounded-[4px] outline-none transition-colors",
+						!isCollapsed && "mr-[8px]",
+						mockModeEnabled
+							? "bg-peach-100 text-peach-500"
+							: "text-black-400 hover:bg-black-100 hover:text-black-600",
+					)}
+				>
+					<FlaskConical className="size-[16px]" strokeWidth={1.8} />
+				</button>
+
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<button
