@@ -1,10 +1,9 @@
 "use client"
 
-import { ArrowUpRight, ChevronDown, MoreHorizontal, Plus, Search, X } from "lucide-react"
+import { ArrowUpRight, ChevronDown, MoreHorizontal, Search, X } from "lucide-react"
 import type * as React from "react"
 import { useEffect, useMemo, useState } from "react"
 import { CalendarDateField } from "@/components/ui/calendar"
-import { Checkbox } from "@/components/ui/checkbox"
 import { DesignDialogContent } from "@/components/ui/design-dialog"
 import {
 	DesignTable,
@@ -33,13 +32,27 @@ import { Pagination } from "@/components/ui/pagination"
 import { SearchInput } from "@/components/ui/search-input"
 import { DotStatusBadge, TagBadge } from "@/components/ui/status-badge"
 import { Toast } from "@/components/ui/toast"
+import { useUsers } from "@/hooks/use-members"
+import {
+	useAddProjectMember,
+	useDeleteProject,
+	useDownloadProjectMemberTemplate,
+	useProjectMembers,
+	useRemoveProjectMember,
+	useReplaceProjectMembers,
+	useUpdateProject,
+	useUpdateProjectMember,
+} from "@/hooks/use-projects"
 import { cn } from "@/lib/utils"
 import type {
+	MemberDetail,
+	MemberRole,
 	ProjectDetail,
-	ProjectDetailMember,
 	ProjectDetailViewMode,
-	ProjectManagementStatus,
+	ProjectStatus,
+	ProjectStatusHistory,
 } from "@/types"
+import { MOCK_PROJECT_STATUS_HISTORIES } from "./project-detail.mock"
 import { ProjectMemberBulkUpdateDialog } from "./project-member-bulk-update-dialog"
 
 interface ProjectDetailViewProps {
@@ -58,30 +71,45 @@ type DialogState =
 	| "member-record-delete"
 	| null
 
-const PROJECT_STATUS_OPTIONS: ProjectManagementStatus[] = ["활성화", "유지보수", "종결"]
+const PROJECT_STATUS_OPTIONS: ProjectStatus[] = ["active", "maintenance", "ended"]
+
+const STATUS_LABEL: Record<ProjectStatus, string> = {
+	active: "활성화",
+	maintenance: "유지보수",
+	ended: "종결",
+}
+
 const ACTIVITY_MEMBERS_PER_PAGE = 5
-type ActivityStatusFilterValue = ProjectDetailMember["status"] | "전체"
+type ActivityStatusFilterValue = "활동 중" | "과거 활동" | "전체"
 
-const STATUS_DOT_CLASS: Record<ProjectManagementStatus, string> = {
-	활성화: "bg-[#7aee7f]",
-	유지보수: "bg-[#caa8f6]",
-	종결: "bg-black-400",
+const STATUS_DOT_CLASS: Record<ProjectStatus, string> = {
+	active: "bg-[#7aee7f]",
+	maintenance: "bg-[#caa8f6]",
+	ended: "bg-black-400",
 }
 
-const ACTIVITY_STATUS_DOT_CLASS: Record<ProjectDetailMember["status"], string> = {
+const ACTIVITY_STATUS_DOT_CLASS: Record<"활동 중" | "과거 활동", string> = {
 	"활동 중": "bg-[#7aee7f]",
-	비활성화: "bg-black-400",
+	"과거 활동": "bg-black-400",
 }
 
-function StatusBadge({ status }: { status: ProjectManagementStatus }) {
+const toDisplayDate = (isoDate: string | null) => {
+	if (!isoDate) return "미정"
+	return isoDate.replaceAll("-", ".")
+}
+
+const memberActivityStatus = (member: MemberDetail): "활동 중" | "과거 활동" =>
+	member.left_at == null ? "활동 중" : "과거 활동"
+
+function StatusBadge({ status }: { status: ProjectStatus }) {
 	return (
 		<DotStatusBadge dotClassName={STATUS_DOT_CLASS[status]} className="text-[15px] tracking-normal">
-			{status}
+			{STATUS_LABEL[status]}
 		</DotStatusBadge>
 	)
 }
 
-function ActivityStatusBadge({ status }: { status: ProjectDetailMember["status"] }) {
+function ActivityStatusBadge({ status }: { status: "활동 중" | "과거 활동" }) {
 	return <DotStatusBadge dotClassName={ACTIVITY_STATUS_DOT_CLASS[status]}>{status}</DotStatusBadge>
 }
 
@@ -109,52 +137,119 @@ export function ProjectDetailView({ project, viewMode }: ProjectDetailViewProps)
 	const [showPastMembers, setShowPastMembers] = useState(false)
 	const [activityStatusFilter, setActivityStatusFilter] =
 		useState<ActivityStatusFilterValue>("활동 중")
-	const [members, setMembers] = useState(project.activeMembers)
-	const [pastMembers] = useState(project.pastMembers)
-	const [selectedMember, setSelectedMember] = useState<ProjectDetailMember | null>(null)
-	const [currentStatus, setCurrentStatus] = useState(project.status)
+	const [selectedMember, setSelectedMember] = useState<MemberDetail | null>(null)
 	const [pendingStatus, setPendingStatus] = useState(project.status)
 	const [dialog, setDialog] = useState<DialogState>(null)
 	const [toastMessage, setToastMessage] = useState("")
 	const [showToast, setShowToast] = useState(false)
 	const isAdmin = viewMode === "admin"
-	const hasPendingStatusChange = pendingStatus !== currentStatus
+	const hasPendingStatusChange = pendingStatus !== project.status
+
+	const updateProject = useUpdateProject()
+	const addProjectMember = useAddProjectMember()
+	const updateProjectMember = useUpdateProjectMember()
+	const removeProjectMember = useRemoveProjectMember()
+	const deleteProject = useDeleteProject()
+	const replaceProjectMembers = useReplaceProjectMembers()
+	const downloadTemplate = useDownloadProjectMemberTemplate()
+
+	useEffect(() => {
+		setPendingStatus(project.status)
+	}, [project.status])
+
+	// GET /projects/{id}/members — status로 서버 필터링(활동중/과거활동), keyword는 클라이언트에서 필터링.
+	const serverStatus = showPastMembers ? "inactive" : "active"
+	const { data: memberPage, isLoading: isMembersLoading } = useProjectMembers(project.id, {
+		status: serverStatus,
+		limit: 100,
+	})
+	const membersOfCurrentTab = memberPage?.items ?? []
+	const totalCount = membersOfCurrentTab.length
 
 	const visibleMembers = useMemo(() => {
-		const source = showPastMembers ? pastMembers : members
 		const statusFilteredSource =
 			!showPastMembers && activityStatusFilter !== "전체"
-				? source.filter((member) => member.status === activityStatusFilter)
-				: source
+				? membersOfCurrentTab.filter(
+						(member) => memberActivityStatus(member) === activityStatusFilter,
+					)
+				: membersOfCurrentTab
 		const normalizedQuery = searchQuery.trim().toLowerCase()
 		if (!normalizedQuery) return statusFilteredSource
 
 		return statusFilteredSource.filter((member) =>
-			[member.name, member.position, member.email, member.githubId, member.studentNumber]
+			[member.user.name, member.position ?? "", member.user.email ?? ""]
 				.join(" ")
 				.toLowerCase()
 				.includes(normalizedQuery),
 		)
-	}, [activityStatusFilter, members, pastMembers, searchQuery, showPastMembers])
+	}, [activityStatusFilter, membersOfCurrentTab, searchQuery, showPastMembers])
 
-	const openMemberEdit = (member: ProjectDetailMember) => {
+	const openMemberEdit = (member: MemberDetail) => {
 		setSelectedMember(member)
 		setDialog("member-edit")
-	}
-
-	const handleStatusSave = (status: ProjectManagementStatus) => {
-		setPendingStatus(status)
-		setDialog("status-confirm")
-	}
-
-	const commitStatusChange = () => {
-		setCurrentStatus(pendingStatus)
-		setDialog("status-success")
 	}
 
 	const showMockToast = (message: string) => {
 		setToastMessage(message)
 		setShowToast(true)
+	}
+
+	const commitStatusChange = async () => {
+		try {
+			await updateProject.mutateAsync({ projectId: project.id, data: { status: pendingStatus } })
+			setDialog("status-success")
+		} catch (error) {
+			setDialog(null)
+			showMockToast(error instanceof Error ? error.message : "운영 상태 변경에 실패했습니다.")
+		}
+	}
+
+	const handleAddMember = async (input: { userId: number; role: MemberRole; position: string }) => {
+		try {
+			await addProjectMember.mutateAsync({
+				projectId: project.id,
+				data: { user_id: input.userId, role: input.role, position: input.position || null },
+			})
+			setDialog(null)
+		} catch (error) {
+			showMockToast(error instanceof Error ? error.message : "팀원 추가에 실패했습니다.")
+		}
+	}
+
+	const handleUpdateMember = async (input: { role: MemberRole; position: string }) => {
+		if (!selectedMember) return
+		try {
+			await updateProjectMember.mutateAsync({
+				projectId: project.id,
+				userId: selectedMember.user.id,
+				data: { role: input.role, position: input.position || null },
+			})
+			setDialog(null)
+		} catch (error) {
+			showMockToast(error instanceof Error ? error.message : "팀원 수정에 실패했습니다.")
+		}
+	}
+
+	const handleRemoveMember = async () => {
+		if (!selectedMember) return
+		try {
+			await removeProjectMember.mutateAsync({
+				projectId: project.id,
+				userId: selectedMember.user.id,
+			})
+			setDialog(null)
+		} catch (error) {
+			showMockToast(error instanceof Error ? error.message : "팀원 기록 삭제에 실패했습니다.")
+		}
+	}
+
+	const handleDeleteProject = async () => {
+		try {
+			await deleteProject.mutateAsync(project.id)
+			setDialog(null)
+		} catch (error) {
+			showMockToast(error instanceof Error ? error.message : "프로젝트 삭제에 실패했습니다.")
+		}
 	}
 
 	return (
@@ -172,7 +267,8 @@ export function ProjectDetailView({ project, viewMode }: ProjectDetailViewProps)
 			<div className="flex flex-col gap-[60px]">
 				<ActivityMembersSection
 					members={visibleMembers}
-					totalCount={showPastMembers ? pastMembers.length : members.length}
+					totalCount={totalCount}
+					isLoading={isMembersLoading}
 					searchQuery={searchQuery}
 					showPastMembers={showPastMembers}
 					activityStatusFilter={activityStatusFilter}
@@ -183,24 +279,15 @@ export function ProjectDetailView({ project, viewMode }: ProjectDetailViewProps)
 					onResetActivityStatusFilter={() => setActivityStatusFilter("전체")}
 					onOpenAdd={() => setDialog("member-add")}
 					onOpenEdit={openMemberEdit}
-					onStatusChange={(memberId, status) =>
-						setMembers((prev) =>
-							prev.map((member) => (member.id === memberId ? { ...member, status } : member)),
-						)
-					}
 					onBulkUpdate={() => setDialog("member-bulk-update")}
 				/>
 
-				<RelatedLinksSection
-					linkGroups={project.linkGroups}
-					isAdmin={isAdmin}
-					onAddLink={(groupName) => showMockToast(`${groupName} 링크 추가 API 연결 전입니다.`)}
-				/>
+				<RelatedLinksSection websites={project.websites ?? []} />
 
 				<OperatingStatusSection
 					status={pendingStatus}
 					onStatusChange={setPendingStatus}
-					onSave={() => handleStatusSave(pendingStatus)}
+					onSave={() => setDialog("status-confirm")}
 					canSave={hasPendingStatusChange}
 					onOpenHistory={() => setDialog("status-history")}
 				/>
@@ -208,24 +295,62 @@ export function ProjectDetailView({ project, viewMode }: ProjectDetailViewProps)
 				{isAdmin && <ProjectDeleteSection onDelete={() => setDialog("project-delete")} />}
 			</div>
 
-			<ProjectMemberDialog
-				mode="add"
+			<ProjectMemberAddDialog
 				open={dialog === "member-add"}
 				onOpenChange={(open) => setDialog(open ? "member-add" : null)}
-				onSubmit={() => {
-					setDialog(null)
-					showMockToast("팀원 추가 API 연결 전입니다.")
-				}}
+				onSubmit={handleAddMember}
+				isSubmitting={addProjectMember.isPending}
 			/>
-			<ProjectMemberDialog
-				mode="edit"
+			<ProjectMemberEditDialog
 				member={selectedMember}
 				open={dialog === "member-edit"}
 				onOpenChange={(open) => setDialog(open ? "member-edit" : null)}
 				onDeleteRecord={() => setDialog("member-record-delete")}
-				onSubmit={() => {
+				onSubmit={handleUpdateMember}
+				isSubmitting={updateProjectMember.isPending}
+			/>
+			<ProjectMemberBulkUpdateDialog
+				open={dialog === "member-bulk-update"}
+				onOpenChange={(open) => setDialog(open ? "member-bulk-update" : null)}
+				onSubmit={async (files) => {
+					const file = files[0]
+					if (!file) return
+					await replaceProjectMembers.mutateAsync({ projectId: project.id, file })
 					setDialog(null)
-					showMockToast("팀원 수정 API 연결 전입니다.")
+				}}
+				onDownloadTemplate={() => {
+					downloadTemplate.mutate(project.id, {
+						onSuccess: (blob) => {
+							const url = URL.createObjectURL(blob)
+							const link = document.createElement("a")
+							link.href = url
+							link.download = `project-${project.id}-members.xlsx`
+							link.click()
+							URL.revokeObjectURL(url)
+						},
+						onError: (downloadError) => {
+							showMockToast(
+								downloadError instanceof Error
+									? downloadError.message
+									: "양식 다운로드에 실패했습니다.",
+							)
+						},
+					})
+				}}
+				isSubmitting={replaceProjectMembers.isPending}
+			/>
+			<ProjectMemberBulkUpdateDialog
+				open={dialog === "member-bulk-update"}
+				onOpenChange={(open) => setDialog(open ? "member-bulk-update" : null)}
+				onSubmit={async (files) => {
+					// TODO(API): 프로젝트별 팀원 일괄 수정 API가 준비되면 project.id와 files를
+					// multipart mutation으로 전송하고 팀원 목록 query를 invalidate한다.
+					setDialog(null)
+					showMockToast(`${files.length}개 파일이 선택되었습니다. API 연결 후 반영됩니다.`)
+				}}
+				onDownloadTemplate={() => {
+					// TODO(API): 백엔드 또는 정적 asset의 실제 팀원 명부 양식 다운로드로 교체한다.
+					showMockToast("팀원 명부 양식은 API 연결 후 제공됩니다.")
 				}}
 			/>
 			<ProjectMemberBulkUpdateDialog
@@ -244,7 +369,7 @@ export function ProjectDetailView({ project, viewMode }: ProjectDetailViewProps)
 			/>
 			<ProjectStatusHistoryDialog
 				open={dialog === "status-history"}
-				histories={project.statusHistories}
+				histories={MOCK_PROJECT_STATUS_HISTORIES}
 				onOpenChange={(open) => setDialog(open ? "status-history" : null)}
 			/>
 			<SmallAlertDialog
@@ -264,20 +389,14 @@ export function ProjectDetailView({ project, viewMode }: ProjectDetailViewProps)
 				open={dialog === "project-delete"}
 				title="프로젝트를 삭제하시겠습니까?"
 				onOpenChange={(open) => setDialog(open ? "project-delete" : null)}
-				onConfirm={() => {
-					setDialog(null)
-					showMockToast("프로젝트 삭제 API 연결 전입니다.")
-				}}
+				onConfirm={handleDeleteProject}
 			/>
 			<SmallAlertDialog
 				open={dialog === "member-record-delete"}
 				title="정말로 해당 기록을 삭제하시겠습니까?"
 				description="기록을 삭제하면, 해당 회원은 이 팀과 관련된 활동 이력을 추가할 수 없게 됩니다. 팀원의 활동이 마무리된 경우에는 기록을 삭제하는 대신 활동 기간 종료일을 수정해 주세요."
 				onOpenChange={(open) => setDialog(open ? "member-record-delete" : "member-edit")}
-				onConfirm={() => {
-					setDialog(null)
-					showMockToast("팀원 기록 삭제 API 연결 전입니다.")
-				}}
+				onConfirm={handleRemoveMember}
 			/>
 			<Toast
 				message={toastMessage}
@@ -290,8 +409,9 @@ export function ProjectDetailView({ project, viewMode }: ProjectDetailViewProps)
 }
 
 interface ActivityMembersSectionProps {
-	members: ProjectDetailMember[]
+	members: MemberDetail[]
 	totalCount: number
+	isLoading: boolean
 	searchQuery: string
 	showPastMembers: boolean
 	activityStatusFilter: ActivityStatusFilterValue
@@ -301,14 +421,14 @@ interface ActivityMembersSectionProps {
 	onActivityStatusFilterChange: (value: ActivityStatusFilterValue) => void
 	onResetActivityStatusFilter: () => void
 	onOpenAdd: () => void
-	onOpenEdit: (member: ProjectDetailMember) => void
-	onStatusChange: (memberId: number, status: ProjectDetailMember["status"]) => void
+	onOpenEdit: (member: MemberDetail) => void
 	onBulkUpdate: () => void
 }
 
 function ActivityMembersSection({
 	members,
 	totalCount,
+	isLoading,
 	searchQuery,
 	showPastMembers,
 	activityStatusFilter,
@@ -319,7 +439,6 @@ function ActivityMembersSection({
 	onResetActivityStatusFilter,
 	onOpenAdd,
 	onOpenEdit,
-	onStatusChange,
 	onBulkUpdate,
 }: ActivityMembersSectionProps) {
 	const [currentPage, setCurrentPage] = useState(1)
@@ -393,19 +512,22 @@ function ActivityMembersSection({
 				<h3 className="sr-only">
 					{showPastMembers ? "과거 활동 팀원" : "활동 팀원"} ({totalCount})
 				</h3>
+				{isLoading && (
+					<p className="py-[20px] text-center text-[14px] text-black-600">불러오는 중...</p>
+				)}
 				<div
 					className={cn(
 						"w-full overflow-x-auto bg-white transition-all duration-300",
+						isLoading && "hidden",
 						showPastMembers && "translate-y-[2px]",
 					)}
 				>
 					<DesignTable className="w-full min-w-[1000px]">
 						<thead>
 							<DesignTableHeaderRow>
-								<DesignTableHeaderCell className="w-[120px]">이름</DesignTableHeaderCell>
+								<DesignTableHeaderCell className="w-[180px]">이름</DesignTableHeaderCell>
 								<DesignTableHeaderCell className="w-[200px]">포지션</DesignTableHeaderCell>
 								<DesignTableHeaderCell>이메일</DesignTableHeaderCell>
-								<DesignTableHeaderCell>Github 아이디</DesignTableHeaderCell>
 								<DesignTableHeaderCell className="w-[100px]">
 									<div className="flex items-center gap-[6px]">
 										활동 상태
@@ -422,33 +544,26 @@ function ActivityMembersSection({
 						<tbody>
 							{paginatedMembers.map((member) => (
 								<DesignTableRow key={member.id} className="h-[50px]">
-									<DesignTableBodyCell className="truncate">
-										<div className="flex min-w-0 items-center gap-[6px]">
-											<span className="truncate">{member.name}</span>
-											{member.isLeader && <TagBadge>팀장</TagBadge>}
+									<DesignTableBodyCell className="overflow-visible">
+										<div className="flex items-center gap-[6px]">
+											<span className="whitespace-nowrap">{member.user.name}</span>
+											{member.role === "leader" && <TagBadge>팀장</TagBadge>}
 										</div>
 									</DesignTableBodyCell>
 									<DesignTableBodyCell className="truncate">{member.position}</DesignTableBodyCell>
 									<DesignTableBodyCell className="max-w-0 truncate">
-										{member.email}
-									</DesignTableBodyCell>
-									<DesignTableBodyCell className="max-w-0 truncate">
-										{member.githubId}
+										{member.user.email}
 									</DesignTableBodyCell>
 									<DesignTableBodyCell className="w-[100px]">
-										<ActivityStatusSelect
-											value={member.status}
-											disabled={showPastMembers}
-											onChange={(status) => onStatusChange(member.id, status)}
-										/>
+										<ActivityStatusBadge status={memberActivityStatus(member)} />
 									</DesignTableBodyCell>
 									<DesignTableBodyCell className="truncate">
-										{member.startDate} - {member.endDate}
+										{toDisplayDate(member.joined_at)} - {toDisplayDate(member.left_at)}
 									</DesignTableBodyCell>
 									<DesignTableBodyCell className="px-0">
 										<button
 											type="button"
-											aria-label={`${member.name} 팀원 수정`}
+											aria-label={`${member.user.name} 팀원 수정`}
 											onClick={() => onOpenEdit(member)}
 											className="mx-auto flex size-[36px] items-center justify-center rounded-[4px] text-black-800 transition-colors hover:bg-black-100"
 										>
@@ -490,129 +605,45 @@ function ActivityStatusFilter({
 					value={value}
 					onValueChange={(next) => onChange(next as ActivityStatusFilterValue)}
 				>
-					{(["전체", "활동 중", "비활성화"] satisfies ActivityStatusFilterValue[]).map((status) => (
-						<DropdownMenuFilterRadioItem key={status} value={status}>
-							{status}
-						</DropdownMenuFilterRadioItem>
-					))}
+					{(["전체", "활동 중", "과거 활동"] satisfies ActivityStatusFilterValue[]).map(
+						(status) => (
+							<DropdownMenuFilterRadioItem key={status} value={status}>
+								{status}
+							</DropdownMenuFilterRadioItem>
+						),
+					)}
 				</DropdownMenuRadioGroup>
 			</DropdownMenuContent>
 		</DropdownMenu>
 	)
 }
 
-function ActivityStatusSelect({
-	value,
-	disabled,
-	onChange,
-}: {
-	value: ProjectDetailMember["status"]
-	disabled?: boolean
-	onChange: (value: ProjectDetailMember["status"]) => void
-}) {
-	if (disabled) {
-		return <ActivityStatusBadge status={value} />
-	}
-
-	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<button type="button" className="outline-none">
-					<ActivityStatusBadge status={value} />
-				</button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent
-				align="start"
-				className="w-[125px] rounded-[6px] border-black-300 bg-white p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
-			>
-				<DropdownMenuRadioGroup
-					value={value}
-					onValueChange={(next) => onChange(next as ProjectDetailMember["status"])}
-				>
-					{(["활동 중", "비활성화"] satisfies ProjectDetailMember["status"][]).map((status) => (
-						<DropdownMenuFilterRadioItem key={status} value={status} className="h-[40px]">
-							{status}
-						</DropdownMenuFilterRadioItem>
-					))}
-				</DropdownMenuRadioGroup>
-			</DropdownMenuContent>
-		</DropdownMenu>
-	)
-}
-
-function RelatedLinksSection({
-	linkGroups,
-	isAdmin,
-	onAddLink,
-}: {
-	linkGroups: ProjectDetail["linkGroups"]
-	isAdmin: boolean
-	onAddLink: (groupName: string) => void
-}) {
-	const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() =>
-		Object.fromEntries(linkGroups.map((group) => [group.name, group.name !== "ETC"])),
-	)
-
-	const toggleGroup = (groupName: string) => {
-		setExpandedGroups((prev) => ({ ...prev, [groupName]: !prev[groupName] }))
-	}
-
+function RelatedLinksSection({ websites }: { websites: NonNullable<ProjectDetail["websites"]> }) {
 	return (
 		<SectionRow title="관련 링크">
 			<div className="w-[1456px] max-w-full overflow-x-auto bg-white">
 				<div className="min-w-[960px] border-black-300 border-t">
-					{linkGroups.map((group) => {
-						const isExpanded = expandedGroups[group.name] ?? false
-
-						return (
-							<div key={group.name}>
-								<div className="flex h-[50px] items-center border-black-300 border-b bg-white">
-									<button
-										type="button"
-										onClick={() => toggleGroup(group.name)}
-										aria-expanded={isExpanded}
-										className="flex h-full flex-1 items-center gap-[10px] px-[20px] text-[14px] font-medium leading-[1.4] whitespace-nowrap text-black-900"
-									>
-										<ChevronDown
-											className={cn(
-												"size-[24px] text-black-800 transition-transform",
-												isExpanded && "rotate-180",
-											)}
-											strokeWidth={1.7}
-										/>
-										{group.name} ({group.links.length})
-									</button>
-									{isAdmin && (
-										<button
-											type="button"
-											onClick={() => onAddLink(group.name)}
-											className="mr-[20px] flex h-[37px] items-center gap-[8px] rounded-[3px] px-[10px] text-[14px] font-medium leading-[17px] whitespace-nowrap text-black-800 transition-colors hover:bg-black-100"
-										>
-											<Plus className="size-[16px]" strokeWidth={1.8} />
-											링크추가
-										</button>
-									)}
-								</div>
-								{isExpanded &&
-									group.links.map((link) => (
-										<div key={link.id} className="flex h-[40px] border-black-300 border-b">
-											<div className="flex w-[220px] items-center overflow-hidden px-[80px] text-[14px] font-normal whitespace-nowrap text-black-900">
-												{link.type}
-											</div>
-											<a
-												href={link.url}
-												target="_blank"
-												rel="noreferrer"
-												className="flex min-w-0 flex-1 items-center gap-[4px] overflow-hidden px-[20px] text-[14px] font-normal whitespace-nowrap text-black-600 hover:underline"
-											>
-												<span className="truncate">{link.label}</span>
-												<ArrowUpRight className="size-[20px] shrink-0" strokeWidth={1.6} />
-											</a>
-										</div>
-									))}
+					{websites.length === 0 && (
+						<div className="flex h-[50px] items-center px-[20px] text-[14px] text-black-600">
+							등록된 링크가 없습니다.
+						</div>
+					)}
+					{websites.map((website) => (
+						<div key={website.url} className="flex h-[40px] border-black-300 border-b">
+							<div className="flex w-[220px] items-center overflow-hidden px-[80px] text-[14px] font-normal whitespace-nowrap text-black-900">
+								{website.type}
 							</div>
-						)
-					})}
+							<a
+								href={website.url}
+								target="_blank"
+								rel="noreferrer"
+								className="flex min-w-0 flex-1 items-center gap-[4px] overflow-hidden px-[20px] text-[14px] font-normal whitespace-nowrap text-black-600 hover:underline"
+							>
+								<span className="truncate">{website.description || website.url}</span>
+								<ArrowUpRight className="size-[20px] shrink-0" strokeWidth={1.6} />
+							</a>
+						</div>
+					))}
 				</div>
 			</div>
 		</SectionRow>
@@ -626,8 +657,8 @@ function OperatingStatusSection({
 	canSave,
 	onOpenHistory,
 }: {
-	status: ProjectManagementStatus
-	onStatusChange: (status: ProjectManagementStatus) => void
+	status: ProjectStatus
+	onStatusChange: (status: ProjectStatus) => void
 	onSave: () => void
 	canSave: boolean
 	onOpenHistory: () => void
@@ -652,11 +683,11 @@ function OperatingStatusSection({
 						>
 							<DropdownMenuRadioGroup
 								value={status}
-								onValueChange={(next) => onStatusChange(next as ProjectManagementStatus)}
+								onValueChange={(next) => onStatusChange(next as ProjectStatus)}
 							>
 								{PROJECT_STATUS_OPTIONS.map((option) => (
 									<DropdownMenuFilterRadioItem key={option} value={option}>
-										{option}
+										{STATUS_LABEL[option]}
 									</DropdownMenuFilterRadioItem>
 								))}
 							</DropdownMenuRadioGroup>
@@ -683,27 +714,13 @@ function OperatingStatusSection({
 	)
 }
 
-function ProjectDeleteSection({ onDelete }: { onDelete: () => void }) {
-	return (
-		<SectionRow title="프로젝트 삭제">
-			<button
-				type="button"
-				onClick={onDelete}
-				className="flex h-[40px] w-[108px] items-center justify-center rounded-[4px] bg-[#ffeaea] text-[14px] font-semibold leading-[24px] text-[#f44949] transition-colors hover:bg-[#ffdada] active:bg-[#ffd0d0]"
-			>
-				프로젝트 삭제
-			</button>
-		</SectionRow>
-	)
-}
-
 function ProjectStatusHistoryDialog({
 	open,
 	histories,
 	onOpenChange,
 }: {
 	open: boolean
-	histories: ProjectDetail["statusHistories"]
+	histories: ProjectStatusHistory[]
 	onOpenChange: (open: boolean) => void
 }) {
 	return (
@@ -721,11 +738,11 @@ function ProjectStatusHistoryDialog({
 						<div className="w-[434px] border-black-300 border-t">
 							{histories.map((history) => (
 								<div
-									key={history.status}
+									key={`${history.status}-${history.startDate}`}
 									className="flex h-[80px] items-center justify-between border-black-300 border-b px-[20px]"
 								>
 									<span className="text-[15px] font-medium tracking-[-0.3px] text-black-900">
-										{history.status}
+										{STATUS_LABEL[history.status]}
 									</span>
 									<div className="flex items-center gap-[5px]">
 										<CalendarDateField
@@ -757,35 +774,205 @@ function ProjectStatusHistoryDialog({
 	)
 }
 
-function ProjectMemberDialog({
-	mode,
+function ProjectDeleteSection({ onDelete }: { onDelete: () => void }) {
+	return (
+		<SectionRow title="프로젝트 삭제">
+			<button
+				type="button"
+				onClick={onDelete}
+				className="flex h-[40px] w-[108px] items-center justify-center rounded-[4px] bg-[#ffeaea] text-[14px] font-semibold leading-[24px] text-[#f44949] transition-colors hover:bg-[#ffdada] active:bg-[#ffd0d0]"
+			>
+				프로젝트 삭제
+			</button>
+		</SectionRow>
+	)
+}
+
+function useMemberSearch(query: string) {
+	const { data } = useUsers(undefined, 20, { name: query, enabled: query.trim().length > 0 })
+	return data?.items ?? []
+}
+
+function MemberSearchSelect({
+	selectedUserId,
+	selectedLabel,
+	onSelect,
+}: {
+	selectedUserId: number | null
+	selectedLabel: string
+	onSelect: (userId: number, label: string) => void
+}) {
+	const [query, setQuery] = useState("")
+	const results = useMemberSearch(query)
+
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>
+				<button
+					type="button"
+					className="flex h-[42px] w-[300px] items-center gap-[10px] rounded-[5px] border border-black-300 bg-white px-[10px] text-left text-[14px] text-black-600 transition-colors hover:border-peach-300 focus-visible:border-peach-300 focus-visible:outline-none"
+				>
+					<Search className="size-[20px] shrink-0 text-black-600" strokeWidth={1.8} aria-hidden />
+					<span className={cn("truncate", !selectedLabel && "text-black-600")}>
+						{selectedLabel || "이름을 검색해 보세요."}
+					</span>
+				</button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent
+				align="start"
+				className="w-[300px] rounded-[6px] border-black-300 bg-white p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
+			>
+				<div className="p-[5px]">
+					<Input
+						autoFocus
+						value={query}
+						onChange={(event) => setQuery(event.target.value)}
+						placeholder="이름을 검색해 보세요."
+						className="h-[36px] rounded-[4px] border-black-300 text-[13px]"
+					/>
+				</div>
+				<DropdownMenuRadioGroup
+					value={selectedUserId != null ? String(selectedUserId) : ""}
+					onValueChange={() => undefined}
+				>
+					{results.map((user) => (
+						<DropdownMenuFilterRadioItem
+							key={user.id}
+							value={String(user.id)}
+							onClick={() => onSelect(user.id, `${user.name}(${user.student_id ?? user.id})`)}
+						>
+							{user.name}
+							{user.student_id ? `(${user.student_id})` : ""}
+						</DropdownMenuFilterRadioItem>
+					))}
+					{results.length === 0 && (
+						<p className="px-[10px] py-[8px] text-[13px] text-black-600">검색 결과가 없습니다.</p>
+					)}
+				</DropdownMenuRadioGroup>
+			</DropdownMenuContent>
+		</DropdownMenu>
+	)
+}
+
+function ProjectMemberAddDialog({
+	open,
+	onOpenChange,
+	onSubmit,
+	isSubmitting,
+}: {
+	open: boolean
+	onOpenChange: (open: boolean) => void
+	onSubmit: (input: { userId: number; role: MemberRole; position: string }) => void
+	isSubmitting: boolean
+}) {
+	const [userId, setUserId] = useState<number | null>(null)
+	const [userLabel, setUserLabel] = useState("")
+	const [isLeader, setIsLeader] = useState(false)
+	const [position, setPosition] = useState("")
+
+	useEffect(() => {
+		if (!open) return
+		setUserId(null)
+		setUserLabel("")
+		setIsLeader(false)
+		setPosition("")
+	}, [open])
+
+	const handleSubmit = () => {
+		if (userId == null) return
+		onSubmit({ userId, role: isLeader ? "leader" : "member", position })
+	}
+
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DesignDialogContent className="!w-[587px] !max-w-[calc(100vw-32px)] overflow-visible rounded-[15px] border-0 shadow-none">
+				<div className="flex flex-col gap-[10px] overflow-visible px-[10px] pt-[10px] pb-[40px]">
+					<button
+						type="button"
+						aria-label="닫기"
+						onClick={() => onOpenChange(false)}
+						className="ml-auto flex size-[35px] shrink-0 items-center justify-center text-black-800 transition-colors hover:text-black-900"
+					>
+						<X className="size-[28px]" strokeWidth={2.4} />
+					</button>
+					<div className="flex w-full flex-col items-end">
+						<div className="flex w-full flex-col gap-[50px] px-[40px]">
+							<DialogTitle className="w-[420px] text-[24px] font-medium leading-normal text-black-900">
+								팀원 추가
+							</DialogTitle>
+							<div className="flex flex-col items-end gap-[40px]">
+								<div className="w-[487px] border-black-300 border-t">
+									<MemberDialogRow label="이름">
+										<MemberSearchSelect
+											selectedUserId={userId}
+											selectedLabel={userLabel}
+											onSelect={(id, label) => {
+												setUserId(id)
+												setUserLabel(label)
+											}}
+										/>
+									</MemberDialogRow>
+									<MemberDialogRow label="팀장 여부">
+										<div className="flex items-center gap-[50px]">
+											<RadioButton checked={isLeader} onClick={() => setIsLeader(true)}>
+												예
+											</RadioButton>
+											<RadioButton checked={!isLeader} onClick={() => setIsLeader(false)}>
+												아니오
+											</RadioButton>
+										</div>
+									</MemberDialogRow>
+									<MemberDialogRow label="포지션">
+										<Input
+											value={position}
+											onChange={(event) => setPosition(event.target.value)}
+											placeholder="포지션을 입력해 주세요."
+											className="h-[42px] w-[300px] rounded-[5px] border-black-300 px-[10px] text-[14px] tracking-[-0.28px] text-black-900 shadow-none placeholder:text-black-600 focus-visible:border-peach-300 focus-visible:ring-0"
+										/>
+									</MemberDialogRow>
+								</div>
+								<div className="flex h-[50px] items-center gap-[10px]">
+									<DialogActionButton variant="cancel" onClick={() => onOpenChange(false)}>
+										취소
+									</DialogActionButton>
+									<DialogActionButton
+										onClick={handleSubmit}
+										disabled={userId == null || isSubmitting}
+									>
+										확인
+									</DialogActionButton>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</DesignDialogContent>
+		</Dialog>
+	)
+}
+
+function ProjectMemberEditDialog({
 	member,
 	open,
 	onOpenChange,
 	onDeleteRecord,
 	onSubmit,
+	isSubmitting,
 }: {
-	mode: "add" | "edit"
-	member?: ProjectDetailMember | null
+	member: MemberDetail | null
 	open: boolean
 	onOpenChange: (open: boolean) => void
-	onDeleteRecord?: () => void
-	onSubmit: () => void
+	onDeleteRecord: () => void
+	onSubmit: (input: { role: MemberRole; position: string }) => void
+	isSubmitting: boolean
 }) {
-	const [startDate, setStartDate] = useState(member?.startDate ?? "YYYY.MM.DD")
-	const [endDate, setEndDate] = useState(
-		member?.endDatePending ? "YYYY.MM.DD" : (member?.endDate ?? "YYYY.MM.DD"),
-	)
-	const [endDatePending, setEndDatePending] = useState(member?.endDatePending ?? true)
-	const [isLeader, setIsLeader] = useState(member?.isLeader ?? true)
+	const [isLeader, setIsLeader] = useState(member?.role === "leader")
+	const [position, setPosition] = useState(member?.position ?? "")
 
 	useEffect(() => {
 		if (!open) return
-
-		setStartDate(member?.startDate ?? "YYYY.MM.DD")
-		setEndDate(member?.endDatePending ? "YYYY.MM.DD" : (member?.endDate ?? "YYYY.MM.DD"))
-		setEndDatePending(member?.endDatePending ?? true)
-		setIsLeader(member?.isLeader ?? true)
+		setIsLeader(member?.role === "leader")
+		setPosition(member?.position ?? "")
 	}, [member, open])
 
 	return (
@@ -803,14 +990,12 @@ function ProjectMemberDialog({
 					<div className="flex w-full flex-col items-end">
 						<div className="flex w-full flex-col gap-[50px] px-[40px]">
 							<DialogTitle className="w-[420px] text-[24px] font-medium leading-normal text-black-900">
-								{mode === "add" ? "팀원 추가" : "팀원 수정"}
+								팀원 수정
 							</DialogTitle>
 							<div className="flex flex-col items-end gap-[40px]">
 								<div className="w-[487px] border-black-300 border-t">
 									<MemberDialogRow label="이름">
-										<MemberSearchSelect
-											initialLabel={member ? `${member.name}(${member.studentNumber})` : undefined}
-										/>
+										<span className="text-[14px] text-black-900">{member?.user.name}</span>
 									</MemberDialogRow>
 									<MemberDialogRow label="팀장 여부">
 										<div className="flex items-center gap-[50px]">
@@ -824,59 +1009,33 @@ function ProjectMemberDialog({
 									</MemberDialogRow>
 									<MemberDialogRow label="포지션">
 										<Input
-											defaultValue={member?.position ?? ""}
+											value={position}
+											onChange={(event) => setPosition(event.target.value)}
 											placeholder="포지션을 입력해 주세요."
 											className="h-[42px] w-[300px] rounded-[5px] border-black-300 px-[10px] text-[14px] tracking-[-0.28px] text-black-900 shadow-none placeholder:text-black-600 focus-visible:border-peach-300 focus-visible:ring-0"
 										/>
 									</MemberDialogRow>
-									<MemberDialogRow label="활동 기간">
-										<div className="flex w-full items-center gap-[10px]">
-											<div className="flex shrink-0 items-center gap-[5px]">
-												<CalendarDateField
-													value={startDate}
-													onChange={setStartDate}
-													className="h-[42px] w-[140px] rounded-[6px] border-black-300 px-[10px] text-[14px] leading-[20px] text-black-600"
-												/>
-												<span className="text-[15px] text-black-300">-</span>
-												<CalendarDateField
-													value={endDate}
-													onChange={setEndDate}
-													className="h-[42px] w-[140px] rounded-[6px] border-black-300 px-[10px] text-[14px] leading-[20px] text-black-600"
-													popoverClassName="right-0"
-												/>
-											</div>
-											<button
-												type="button"
-												aria-pressed={endDatePending}
-												onClick={() => setEndDatePending((prev) => !prev)}
-												className="flex shrink-0 cursor-pointer items-center gap-[10px] text-[14px] text-black-700 tracking-[-0.28px]"
-											>
-												<Checkbox
-													checked={endDatePending}
-													className="pointer-events-none size-[16px] rounded-[3px] border border-black-500 bg-white text-white shadow-none transition-colors data-[state=checked]:border-peach-300 data-[state=checked]:bg-peach-300 data-[state=unchecked]:bg-white [&_svg]:size-[12px]"
-												/>
-												미정
-											</button>
-										</div>
+									<MemberDialogRow label="기록 삭제">
+										<DialogActionButton
+											variant="danger"
+											size="sm"
+											onClick={onDeleteRecord}
+											className="h-[36px] rounded-[3px] px-[16px] text-[14px]"
+										>
+											기록 삭제
+										</DialogActionButton>
 									</MemberDialogRow>
-									{mode === "edit" && (
-										<MemberDialogRow label="기록 삭제">
-											<DialogActionButton
-												variant="danger"
-												size="sm"
-												onClick={onDeleteRecord}
-												className="h-[36px] rounded-[3px] px-[16px] text-[14px]"
-											>
-												기록 삭제
-											</DialogActionButton>
-										</MemberDialogRow>
-									)}
 								</div>
 								<div className="flex h-[50px] items-center gap-[10px]">
 									<DialogActionButton variant="cancel" onClick={() => onOpenChange(false)}>
 										취소
 									</DialogActionButton>
-									<DialogActionButton onClick={onSubmit}>확인</DialogActionButton>
+									<DialogActionButton
+										onClick={() => onSubmit({ role: isLeader ? "leader" : "member", position })}
+										disabled={isSubmitting}
+									>
+										확인
+									</DialogActionButton>
 								</div>
 							</div>
 						</div>
@@ -896,47 +1055,6 @@ function MemberDialogRow({ label, children }: { label: string; children: React.R
 			<div className="flex min-w-0 flex-1 items-center px-[20px]">{children}</div>
 		</div>
 	)
-}
-
-function MemberSearchSelect({ initialLabel }: { initialLabel?: string }) {
-	const memberSearchOptions = ["김와플(2021-23456)", "목록에 없음"]
-	const [selectedLabel, setSelectedLabel] = useState(initialLabel ?? "")
-
-	useEffect(() => {
-		setSelectedLabel(initialLabel ?? "")
-	}, [initialLabel])
-
-	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<button
-					type="button"
-					className="flex h-[42px] w-[300px] items-center gap-[10px] rounded-[5px] border border-black-300 bg-white px-[10px] text-left text-[14px] text-black-600 transition-colors hover:border-peach-300 focus-visible:border-peach-300 focus-visible:outline-none"
-				>
-					<SearchInputIcon />
-					<span className={cn("truncate", !selectedLabel && "text-black-600")}>
-						{selectedLabel || "이름을 검색해 보세요."}
-					</span>
-				</button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent
-				align="start"
-				className="w-[300px] rounded-[6px] border-black-300 bg-white p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
-			>
-				<DropdownMenuRadioGroup value={selectedLabel} onValueChange={setSelectedLabel}>
-					{memberSearchOptions.map((option) => (
-						<DropdownMenuFilterRadioItem key={option} value={option}>
-							{option}
-						</DropdownMenuFilterRadioItem>
-					))}
-				</DropdownMenuRadioGroup>
-			</DropdownMenuContent>
-		</DropdownMenu>
-	)
-}
-
-function SearchInputIcon() {
-	return <Search className="size-[20px] shrink-0 text-black-600" strokeWidth={1.8} aria-hidden />
 }
 
 function RadioButton({

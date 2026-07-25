@@ -1,12 +1,31 @@
 "use client"
 
-import { MOCK_PROJECT_MANAGEMENT_ROWS } from "@/components/projects/project-management.mock"
+import { Loader2 } from "lucide-react"
+import { Forbidden } from "@/components/error/forbidden"
 import { ProjectManagementView } from "@/components/projects/project-management-view"
+import { useAuth } from "@/components/providers/auth-provider"
 import type { ProjectManagementViewMode } from "@/types"
 
 export default function ProjectsPage() {
-	// TODO(API): 현재 사용자 권한 API와 프로젝트 목록 API가 준비되면 viewMode와 projects를 hook 결과로 교체.
-	const viewMode: ProjectManagementViewMode = "admin"
+	const { activeRole, isLoading } = useAuth()
 
-	return <ProjectManagementView projects={MOCK_PROJECT_MANAGEMENT_ROWS} viewMode={viewMode} />
+	if (isLoading) {
+		return (
+			<div className="flex min-h-screen items-center justify-center">
+				<Loader2 className="h-8 w-8 animate-spin text-primary" />
+			</div>
+		)
+	}
+
+	const canViewProjectManagement = ["leader", "waffle_leader", "operations"].includes(activeRole)
+
+	if (!canViewProjectManagement) {
+		return (
+			<Forbidden message="프로젝트 관리 페이지에 접근할 권한이 없습니다. 관리자 또는 팀장 권한이 필요합니다." />
+		)
+	}
+
+	const viewMode: ProjectManagementViewMode = activeRole === "leader" ? "member" : "admin"
+
+	return <ProjectManagementView viewMode={viewMode} />
 }
