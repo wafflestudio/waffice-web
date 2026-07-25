@@ -4,17 +4,19 @@ import { Loader2 } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { Suspense } from "react"
 import { Forbidden } from "@/components/error/forbidden"
-import { MOCK_PROJECT_DETAIL } from "@/components/projects/project-detail.mock"
 import { ProjectDetailView } from "@/components/projects/project-detail-view"
-import { MOCK_PROJECT_MANAGEMENT_ROWS } from "@/components/projects/project-management.mock"
 import { useAuth } from "@/components/providers/auth-provider"
+import { useProject } from "@/hooks/use-projects"
 import type { ProjectDetailViewMode } from "@/types"
 
 function ProjectDetailContent() {
-	const { activeRole, isLoading } = useAuth()
+	const { activeRole, isLoading: isAuthLoading } = useAuth()
 	const searchParams = useSearchParams()
+	const projectIdParam = Number(searchParams.get("projectId"))
+	const projectId = Number.isInteger(projectIdParam) ? projectIdParam : null
+	const { data: project, isLoading: isProjectLoading, error } = useProject(projectId)
 
-	if (isLoading) {
+	if (isAuthLoading) {
 		return (
 			<div className="flex min-h-screen items-center justify-center">
 				<Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -30,19 +32,23 @@ function ProjectDetailContent() {
 		)
 	}
 
+	if (isProjectLoading) {
+		return (
+			<div className="flex min-h-screen items-center justify-center">
+				<Loader2 className="h-8 w-8 animate-spin text-primary" />
+			</div>
+		)
+	}
+
+	if (error || !project) {
+		return (
+			<div className="flex min-h-screen items-center justify-center text-black-600">
+				{error?.message ?? "프로젝트를 찾을 수 없습니다."}
+			</div>
+		)
+	}
+
 	const viewMode: ProjectDetailViewMode = activeRole === "leader" ? "leader" : "admin"
-	const projectId = Number(searchParams.get("projectId"))
-	const selectedProject = Number.isInteger(projectId)
-		? MOCK_PROJECT_MANAGEMENT_ROWS.find((project) => project.id === projectId)
-		: undefined
-	const project = selectedProject
-		? {
-				...MOCK_PROJECT_DETAIL,
-				id: selectedProject.id,
-				name: selectedProject.name,
-				status: selectedProject.status,
-			}
-		: MOCK_PROJECT_DETAIL
 
 	return <ProjectDetailView project={project} viewMode={viewMode} />
 }

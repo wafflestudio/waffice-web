@@ -104,7 +104,7 @@ export function ProjectMemberBulkUpdateDialog({
 	return (
 		<>
 			<Dialog open={open} onOpenChange={handleOpenChange}>
-				<DesignDialogContent className="w-[460px] max-w-[calc(100vw-32px)] overflow-y-auto rounded-[12px] border border-black-300 shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
+				<DesignDialogContent className="w-[460px] max-w-[calc(100vw-32px)] overflow-visible rounded-[12px] border border-black-300 shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
 					<div className="flex w-full flex-col items-end gap-[10px] px-[10px] pt-[10px] pb-[40px]">
 						<DialogClose
 							onClick={() => handleOpenChange(false)}

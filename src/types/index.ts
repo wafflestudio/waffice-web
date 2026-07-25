@@ -1,4 +1,5 @@
 export * from "./activity"
+export * from "./activity-history"
 export * from "./auth"
 export * from "./certificate"
 export * from "./common"

@@ -1,47 +1,11 @@
-import type { ProjectManagementStatus } from "./project-management"
+import type { ProjectStatus } from "./project"
 
 export type ProjectDetailViewMode = "admin" | "leader"
-export type ProjectMemberActivityStatus = "활동 중" | "비활성화"
-export type ProjectLinkGroupName = "Released" | "Github" | "ETC"
 
-export interface ProjectDetailMember {
-	id: number
-	name: string
-	studentNumber: string
-	isLeader: boolean
-	position: string
-	email: string
-	githubId: string
-	status: ProjectMemberActivityStatus
-	startDate: string
-	endDate: string
-	endDatePending?: boolean
-}
-
-export interface ProjectDetailLink {
-	id: number
-	label: string
-	type: string
-	url: string
-}
-
-export interface ProjectDetailLinkGroup {
-	name: ProjectLinkGroupName
-	links: ProjectDetailLink[]
-}
-
+// TODO(API): 백엔드에 상태 변경 이력 엔드포인트가 생기면 mock 대신 API 응답을 사용한다.
+// docs/project-management-backend-requests.md 1번 참고.
 export interface ProjectStatusHistory {
-	status: ProjectManagementStatus
+	status: ProjectStatus
 	startDate: string
 	endDate: string
-}
-
-export interface ProjectDetail {
-	id: number
-	name: string
-	status: ProjectManagementStatus
-	activeMembers: ProjectDetailMember[]
-	pastMembers: ProjectDetailMember[]
-	linkGroups: ProjectDetailLinkGroup[]
-	statusHistories: ProjectStatusHistory[]
 }
