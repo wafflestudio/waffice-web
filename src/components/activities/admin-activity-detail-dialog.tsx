@@ -36,6 +36,7 @@ export function AdminActivityDetailDialog({
 }: AdminActivityDetailDialogProps) {
 	const relatedRequestsQuery = useRequests({
 		scope: "received",
+		status: "all",
 		activityId: row?.activityId ?? undefined,
 		enabled: row?.activityId != null,
 	})
