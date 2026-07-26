@@ -221,10 +221,6 @@ export function ActivityRequestDialog({
 							/>
 						</ActivityDialogRow>
 
-						<p className="text-[13px] text-black-600">
-							요청을 보내면 운영진 전체에게 승인 요청이 전달됩니다.
-						</p>
-
 						<div className="flex justify-end gap-[10px]">
 							<DialogActionButton variant="cancel" onClick={() => onOpenChange(false)}>
 								취소
