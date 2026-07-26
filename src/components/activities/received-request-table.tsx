@@ -1,6 +1,5 @@
 "use client"
 
-import { SlidersHorizontal } from "lucide-react"
 import { useState } from "react"
 import {
 	REQUEST_KIND_LABELS,
@@ -15,6 +14,7 @@ import {
 	DropdownMenuRadioGroup,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { FilterTrigger } from "@/components/ui/filter-tag"
 import { DotStatusBadge } from "@/components/ui/status-badge"
 import { cn } from "@/lib/utils"
 import type { ApprovalRequestListItem, RequestStatus } from "@/types"
@@ -50,32 +50,34 @@ export function ReceivedRequestTable({
 				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>요청자명</div>
 				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>활동 프로젝트</div>
 				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>요청구분</div>
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<button
-							type="button"
-							className={cn(CELL_CLASS, "gap-[6px] font-medium tracking-[-0.28px]")}
+				<div className={CELL_CLASS}>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<FilterTrigger
+								aria-label="요청상태 필터"
+								className="h-auto w-auto gap-[6px] rounded-none p-0 text-[14px] font-medium tracking-[-0.28px] text-black-900 hover:bg-transparent"
+								iconClassName="size-4 text-black-900"
+							>
+								요청상태
+							</FilterTrigger>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent
+							align="end"
+							className="min-w-0 w-[150px] rounded-[6px] border-black-300 p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
 						>
-							요청상태
-							<SlidersHorizontal className="size-[12px]" strokeWidth={1.5} />
-						</button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent
-						align="end"
-						className="w-[150px] rounded-[6px] border-black-300 p-[5px] shadow-[0px_4px_6px_rgba(0,0,0,0.09)]"
-					>
-						<DropdownMenuRadioGroup
-							value={statusFilter}
-							onValueChange={(value) => setStatusFilter(value as StatusFilter)}
-						>
-							{STATUS_OPTIONS.map((status) => (
-								<DropdownMenuFilterRadioItem key={status} value={status}>
-									{status === "전체" ? status : REQUEST_STATUS_LABELS[status]}
-								</DropdownMenuFilterRadioItem>
-							))}
-						</DropdownMenuRadioGroup>
-					</DropdownMenuContent>
-				</DropdownMenu>
+							<DropdownMenuRadioGroup
+								value={statusFilter}
+								onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+							>
+								{STATUS_OPTIONS.map((status) => (
+									<DropdownMenuFilterRadioItem key={status} value={status}>
+										{status === "전체" ? status : REQUEST_STATUS_LABELS[status]}
+									</DropdownMenuFilterRadioItem>
+								))}
+							</DropdownMenuRadioGroup>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				</div>
 			</div>
 
 			{visibleRequests.map((request) => (

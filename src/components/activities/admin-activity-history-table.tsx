@@ -73,7 +73,7 @@ export function AdminActivityHistoryTable({
 					</DropdownMenu>
 				</div>
 				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>활동 내용</div>
-				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>기록 상태</div>
+				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>요청 상태</div>
 			</div>
 
 			{rows.map((row) => (
