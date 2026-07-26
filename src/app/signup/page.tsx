@@ -24,6 +24,8 @@ import { authClient } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 
 const TERMS_URL = "https://app.notion.com/p/22870e37e9c780728b2cc86f0adaa593?source=copy_link"
+const PRIVACY_POLICY_URL =
+	"https://app.notion.com/p/WAFFICE-3a970e37e9c780418298cf4c252c370c?source=copy_link"
 
 const signupSchema = z.object({
 	name: z.string().min(1, "이름을 입력해 주세요."),
@@ -434,7 +436,14 @@ export default function SignupPage() {
 												</FormControl>
 												<span className="text-[13px]">
 													<span className="text-[#505050]">[필수] </span>
-													<span className="text-[#121212] underline">개인정보 수집·이용 동의</span>
+													<a
+														href={PRIVACY_POLICY_URL}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="text-[#121212] underline"
+													>
+														개인정보 수집·이용 동의
+													</a>
 												</span>
 											</FormItem>
 										)}

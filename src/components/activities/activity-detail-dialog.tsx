@@ -50,6 +50,7 @@ export function ActivityDetailDialog({
 }: ActivityDetailDialogProps) {
 	const relatedRequestsQuery = useRequests({
 		scope: "sent",
+		status: "all",
 		activityId: record?.id ?? undefined,
 		enabled: record?.id != null,
 	})
