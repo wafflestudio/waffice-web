@@ -131,11 +131,14 @@ export default function MembersPage() {
 		}
 	}
 
-	const handleDialogSubmit = async (role: string) => {
+	const handleDialogSubmit = async (role: string, reason: string) => {
 		try {
 			const qualification = roleToQualification(role)
 			const updatePromises = selectedMembers.map((userId) =>
-				updateUserMutation.mutateAsync({ userId, data: { qualification } }),
+				updateUserMutation.mutateAsync({
+					userId,
+					data: { qualification, qualification_change_reason: reason },
+				}),
 			)
 			await Promise.all(updatePromises)
 			setToastMessage(`${selectedMembers.length}명의 회원 자격이 성공적으로 변경되었습니다.`)

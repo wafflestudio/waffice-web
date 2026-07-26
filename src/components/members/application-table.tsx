@@ -110,7 +110,7 @@ export function ApplicationTable({
 	statusFilter,
 	onStatusFilterChange,
 }: ApplicationTableProps) {
-	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "미가입"]
+	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "가입 대기"]
 	const STATUS_OPTIONS = ["대기", "승인"]
 
 	const filteredApplications = applications
@@ -289,7 +289,7 @@ export function ApplicationTable({
 										{formattedDate}
 									</TableCell>
 									<TableCell className="truncate px-[20px] text-[15px] font-normal text-[#121212]">
-										{application.role || "미가입"}
+										{application.role || "가입 대기"}
 									</TableCell>
 									<TableCell className="truncate px-[20px]">
 										<DotStatusBadge

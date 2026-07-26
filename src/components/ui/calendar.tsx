@@ -37,6 +37,8 @@ function Calendar({ value, onChange, className }: CalendarProps) {
 	const [selectedDay, setSelectedDay] = useState(initialDate.getDate())
 
 	const daysInMonth = new Date(year, month, 0).getDate()
+	// 그리드가 월요일 시작이므로 JS의 일요일(0) 기준 요일을 월요일(0)~일요일(6) 기준으로 옮긴다.
+	const firstWeekday = (new Date(year, month - 1, 1).getDay() + 6) % 7
 	const years = Array.from({ length: 11 }, (_, index) => 2026 - index)
 	const months = Array.from({ length: 12 }, (_, index) => index + 1)
 
@@ -79,6 +81,10 @@ function Calendar({ value, onChange, className }: CalendarProps) {
 					<div key={day} className="text-[16px] font-medium text-black-900">
 						{day}
 					</div>
+				))}
+				{Array.from({ length: firstWeekday }, (_, index) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: 위치만 채우는 빈 칸이라 값이 없다
+					<div key={`leading-${index}`} />
 				))}
 				{Array.from({ length: daysInMonth }, (_, index) => index + 1).map((day) => (
 					<button

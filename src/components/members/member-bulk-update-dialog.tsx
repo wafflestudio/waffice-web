@@ -27,6 +27,13 @@ const formatFileSize = (size: number) => {
 const isXlsxFile = (file: File) =>
 	file.name.toLowerCase().endsWith(".xlsx") || file.type === XLSX_MIME_TYPE
 
+const todayDateInput = () => {
+	const now = new Date()
+	return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(
+		now.getDate(),
+	).padStart(2, "0")}`
+}
+
 export function MemberBulkUpdateDialog({
 	open,
 	onOpenChange,
@@ -34,14 +41,14 @@ export function MemberBulkUpdateDialog({
 	onDownloadTemplate,
 	isSubmitting = false,
 }: MemberBulkUpdateDialogProps) {
-	const [effectiveDate, setEffectiveDate] = useState("2025.10.01")
+	const [effectiveDate, setEffectiveDate] = useState(todayDateInput)
 	const [selectedFile, setSelectedFile] = useState<File | null>(null)
 	const [isDragging, setIsDragging] = useState(false)
 	const fileInputId = useId()
 	const fileInputRef = useRef<HTMLInputElement>(null)
 
 	const reset = () => {
-		setEffectiveDate("2025.10.01")
+		setEffectiveDate(todayDateInput())
 		setSelectedFile(null)
 		setIsDragging(false)
 		if (fileInputRef.current) {

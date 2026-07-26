@@ -91,6 +91,10 @@ export interface MyPageProfileUpdateRequest extends ProfileUpdateRequest {}
 
 export interface UserUpdateRequest extends ProfileUpdateRequest {
 	qualification?: Qualification | null
+	// TODO(backend): 백엔드 UserUpdateRequest/AuditLog에 아직 없는 필드.
+	// qualification과 함께 보내면 서버가 audit log payload에 reason으로 저장해주길 기대.
+	// 필드명은 백엔드 스펙 확정 시 맞춰서 수정.
+	qualification_change_reason?: string | null
 	is_leader?: boolean | null
 	is_admin?: boolean | null
 	is_president?: boolean | null

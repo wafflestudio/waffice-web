@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
 
-const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "가입대기"] as const
+const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "가입 대기"] as const
 const DEFAULT_ROLE = "활동회원"
 
 const qualificationChangeSchema = z.object({
@@ -21,7 +21,7 @@ const qualificationChangeSchema = z.object({
 interface QualificationChangeDialogProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
-	onSubmit: (role: string) => Promise<void>
+	onSubmit: (role: string, reason: string) => Promise<void>
 }
 
 export function QualificationChangeDialog({
@@ -70,7 +70,7 @@ export function QualificationChangeDialog({
 		}
 
 		setReasonError(false)
-		await onSubmit(selectedRole)
+		await onSubmit(selectedRole, reason.trim())
 		setSelectedRole(DEFAULT_ROLE)
 		setReason("")
 	}
