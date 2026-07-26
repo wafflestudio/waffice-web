@@ -361,17 +361,15 @@ export function MemberDetailDialog({
 		<>
 			<Dialog open={open} onOpenChange={onOpenChange}>
 				<DialogContent
-					className="!block !w-[1300px] !max-w-[calc(100vw-40px)] max-h-[calc(100vh-40px)] overflow-y-auto rounded-[12px] border-0 bg-white p-0 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
+					className="!block !w-[1300px] !max-w-[calc(100vw-40px)] max-h-[calc(100vh-40px)] overflow-hidden rounded-[12px] border-0 bg-white p-0 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
 					showCloseButton={false}
 				>
-					<div className="flex min-h-[782px] w-full flex-col items-center bg-white pb-[40px]">
-						<div className="flex h-[40px] w-full shrink-0 justify-end px-[10px] pt-[10px]">
-							<DialogClose className="flex size-[35px] items-center justify-center text-black-900 transition-opacity hover:opacity-70">
-								<XIcon className="size-[24px]" strokeWidth={2.2} />
-								<span className="sr-only">닫기</span>
-							</DialogClose>
-						</div>
+					<DialogClose className="absolute top-[10px] right-[10px] z-10 flex size-[35px] items-center justify-center text-black-900 transition-opacity hover:opacity-70">
+						<XIcon className="size-[24px]" strokeWidth={2.2} />
+						<span className="sr-only">닫기</span>
+					</DialogClose>
 
+					<div className="flex max-h-[calc(100vh-40px)] w-full flex-col items-center overflow-y-auto bg-white pt-[40px] pb-[40px]">
 						<div className="flex w-[1100px] max-w-[calc(100%-80px)] flex-col gap-[40px]">
 							<DialogTitle className="shrink-0 text-[28px] font-medium leading-normal text-black-900">
 								회원 상세

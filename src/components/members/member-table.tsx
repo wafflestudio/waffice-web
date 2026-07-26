@@ -127,7 +127,7 @@ export function MemberTable({
 		<div className="space-y-4">
 			{/* 테이블 */}
 			<div className="w-full overflow-hidden border-[#dbdfe0] border-t border-b bg-white">
-				<Table className="min-w-[1140px] table-fixed">
+				<Table className="min-w-[1460px] table-fixed" containerClassName="scrollbar-hide">
 					<TableHeader>
 						<TableRow className="h-[50px] bg-[#f7f7f7] hover:bg-[#f7f7f7]">
 							<TableHead className="h-[50px] w-[56px] px-[20px]">
@@ -141,8 +141,8 @@ export function MemberTable({
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>
 								<GenerationSortHeader sort={generationSort} onSortChange={onGenerationSortChange} />
 							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>소속</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[120px]")}>학번</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[160px]")}>소속</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[130px]")}>학번</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
