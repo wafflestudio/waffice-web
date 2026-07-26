@@ -62,7 +62,7 @@ const QUALIFICATION_LABELS: Record<string, string> = {
 	active: "활동회원",
 	regular: "정회원",
 	associate: "준회원",
-	pending: "가입대기",
+	pending: "가입 대기",
 }
 
 const formatUnixDate = (value?: number | null) => {

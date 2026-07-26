@@ -42,9 +42,9 @@ export const qualificationToRole = (qualification: Qualification): string => {
 		case "associate":
 			return "준회원"
 		case "pending":
-			return "미가입"
+			return "가입 대기"
 		default:
-			return "미가입"
+			return "가입 대기"
 	}
 }
 

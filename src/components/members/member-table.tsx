@@ -72,7 +72,7 @@ export function MemberTable({
 	enrollmentFilter,
 	onEnrollmentFilterChange,
 }: MemberTableProps) {
-	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "미가입"]
+	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "가입 대기"]
 	const ENROLLMENT_OPTIONS = ["학부생", "휴학생", "졸업생", "대학원생"]
 
 	// 회원 상세 페이지 모달
