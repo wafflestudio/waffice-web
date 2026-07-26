@@ -1,14 +1,11 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useEffect, useId, useState } from "react"
+import { useEffect, useId, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { ActivityDialogRow } from "@/components/activities/activity-dialog-row"
-import {
-	ACTIVITY_PROJECT_OPTIONS,
-	ACTIVITY_REQUEST_TARGET_OPTIONS,
-} from "@/components/activities/activity-history.mock"
+import { dateInputToUnix, unixToDateInput } from "@/components/activities/activity-history.utils"
 import { CalendarDateField } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DesignDialogContent } from "@/components/ui/design-dialog"
@@ -16,39 +13,56 @@ import { Dialog, DialogTitle } from "@/components/ui/dialog"
 import { DialogActionButton } from "@/components/ui/dialog-action-button"
 import { SelectField } from "@/components/ui/select-field"
 import { Toast } from "@/components/ui/toast"
-import type { ActivityHistoryRecord, ActivityRequestFormValues } from "@/types"
+import { useProjects } from "@/hooks/use-projects"
+import type { ActivityHistoryItem } from "@/types"
 
 const requestSchema = z
 	.object({
 		projectName: z.string().min(1),
-		requestTarget: z.string().min(1),
 		startDate: z.string().min(1),
 		endDate: z.string(),
 		isEndDateUnknown: z.boolean(),
 		description: z.string().trim().min(1),
-		note: z.string(),
+		reason: z.string().trim().min(1),
 	})
 	.refine((value) => value.isEndDateUnknown || value.endDate.length > 0, {
 		path: ["endDate"],
 		message: "종료일을 입력해주세요.",
 	})
 
+export interface ActivityRequestFormValues {
+	projectId: number
+	startDate: number
+	endDate: number | null
+	description: string
+	reason: string
+}
+
 interface ActivityRequestDialogProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
 	mode?: "add" | "edit"
-	record?: ActivityHistoryRecord | null
+	record?: ActivityHistoryItem | null
 	onSubmit: (values: ActivityRequestFormValues) => void
+	submitting?: boolean
 }
 
-const EMPTY_VALUES: ActivityRequestFormValues = {
-	projectName: ACTIVITY_PROJECT_OPTIONS[0],
-	requestTarget: ACTIVITY_REQUEST_TARGET_OPTIONS[0],
+interface FormValues {
+	projectName: string
+	startDate: string
+	endDate: string
+	isEndDateUnknown: boolean
+	description: string
+	reason: string
+}
+
+const EMPTY_VALUES: FormValues = {
+	projectName: "",
 	startDate: "",
 	endDate: "",
 	isEndDateUnknown: true,
 	description: "",
-	note: "",
+	reason: "",
 }
 
 export function ActivityRequestDialog({
@@ -57,33 +71,44 @@ export function ActivityRequestDialog({
 	mode = "add",
 	record,
 	onSubmit,
+	submitting = false,
 }: ActivityRequestDialogProps) {
 	const endDateUnknownId = useId()
 	const [showErrorToast, setShowErrorToast] = useState(false)
-	const form = useForm<ActivityRequestFormValues>({
+	const projectsQuery = useProjects(undefined, 100)
+	const projects = useMemo(() => projectsQuery.data?.items ?? [], [projectsQuery.data])
+	const projectNameToId = useMemo(
+		() => new Map(projects.map((project) => [project.name, project.id])),
+		[projects],
+	)
+	const projectOptions = useMemo(() => projects.map((project) => project.name), [projects])
+
+	const form = useForm<FormValues>({
 		resolver: zodResolver(requestSchema),
 		defaultValues: EMPTY_VALUES,
 	})
 
 	useEffect(() => {
 		if (!open) return
+		const recordProjectName = record
+			? (projects.find((project) => project.id === record.project_id)?.name ?? "")
+			: ""
 		form.reset(
 			record
 				? {
 						...EMPTY_VALUES,
-						projectName: record.projectName,
-						startDate: record.startDate,
-						endDate: record.endDate ?? "",
-						isEndDateUnknown: record.endDate == null,
-						description: record.description,
+						projectName: recordProjectName,
+						startDate: unixToDateInput(record.start_date),
+						endDate: unixToDateInput(record.end_date),
+						isEndDateUnknown: record.end_date == null,
+						description: record.description ?? "",
 					}
 				: EMPTY_VALUES,
 		)
 		setShowErrorToast(false)
-	}, [form, open, record])
+	}, [form, open, record, projects])
 
 	const projectName = form.watch("projectName")
-	const requestTarget = form.watch("requestTarget")
 	const startDate = form.watch("startDate")
 	const endDate = form.watch("endDate")
 	const isEndDateUnknown = form.watch("isEndDateUnknown")
@@ -92,6 +117,28 @@ export function ActivityRequestDialog({
 		setShowErrorToast(false)
 		requestAnimationFrame(() => setShowErrorToast(true))
 	}
+
+	const handleSubmit = form.handleSubmit((values) => {
+		const projectId = projectNameToId.get(values.projectName)
+		if (projectId == null) {
+			showValidationToast()
+			return
+		}
+		const startUnix = dateInputToUnix(values.startDate)
+		if (startUnix == null) {
+			showValidationToast()
+			return
+		}
+		const endUnix = values.isEndDateUnknown ? null : dateInputToUnix(values.endDate)
+
+		onSubmit({
+			projectId,
+			startDate: startUnix,
+			endDate: endUnix,
+			description: values.description.trim(),
+			reason: values.reason.trim(),
+		})
+	}, showValidationToast)
 
 	return (
 		<>
@@ -105,31 +152,13 @@ export function ActivityRequestDialog({
 						활동 이력 {mode === "add" ? "추가" : "수정"} 요청
 					</DialogTitle>
 
-					<form
-						className="mt-[50px] flex flex-col gap-[40px]"
-						onSubmit={form.handleSubmit((values) => {
-							onSubmit(values)
-							onOpenChange(false)
-						}, showValidationToast)}
-					>
+					<form className="mt-[50px] flex flex-col gap-[40px]" onSubmit={handleSubmit}>
 						<ActivityDialogRow label="활동 프로젝트">
 							<SelectField
 								value={projectName}
-								options={ACTIVITY_PROJECT_OPTIONS}
+								options={projectOptions}
+								placeholder="프로젝트를 선택해주세요"
 								onChange={(value) => form.setValue("projectName", value, { shouldValidate: true })}
-								triggerClassName="h-[42px] w-[300px] rounded-[6px] px-[10px] text-[14px]"
-								contentClassName="z-[70] w-[300px] rounded-[6px] p-[5px]"
-								itemClassName="h-[40px] px-[8px] text-[14px]"
-							/>
-						</ActivityDialogRow>
-
-						<ActivityDialogRow label="요청대상">
-							<SelectField
-								value={requestTarget}
-								options={ACTIVITY_REQUEST_TARGET_OPTIONS}
-								onChange={(value) =>
-									form.setValue("requestTarget", value, { shouldValidate: true })
-								}
 								triggerClassName="h-[42px] w-[300px] rounded-[6px] px-[10px] text-[14px]"
 								contentClassName="z-[70] w-[300px] rounded-[6px] p-[5px]"
 								itemClassName="h-[40px] px-[8px] text-[14px]"
@@ -184,19 +213,25 @@ export function ActivityRequestDialog({
 							/>
 						</ActivityDialogRow>
 
-						<ActivityDialogRow label="요청 비고">
+						<ActivityDialogRow label="요청 사유">
 							<textarea
-								{...form.register("note")}
-								placeholder="요청 대상에게 전달할 말이 있다면 작성해주세요."
+								{...form.register("reason")}
+								placeholder="운영진에게 전달할 요청 사유를 작성해주세요."
 								className="h-[70px] w-full resize-none rounded-[5px] border border-black-300 px-[16px] py-[10px] text-[14px] outline-none placeholder:text-black-600 focus:border-peach-300"
 							/>
 						</ActivityDialogRow>
+
+						<p className="text-[13px] text-black-600">
+							요청을 보내면 운영진 전체에게 승인 요청이 전달됩니다.
+						</p>
 
 						<div className="flex justify-end gap-[10px]">
 							<DialogActionButton variant="cancel" onClick={() => onOpenChange(false)}>
 								취소
 							</DialogActionButton>
-							<DialogActionButton type="submit">확인</DialogActionButton>
+							<DialogActionButton type="submit" disabled={submitting}>
+								확인
+							</DialogActionButton>
 						</div>
 					</form>
 				</DesignDialogContent>
