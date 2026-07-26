@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { ActivityDialogRow } from "@/components/activities/activity-dialog-row"
 import { dateInputToUnix, unixToDateInput } from "@/components/activities/activity-history.utils"
+import { ActivityRequestTargetField } from "@/components/activities/activity-request-target-field"
 import { CalendarDateField } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DesignDialogContent } from "@/components/ui/design-dialog"
@@ -19,6 +20,7 @@ import type { ActivityHistoryItem } from "@/types"
 const requestSchema = z
 	.object({
 		projectName: z.string().min(1),
+		requestTargets: z.array(z.string()),
 		startDate: z.string().min(1),
 		endDate: z.string(),
 		isEndDateUnknown: z.boolean(),
@@ -49,6 +51,7 @@ interface ActivityRequestDialogProps {
 
 interface FormValues {
 	projectName: string
+	requestTargets: string[]
 	startDate: string
 	endDate: string
 	isEndDateUnknown: boolean
@@ -58,6 +61,7 @@ interface FormValues {
 
 const EMPTY_VALUES: FormValues = {
 	projectName: "",
+	requestTargets: [],
 	startDate: "",
 	endDate: "",
 	isEndDateUnknown: true,
@@ -109,6 +113,7 @@ export function ActivityRequestDialog({
 	}, [form, open, record, projects])
 
 	const projectName = form.watch("projectName")
+	const requestTargets = form.watch("requestTargets")
 	const startDate = form.watch("startDate")
 	const endDate = form.watch("endDate")
 	const isEndDateUnknown = form.watch("isEndDateUnknown")
@@ -162,6 +167,16 @@ export function ActivityRequestDialog({
 								triggerClassName="h-[42px] w-[300px] rounded-[6px] px-[10px] text-[14px]"
 								contentClassName="z-[70] w-[300px] rounded-[6px] p-[5px]"
 								itemClassName="h-[40px] px-[8px] text-[14px]"
+							/>
+						</ActivityDialogRow>
+
+						<ActivityDialogRow label="요청대상">
+							<ActivityRequestTargetField
+								projectId={projectNameToId.get(projectName) ?? null}
+								value={requestTargets}
+								onChange={(value) =>
+									form.setValue("requestTargets", value, { shouldValidate: true })
+								}
 							/>
 						</ActivityDialogRow>
 

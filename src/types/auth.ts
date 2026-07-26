@@ -1,4 +1,4 @@
-import type { Qualification } from "./common"
+import type { GraduationStatus, Qualification } from "./common"
 import type { UserDetail } from "./user"
 
 export type AuthStatus = "new" | "pending" | "active"
@@ -27,6 +27,15 @@ export interface RelinkGoogleAccountRequest {
 export interface SignupRequest {
 	auth_token: string
 	name: string
+	generation: string
+	student_id: string
+	email: string
+	graduation_status: GraduationStatus
+	qualification: Exclude<Qualification, "pending">
+	privacy_policy_agreed: true
+	terms_agreed: true
+	email_notifications_agreed?: boolean
+	sms_notifications_agreed?: boolean
 	phone?: string
 	affiliation?: string
 	bio?: string
