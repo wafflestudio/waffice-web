@@ -43,10 +43,11 @@ interface UseRequestsOptions {
 	activityId?: number
 	cursor?: number
 	limit?: number
+	enabled?: boolean
 }
 
 /** GET /requests — 기본값은 scope=received&status=pending (LNB "나에게 온 요청"과 동일). */
-export function useRequests(options: UseRequestsOptions = {}) {
+export function useRequests({ enabled = true, ...options }: UseRequestsOptions = {}) {
 	return useQuery<CursorPage<ApprovalRequestListItem>, Error>({
 		queryKey: requestQueryKeys.list(options),
 		queryFn: async () =>
@@ -54,6 +55,7 @@ export function useRequests(options: UseRequestsOptions = {}) {
 				await apiClient.listRequests(options),
 				"요청 목록을 불러오는데 실패했습니다.",
 			),
+		enabled,
 	})
 }
 

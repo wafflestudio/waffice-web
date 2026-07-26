@@ -1,108 +1,103 @@
 "use client"
 
+import { useQueryClient } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
 import { ActivityDeleteDialog } from "@/components/activities/activity-delete-dialog"
 import { ActivityDetailDialog } from "@/components/activities/activity-detail-dialog"
+import { sortActivityHistoryItems } from "@/components/activities/activity-history.utils"
 import { ActivityHistoryTable } from "@/components/activities/activity-history-table"
+import type { ActivityRequestFormValues } from "@/components/activities/activity-request-dialog"
 import { ActivityRequestDialog } from "@/components/activities/activity-request-dialog"
 import { Toast } from "@/components/ui/toast"
-import type { ActivityHistoryRecord, ActivityRequestFormValues } from "@/types"
+import { memberQueryKeys, useMyActivities } from "@/hooks/use-members"
+import { useCreateRequest } from "@/hooks/use-requests"
+import type { ActivityHistoryItem } from "@/types"
 
-interface ActivityHistoryViewProps {
-	initialRecords: ActivityHistoryRecord[]
-}
+export function ActivityHistoryView() {
+	const queryClient = useQueryClient()
+	const activitiesQuery = useMyActivities()
+	const createRequestMutation = useCreateRequest()
 
-function dateValue(value: string | null) {
-	if (!value) return Number.POSITIVE_INFINITY
-	return Number(value.replaceAll(".", ""))
-}
-
-function sortRecords(records: ActivityHistoryRecord[]) {
-	return [...records].sort((a, b) => {
-		const startDifference = dateValue(b.startDate) - dateValue(a.startDate)
-		if (startDifference !== 0) return startDifference
-		return dateValue(b.endDate) - dateValue(a.endDate)
-	})
-}
-
-export function ActivityHistoryView({ initialRecords }: ActivityHistoryViewProps) {
-	const [records, setRecords] = useState(initialRecords)
-	const [selectedRecord, setSelectedRecord] = useState<ActivityHistoryRecord | null>(null)
-	const [deleteTarget, setDeleteTarget] = useState<ActivityHistoryRecord | null>(null)
+	const [selectedRecord, setSelectedRecord] = useState<ActivityHistoryItem | null>(null)
+	const [deleteTarget, setDeleteTarget] = useState<ActivityHistoryItem | null>(null)
 	const [requestMode, setRequestMode] = useState<"add" | "edit" | null>(null)
-	const [requestTargetRecord, setRequestTargetRecord] = useState<ActivityHistoryRecord | null>(null)
+	const [requestTargetRecord, setRequestTargetRecord] = useState<ActivityHistoryItem | null>(null)
 	const [toastMessage, setToastMessage] = useState("")
 	const [showToast, setShowToast] = useState(false)
-	const sortedRecords = useMemo(() => sortRecords(records), [records])
+
+	const records = activitiesQuery.data ?? []
+	const sortedRecords = useMemo(() => sortActivityHistoryItems(records), [records])
 
 	const showMessage = (message: string) => {
 		setToastMessage(message)
 		setShowToast(true)
 	}
 
-	const openEditRequest = (record: ActivityHistoryRecord) => {
+	const openEditRequest = (record: ActivityHistoryItem) => {
 		setSelectedRecord(null)
 		setRequestTargetRecord(record)
 		setRequestMode("edit")
 	}
 
-	const openDeleteDialog = (record: ActivityHistoryRecord) => {
+	const openDeleteDialog = (record: ActivityHistoryItem) => {
 		setSelectedRecord(null)
 		setDeleteTarget(record)
 	}
 
 	const submitRequest = (values: ActivityRequestFormValues) => {
-		// TODO(API): 활동 이력 추가/수정 요청 API가 추가되면 로컬 상태 변경을 mutation으로 교체한다.
-		if (requestMode === "edit" && requestTargetRecord) {
-			setRecords((current) =>
-				current.map((record) =>
-					record.id === requestTargetRecord.id
-						? {
-								...record,
-								status: "수정 요청중",
-								requests: [
-									...record.requests,
-									{
-										id: Date.now(),
-										kind: "수정 요청",
-										requestedAt: new Date().toISOString().slice(0, 10).replaceAll("-", "."),
-										target: values.requestTarget.split("(")[0],
-										status: "승인대기중",
-										note: values.note,
-									},
-								],
-							}
-						: record,
-				),
-			)
-			showMessage("활동 이력 수정 요청이 등록되었습니다.")
-		} else {
-			setRecords((current) => [
-				...current,
-				{
-					id: Date.now(),
-					startDate: values.startDate,
-					endDate: values.isEndDateUnknown ? null : values.endDate,
-					projectName: values.projectName,
-					description: values.description,
-					status: "추가 요청중",
-					requests: [
-						{
-							id: Date.now(),
-							kind: "추가 요청",
-							requestedAt: new Date().toISOString().slice(0, 10).replaceAll("-", "."),
-							target: values.requestTarget.split("(")[0],
-							status: "승인대기중",
-							note: values.note,
-						},
-					],
-				},
-			])
-			showMessage("활동 이력 추가 요청이 등록되었습니다.")
-		}
+		const isEdit = requestMode === "edit" && requestTargetRecord
 
-		setRequestMode(null)
-		setRequestTargetRecord(null)
+		createRequestMutation.mutate(
+			{
+				request_kind: isEdit ? "update" : "create",
+				activity_id: isEdit ? requestTargetRecord.id : null,
+				after: {
+					project_id: values.projectId,
+					position: values.description,
+					start_date: values.startDate,
+					end_date: values.endDate,
+					description: values.description,
+				},
+				reason: values.reason,
+			},
+			{
+				onSuccess: () => {
+					queryClient.invalidateQueries({ queryKey: memberQueryKeys.myActivities() })
+					showMessage(
+						isEdit
+							? "활동 이력 수정 요청이 등록되었습니다."
+							: "활동 이력 추가 요청이 등록되었습니다.",
+					)
+					setRequestMode(null)
+					setRequestTargetRecord(null)
+				},
+				onError: (error) => {
+					showMessage(error.message)
+				},
+			},
+		)
+	}
+
+	const confirmDelete = (record: ActivityHistoryItem) => {
+		if (record.id == null) return
+
+		createRequestMutation.mutate(
+			{
+				request_kind: "delete",
+				activity_id: record.id,
+				reason: "활동 이력 삭제 요청",
+			},
+			{
+				onSuccess: () => {
+					queryClient.invalidateQueries({ queryKey: memberQueryKeys.myActivities() })
+					setDeleteTarget(null)
+					showMessage("활동 이력 삭제 요청이 완료되었습니다.")
+				},
+				onError: (error) => {
+					showMessage(error.message)
+				},
+			},
+		)
 	}
 
 	return (
@@ -122,7 +117,17 @@ export function ActivityHistoryView({ initialRecords }: ActivityHistoryViewProps
 					>
 						활동 이력 추가 요청
 					</button>
-					<ActivityHistoryTable records={sortedRecords} onSelect={setSelectedRecord} />
+					{activitiesQuery.isLoading ? (
+						<div className="flex h-[120px] items-center justify-center border-black-300 border-y text-[14px] text-black-600">
+							불러오는 중입니다...
+						</div>
+					) : activitiesQuery.isError ? (
+						<div className="flex h-[120px] items-center justify-center border-black-300 border-y text-[14px] text-black-600">
+							{activitiesQuery.error.message}
+						</div>
+					) : (
+						<ActivityHistoryTable records={sortedRecords} onSelect={setSelectedRecord} />
+					)}
 				</div>
 			</div>
 
@@ -142,12 +147,8 @@ export function ActivityHistoryView({ initialRecords }: ActivityHistoryViewProps
 				onOpenChange={(open) => {
 					if (!open) setDeleteTarget(null)
 				}}
-				onConfirm={(record) => {
-					// TODO(API): 본인 활동 이력 삭제 API가 생기면 mutation 성공 후 목록을 invalidate한다.
-					setRecords((current) => current.filter((item) => item.id !== record.id))
-					setDeleteTarget(null)
-					showMessage("활동 이력이 삭제되었습니다.")
-				}}
+				onConfirm={confirmDelete}
+				submitting={createRequestMutation.isPending}
 			/>
 
 			<ActivityRequestDialog
@@ -161,6 +162,7 @@ export function ActivityHistoryView({ initialRecords }: ActivityHistoryViewProps
 				mode={requestMode ?? "add"}
 				record={requestTargetRecord}
 				onSubmit={submitRequest}
+				submitting={createRequestMutation.isPending}
 			/>
 
 			<Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />

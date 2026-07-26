@@ -1,27 +1,44 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { ActivityDialogRow } from "@/components/activities/activity-dialog-row"
-import { CalendarDateField } from "@/components/ui/calendar"
+import {
+	ACTIVITY_STATUS_LABELS,
+	ACTIVITY_STATUS_STYLES,
+	unixToDateInput,
+} from "@/components/activities/activity-history.utils"
 import { DesignDialogContent } from "@/components/ui/design-dialog"
 import { Dialog, DialogTitle } from "@/components/ui/dialog"
 import { DialogActionButton } from "@/components/ui/dialog-action-button"
 import { DotStatusBadge } from "@/components/ui/status-badge"
-import type { ActivityHistoryRecord, ActivityRecordStatus } from "@/types"
+import { useRequests } from "@/hooks/use-requests"
+import type { ActivityHistoryItem } from "@/types"
 
-const STATUS_STYLES: Record<ActivityRecordStatus, string> = {
-	"추가 완료": "bg-[#7aee7f]",
-	"수정 완료": "bg-[#7aee7f]",
-	"수정 요청중": "bg-[#ffd21f]",
-	"추가 요청중": "bg-[#f0975e]",
+const REQUEST_KIND_LABELS = {
+	create: "추가 요청",
+	update: "수정 요청",
+	delete: "삭제 요청",
+} as const
+
+const REQUEST_STATUS_LABELS = {
+	pending: "승인대기중",
+	approved: "승인",
+	rejected: "반려",
+} as const
+
+function formatRequestedAt(unixSeconds: number) {
+	const date = new Date(unixSeconds * 1000)
+	if (Number.isNaN(date.getTime())) return "-"
+	return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(
+		date.getDate(),
+	).padStart(2, "0")}`
 }
 
 interface ActivityDetailDialogProps {
-	record: ActivityHistoryRecord | null
+	record: ActivityHistoryItem | null
 	open: boolean
 	onOpenChange: (open: boolean) => void
-	onRequestEdit: (record: ActivityHistoryRecord) => void
-	onRequestDelete: (record: ActivityHistoryRecord) => void
+	onRequestEdit: (record: ActivityHistoryItem) => void
+	onRequestDelete: (record: ActivityHistoryItem) => void
 }
 
 export function ActivityDetailDialog({
@@ -31,15 +48,17 @@ export function ActivityDetailDialog({
 	onRequestEdit,
 	onRequestDelete,
 }: ActivityDetailDialogProps) {
-	const [startDate, setStartDate] = useState(record?.startDate ?? "")
-	const [endDate, setEndDate] = useState(record?.endDate ?? "")
-
-	useEffect(() => {
-		setStartDate(record?.startDate ?? "")
-		setEndDate(record?.endDate ?? "")
-	}, [record])
+	const relatedRequestsQuery = useRequests({
+		scope: "sent",
+		activityId: record?.id ?? undefined,
+		enabled: record?.id != null,
+	})
+	const canRequestEdit = record?.id != null
+	const canRequestDelete = record?.id != null
 
 	if (!record) return null
+
+	const relatedRequests = relatedRequestsQuery.data?.items ?? []
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -54,23 +73,13 @@ export function ActivityDetailDialog({
 
 				<div className="mt-[50px] flex w-full flex-col gap-[40px]">
 					<ActivityDialogRow label="활동 프로젝트">
-						<p className="pt-[2px] text-[14px] text-black-900">{record.projectName}</p>
+						<p className="pt-[2px] text-[14px] text-black-900">{record.project_name ?? "-"}</p>
 					</ActivityDialogRow>
 
 					<ActivityDialogRow label="활동 기간">
-						<div className="flex items-center gap-[5px]">
-							<CalendarDateField
-								value={startDate || "YYYY.MM.DD"}
-								onChange={setStartDate}
-								className="h-[42px] w-[140px] rounded-[6px] text-[14px]"
-							/>
-							<span className="text-[15px] text-black-300">-</span>
-							<CalendarDateField
-								value={endDate || "YYYY.MM.DD"}
-								onChange={setEndDate}
-								className="h-[42px] w-[140px] rounded-[6px] text-[14px]"
-							/>
-						</div>
+						<p className="pt-[2px] text-[14px] text-black-900">
+							{unixToDateInput(record.start_date)} ~ {unixToDateInput(record.end_date) || "현재"}
+						</p>
 					</ActivityDialogRow>
 
 					<ActivityDialogRow label="활동 내용">
@@ -80,26 +89,25 @@ export function ActivityDetailDialog({
 					</ActivityDialogRow>
 
 					<ActivityDialogRow label="기록 상태">
-						<DotStatusBadge dotClassName={STATUS_STYLES[record.status]} className="pt-[2px]">
-							{record.status}
+						<DotStatusBadge
+							dotClassName={ACTIVITY_STATUS_STYLES[record.status]}
+							className="pt-[2px]"
+						>
+							{ACTIVITY_STATUS_LABELS[record.status]}
 						</DotStatusBadge>
 					</ActivityDialogRow>
 
 					<ActivityDialogRow label="관련 요청">
 						<div className="flex flex-col gap-[20px]">
-							<button
-								type="button"
-								onClick={() =>
-									onRequestEdit({
-										...record,
-										startDate,
-										endDate: endDate || null,
-									})
-								}
-								className="h-[36px] w-fit rounded-[3px] bg-peach-300 px-[16px] text-[14px] font-semibold text-white hover:bg-peach-500"
-							>
-								수정 요청하기
-							</button>
+							{canRequestEdit && (
+								<button
+									type="button"
+									onClick={() => onRequestEdit(record)}
+									className="h-[36px] w-fit rounded-[3px] bg-peach-300 px-[16px] text-[14px] font-semibold text-white hover:bg-peach-500"
+								>
+									수정 요청하기
+								</button>
+							)}
 							<div className="w-full overflow-hidden bg-white">
 								<div className="grid h-[40px] grid-cols-4 border-black-300 border-y bg-black-100 text-[14px] font-medium tracking-[-0.28px]">
 									{["요청 구분", "요청 일시", "요청 대상자", "요청 상태"].map((title) => (
@@ -108,16 +116,24 @@ export function ActivityDetailDialog({
 										</div>
 									))}
 								</div>
-								{record.requests.length > 0 ? (
-									record.requests.map((request) => (
+								{relatedRequests.length > 0 ? (
+									relatedRequests.map((request) => (
 										<div
 											key={request.id}
 											className="grid h-[50px] grid-cols-4 border-black-300 border-b text-[14px]"
 										>
-											<div className="flex items-center px-[20px]">{request.kind}</div>
-											<div className="flex items-center px-[20px]">{request.requestedAt}</div>
-											<div className="flex items-center px-[20px]">{request.target}</div>
-											<div className="flex items-center px-[20px]">{request.status}</div>
+											<div className="flex items-center px-[20px]">
+												{REQUEST_KIND_LABELS[request.request_kind]}
+											</div>
+											<div className="flex items-center px-[20px]">
+												{formatRequestedAt(request.created_at)}
+											</div>
+											<div className="flex items-center truncate px-[20px]">
+												{request.reviewers.map((reviewer) => reviewer.user.name).join(", ") || "-"}
+											</div>
+											<div className="flex items-center px-[20px]">
+												{REQUEST_STATUS_LABELS[request.status]}
+											</div>
 										</div>
 									))
 								) : (
@@ -129,15 +145,17 @@ export function ActivityDetailDialog({
 						</div>
 					</ActivityDialogRow>
 
-					<ActivityDialogRow label="활동이력 삭제">
-						<button
-							type="button"
-							onClick={() => onRequestDelete(record)}
-							className="h-[36px] rounded-[3px] bg-[#ffeaea] px-[16px] text-[14px] font-semibold text-[#f44949] hover:bg-[#ffdada]"
-						>
-							활동이력 삭제
-						</button>
-					</ActivityDialogRow>
+					{canRequestDelete && (
+						<ActivityDialogRow label="활동이력 삭제">
+							<button
+								type="button"
+								onClick={() => onRequestDelete(record)}
+								className="h-[36px] rounded-[3px] bg-[#ffeaea] px-[16px] text-[14px] font-semibold text-[#f44949] hover:bg-[#ffdada]"
+							>
+								활동이력 삭제
+							</button>
+						</ActivityDialogRow>
+					)}
 				</div>
 
 				<div className="mt-[40px] flex justify-end gap-[10px]">

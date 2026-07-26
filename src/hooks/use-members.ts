@@ -1,6 +1,8 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/components/providers/auth-provider"
+import { useMockMode } from "@/hooks/use-mock-mode"
 import { apiClient } from "@/lib/api"
+import { buildMockMyActivities } from "@/lib/mock/activities"
 import { canManageMembers } from "@/lib/permissions"
 import type {
 	ActivityCreateRequest,
@@ -227,10 +229,17 @@ export function useUserActivities(userId: number | null) {
 }
 
 export function useMyActivities() {
+	const { enabled: mockEnabled } = useMockMode()
+
 	return useQuery<ActivityHistoryItem[], Error>({
-		queryKey: memberQueryKeys.myActivities(),
-		queryFn: async () =>
-			getResponseData(await apiClient.getMyActivities(), "내 활동 이력을 불러오는데 실패했습니다."),
+		queryKey: [...memberQueryKeys.myActivities(), mockEnabled],
+		queryFn: async () => {
+			if (mockEnabled) return buildMockMyActivities()
+			return getResponseData(
+				await apiClient.getMyActivities(),
+				"내 활동 이력을 불러오는데 실패했습니다.",
+			)
+		},
 	})
 }
 
