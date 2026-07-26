@@ -677,7 +677,7 @@ function OperatingStatusSection({
 					type="button"
 					onClick={onSave}
 					disabled={!canSave}
-					className="flex h-[42px] items-center justify-center rounded-[4px] bg-black-500 px-[30px] text-[15px] font-medium leading-[24px] whitespace-nowrap text-white transition-colors hover:bg-black-600 active:bg-black-600 disabled:cursor-not-allowed disabled:bg-black-500"
+					className="flex h-[42px] items-center justify-center rounded-[4px] bg-black-500 px-[30px] text-[15px] font-medium leading-[24px] whitespace-nowrap text-white transition-colors hover:bg-black-600 active:bg-black-600 disabled:cursor-not-allowed disabled:bg-black-300 disabled:text-black-600"
 				>
 					저장
 				</button>
