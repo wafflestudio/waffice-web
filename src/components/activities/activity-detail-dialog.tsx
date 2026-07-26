@@ -53,6 +53,7 @@ export function ActivityDetailDialog({
 		activityId: record?.id ?? undefined,
 		enabled: record?.id != null,
 	})
+	const canRequestEdit = record?.id != null
 	const canRequestDelete = record?.id != null
 
 	if (!record) return null
@@ -98,13 +99,15 @@ export function ActivityDetailDialog({
 
 					<ActivityDialogRow label="관련 요청">
 						<div className="flex flex-col gap-[20px]">
-							<button
-								type="button"
-								onClick={() => onRequestEdit(record)}
-								className="h-[36px] w-fit rounded-[3px] bg-peach-300 px-[16px] text-[14px] font-semibold text-white hover:bg-peach-500"
-							>
-								수정 요청하기
-							</button>
+							{canRequestEdit && (
+								<button
+									type="button"
+									onClick={() => onRequestEdit(record)}
+									className="h-[36px] w-fit rounded-[3px] bg-peach-300 px-[16px] text-[14px] font-semibold text-white hover:bg-peach-500"
+								>
+									수정 요청하기
+								</button>
+							)}
 							<div className="w-full overflow-hidden bg-white">
 								<div className="grid h-[40px] grid-cols-4 border-black-300 border-y bg-black-100 text-[14px] font-medium tracking-[-0.28px]">
 									{["요청 구분", "요청 일시", "요청 대상자", "요청 상태"].map((title) => (
