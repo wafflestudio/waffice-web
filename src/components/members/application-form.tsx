@@ -39,6 +39,9 @@ interface ApplicationFormProps {
 
 const ROLE_OPTIONS = ["활동회원", "정회원", "준회원"] as const
 
+const toSelectableRole = (role?: string): string =>
+	role && (ROLE_OPTIONS as readonly string[]).includes(role) ? role : "활동회원"
+
 export function ApplicationForm({
 	application,
 	onApprove,
@@ -47,13 +50,14 @@ export function ApplicationForm({
 }: ApplicationFormProps) {
 	const [open, setOpen] = useState(false)
 	const [step, setStep] = useState<1 | 2>(1)
-	const [selectedRole, setSelectedRole] = useState<string>(application.role || "활동회원")
+	// 신청자가 가입 시 고른 자격(requested_qualification 기반)을 기본 선택값으로 사용한다.
+	const [selectedRole, setSelectedRole] = useState<string>(toSelectableRole(application.role))
 
 	const handleOpenChange = (nextOpen: boolean) => {
 		setOpen(nextOpen)
 		if (!nextOpen) {
 			setStep(1)
-			setSelectedRole(application.role || "활동회원")
+			setSelectedRole(toSelectableRole(application.role))
 		}
 	}
 

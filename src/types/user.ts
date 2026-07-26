@@ -14,7 +14,12 @@ export interface UserDetail {
 	name: string
 	generation: string
 	qualification: Qualification
+	requested_qualification: Qualification | null
 	graduation_status: GraduationStatus
+	privacy_policy_agreed: boolean
+	terms_agreed: boolean
+	email_notifications_agreed: boolean
+	sms_notifications_agreed: boolean
 	is_leader: boolean
 	is_admin: boolean
 	is_president: boolean

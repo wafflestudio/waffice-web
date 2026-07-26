@@ -31,7 +31,7 @@ const roleToQualification = (role: string): Qualification => {
 	}
 }
 
-const qualificationToRole = (qualification: Qualification): string => {
+const qualificationToRole = (qualification: Qualification | null): string => {
 	switch (qualification) {
 		case "active":
 			return "활동회원"
@@ -65,7 +65,12 @@ const userDetailToApplication = (user: UserDetail): Application => ({
 	email: user.email ?? "",
 	github_username: user.github_username || "",
 	application_date: new Date(user.created_at * 1000).toISOString(),
-	role: qualificationToRole(user.qualification),
+	// 대기 중인 신청은 가입 시 신청자가 고른 자격(requested_qualification)을 보여준다.
+	// 승인 완료된 회원은 확정된 qualification을 그대로 보여준다.
+	role:
+		user.qualification === "pending"
+			? qualificationToRole(user.requested_qualification)
+			: qualificationToRole(user.qualification),
 	status: user.qualification === "pending" ? "대기" : "승인",
 })
 
