@@ -86,11 +86,6 @@ export function buildMockProjectListPage(): CursorPage<ProjectListItem> {
 	return { items, next_cursor: null }
 }
 
-/** 내 프로젝트 목록(GET /users/me/projects) mock. */
-export function buildMockMyProjects(): ProjectListItem[] {
-	return buildMockProjectListPage().items.slice(0, 2)
-}
-
 /** 프로젝트 상세(GET /projects/{id}) mock — 백엔드 ProjectDetail(멤버 미포함)과 동일한 형태. */
 export function buildMockProjectDetail(projectId: number): ProjectDetail {
 	const listItem =

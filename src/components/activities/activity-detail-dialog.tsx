@@ -10,8 +10,8 @@ import { DesignDialogContent } from "@/components/ui/design-dialog"
 import { Dialog, DialogTitle } from "@/components/ui/dialog"
 import { DialogActionButton } from "@/components/ui/dialog-action-button"
 import { DotStatusBadge } from "@/components/ui/status-badge"
-import { useRequests } from "@/hooks/use-requests"
-import type { ActivityHistoryItem } from "@/types"
+import { useRequestDetail, useRequests } from "@/hooks/use-requests"
+import type { ActivityHistoryItem, ApprovalRequestListItem } from "@/types"
 
 const REQUEST_KIND_LABELS = {
 	create: "추가 요청",
@@ -54,12 +54,35 @@ export function ActivityDetailDialog({
 		activityId: record?.id ?? undefined,
 		enabled: record?.id != null,
 	})
+	// activity 레코드가 아직 없는 create-pending 행은 activityId로 조회할 수 없으므로,
+	// pendingRequestId로 그 요청 하나를 직접 가져와 "관련 요청" 한 건으로 보여준다.
+	const pendingRequestQuery = useRequestDetail(
+		record?.id == null ? (record?.pending_request_id ?? null) : null,
+	)
 	const canRequestEdit = record?.id != null
 	const canRequestDelete = record?.id != null
 
 	if (!record) return null
 
-	const relatedRequests = relatedRequestsQuery.data?.items ?? []
+	const relatedRequests: ApprovalRequestListItem[] =
+		record.id != null
+			? (relatedRequestsQuery.data?.items ?? [])
+			: pendingRequestQuery.data
+				? [
+						{
+							id: pendingRequestQuery.data.id,
+							requester: pendingRequestQuery.data.requester,
+							target_user_id: pendingRequestQuery.data.body.target_user_id,
+							activity_id: pendingRequestQuery.data.body.activity_id,
+							reviewers: pendingRequestQuery.data.reviewers,
+							request_kind: pendingRequestQuery.data.body.request_kind,
+							after: pendingRequestQuery.data.body.after,
+							status: pendingRequestQuery.data.status,
+							created_at: pendingRequestQuery.data.created_at,
+							reviewed_at: pendingRequestQuery.data.reviewed_at,
+						},
+					]
+				: []
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>

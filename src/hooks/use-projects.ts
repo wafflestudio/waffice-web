@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useMockMode } from "@/hooks/use-mock-mode"
 import { apiClient } from "@/lib/api"
 import {
-	buildMockMyProjects,
 	buildMockProjectDetail,
 	buildMockProjectListPage,
 	buildMockProjectMembersPage,
@@ -33,7 +32,6 @@ export const projectQueryKeys = {
 			keyword?: string
 		} = {},
 	) => [...projectQueryKeys.all, "members", projectId, options] as const,
-	mine: () => [...projectQueryKeys.all, "mine"] as const,
 }
 
 function getResponseData<T>(response: ApiResponse<T>, fallbackMessage: string): T {
@@ -120,21 +118,6 @@ export function useProjectMembers(
 			)
 		},
 		enabled: projectId != null,
-	})
-}
-
-export function useMyProjects() {
-	const { enabled: mockEnabled } = useMockMode()
-
-	return useQuery<ProjectListItem[], Error>({
-		queryKey: [...projectQueryKeys.mine(), mockEnabled],
-		queryFn: async () => {
-			if (mockEnabled) return buildMockMyProjects()
-			return getResponseData(
-				await apiClient.getMyProjects(),
-				"내 프로젝트 목록을 불러오는데 실패했습니다.",
-			)
-		},
 	})
 }
 

@@ -46,10 +46,6 @@ export function createProjectsApi(client: ApiClient) {
 			)
 		},
 
-		getMyProjects(): Promise<ApiResponse<ProjectListItem[]>> {
-			return client.request<ApiResponse<ProjectListItem[]>>("/users/me/projects")
-		},
-
 		createProject(request: ProjectCreateRequest): Promise<ApiResponse<ProjectDetail>> {
 			return client.request<ApiResponse<ProjectDetail>>("/projects", {
 				method: "POST",

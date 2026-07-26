@@ -1,11 +1,19 @@
 "use client"
 
 import { Loader2 } from "lucide-react"
+import { useMemo } from "react"
 import { MyProjectsView } from "@/components/projects/my-projects-view"
-import { useMyProjects } from "@/hooks/use-projects"
+import { useAuth } from "@/components/providers/auth-provider"
+import { useProjects } from "@/hooks/use-projects"
 
 export default function MyProjectsPage() {
-	const { data: projects, isLoading, error } = useMyProjects()
+	const { user } = useAuth()
+	const { data, isLoading, error } = useProjects(undefined, 100)
+
+	const myProjects = useMemo(
+		() => (data?.items ?? []).filter((project) => project.leader_names.includes(user?.name ?? "")),
+		[data, user],
+	)
 
 	if (isLoading) {
 		return (
@@ -23,5 +31,5 @@ export default function MyProjectsPage() {
 		)
 	}
 
-	return <MyProjectsView projects={projects ?? []} />
+	return <MyProjectsView projects={myProjects} />
 }
