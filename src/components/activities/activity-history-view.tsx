@@ -166,7 +166,12 @@ export function ActivityHistoryView() {
 				submitting={createRequestMutation.isPending}
 			/>
 
-			<Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />
+			<Toast
+				message={toastMessage}
+				isVisible={showToast}
+				onClose={() => setShowToast(false)}
+				variant="error"
+			/>
 		</>
 	)
 }
