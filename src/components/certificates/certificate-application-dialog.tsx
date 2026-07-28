@@ -190,7 +190,6 @@ export function CertificateApplicationDialog({
 												onCheckedChange={(checked) =>
 													toggleIncludedContent(option, checked === true)
 												}
-												className="size-[16px] border-[#999] data-[state=checked]:border-peach-300 data-[state=checked]:bg-peach-300"
 											/>
 											{option}
 										</label>

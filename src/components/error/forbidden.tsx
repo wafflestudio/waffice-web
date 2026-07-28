@@ -18,7 +18,7 @@ export function Forbidden({ message }: ForbiddenProps) {
 			</div>
 
 			<div className="space-y-2">
-				<h1 className="text-2xl font-bold text-gray-900">접근 권한이 없습니다</h1>
+				<h1 className="text-[28px] font-semibold text-gray-900">접근 권한이 없습니다</h1>
 				<p className="text-gray-500 max-w-md">
 					{message || "이 페이지에 접근할 수 있는 권한이 없습니다. 관리자에게 문의해주세요."}
 				</p>

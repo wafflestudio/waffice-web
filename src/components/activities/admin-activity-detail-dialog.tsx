@@ -35,7 +35,7 @@ export function AdminActivityDetailDialog({
 	onRequestDelete,
 }: AdminActivityDetailDialogProps) {
 	const relatedRequestsQuery = useRequests({
-		scope: "received",
+		scope: "all",
 		status: "all",
 		activityId: row?.activityId ?? undefined,
 		enabled: row?.activityId != null,

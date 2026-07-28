@@ -21,6 +21,7 @@ import type {
 
 export const memberQueryKeys = {
 	all: ["members"] as const,
+	pending: () => [...memberQueryKeys.all, "pending"] as const,
 	users: (cursor?: number, limit = 100, name = "") =>
 		[...memberQueryKeys.all, "users", cursor, limit, name] as const,
 	memberList: (cursor?: number, limit = 100, name = "") =>
@@ -108,6 +109,18 @@ function assertSuccessfulResponse<T>(response: ApiResponse<T>, fallbackMessage: 
 interface UseMembersQueryOptions {
 	enabled?: boolean
 	name?: string
+}
+
+export function usePendingUsers(enabled = true) {
+	return useQuery<UserDetail[], Error>({
+		queryKey: memberQueryKeys.pending(),
+		queryFn: async () =>
+			getResponseData(
+				await apiClient.getPendingUsers(),
+				"가입 대기 회원을 불러오는데 실패했습니다.",
+			),
+		enabled,
+	})
 }
 
 export function useUsers(cursor?: number, limit = 100, options: UseMembersQueryOptions = {}) {

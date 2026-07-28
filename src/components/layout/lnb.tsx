@@ -298,12 +298,12 @@ export function Lnb() {
 							className="flex h-[20px] w-[140px] items-center px-[20px]"
 						>
 							<Image
-								src="/waffle.svg"
+								src="/waffice-logo.svg"
 								alt="WAFFICE"
-								width={83}
+								width={94}
 								height={20}
 								priority
-								className="h-[20px] w-[83px] object-contain"
+								className="h-[20px] w-[94px] object-contain"
 							/>
 						</Link>
 					)}

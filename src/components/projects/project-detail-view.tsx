@@ -1,9 +1,8 @@
 "use client"
 
-import { ArrowUpRight, ChevronDown, MoreHorizontal, Search, X } from "lucide-react"
+import { ArrowUpRight, ChevronDown, MoreHorizontal, Plus, Search, X } from "lucide-react"
 import type * as React from "react"
 import { useEffect, useMemo, useState } from "react"
-import { CalendarDateField } from "@/components/ui/calendar"
 import { DesignDialogContent } from "@/components/ui/design-dialog"
 import {
 	DesignTable,
@@ -28,7 +27,6 @@ import {
 	FilterTrigger,
 } from "@/components/ui/filter-tag"
 import { Input } from "@/components/ui/input"
-import { Pagination } from "@/components/ui/pagination"
 import { SearchInput } from "@/components/ui/search-input"
 import { DotStatusBadge, TagBadge } from "@/components/ui/status-badge"
 import { Toast } from "@/components/ui/toast"
@@ -255,7 +253,7 @@ export function ProjectDetailView({ project, viewMode }: ProjectDetailViewProps)
 	return (
 		<div className="flex w-full flex-col gap-[40px] pb-[80px]">
 			<header className="flex items-end gap-[30px]">
-				<h1 className="text-[36px] font-medium leading-none text-black-900">프로젝트 상세</h1>
+				<h1 className="text-[28px] font-semibold leading-[1.5] text-black-900">프로젝트 상세</h1>
 				<div className="flex h-[25px] flex-col justify-between">
 					<span className="text-[14px] font-medium leading-[18px] tracking-[-0.28px] text-black-900">
 						{project.name}
@@ -282,7 +280,11 @@ export function ProjectDetailView({ project, viewMode }: ProjectDetailViewProps)
 					onBulkUpdate={() => setDialog("member-bulk-update")}
 				/>
 
-				<RelatedLinksSection websites={project.websites ?? []} />
+				<RelatedLinksSection
+					projectId={project.id}
+					websites={project.websites ?? []}
+					onSaveError={(message) => showMockToast(message)}
+				/>
 
 				<OperatingStatusSection
 					status={pendingStatus}
@@ -413,18 +415,17 @@ function ActivityMembersSection({
 	onOpenEdit,
 	onBulkUpdate,
 }: ActivityMembersSectionProps) {
-	const [currentPage, setCurrentPage] = useState(1)
-	const totalPages = Math.max(1, Math.ceil(members.length / ACTIVITY_MEMBERS_PER_PAGE))
-	const paginatedMembers = members.slice(
-		(currentPage - 1) * ACTIVITY_MEMBERS_PER_PAGE,
-		currentPage * ACTIVITY_MEMBERS_PER_PAGE,
+	const [visibleCount, setVisibleCount] = useState(ACTIVITY_MEMBERS_PER_PAGE)
+	const [lastFilterKey, setLastFilterKey] = useState(
+		`${showPastMembers}-${activityStatusFilter}-${searchQuery}`,
 	)
-
-	useEffect(() => {
-		if (currentPage > totalPages) {
-			setCurrentPage(totalPages)
-		}
-	}, [currentPage, totalPages])
+	const filterKey = `${showPastMembers}-${activityStatusFilter}-${searchQuery}`
+	if (filterKey !== lastFilterKey) {
+		setLastFilterKey(filterKey)
+		setVisibleCount(ACTIVITY_MEMBERS_PER_PAGE)
+	}
+	const visibleMembersList = members.slice(0, visibleCount)
+	const hasMore = visibleCount < members.length
 
 	return (
 		<SectionRow title={showPastMembers ? "과거 활동 팀원" : "활동 팀원"}>
@@ -514,7 +515,7 @@ function ActivityMembersSection({
 							</DesignTableHeaderRow>
 						</thead>
 						<tbody>
-							{paginatedMembers.map((member) => (
+							{visibleMembersList.map((member) => (
 								<DesignTableRow key={member.id} className="h-[50px]">
 									<DesignTableBodyCell className="overflow-visible">
 										<div className="flex items-center gap-[6px]">
@@ -547,11 +548,15 @@ function ActivityMembersSection({
 						</tbody>
 					</DesignTable>
 				</div>
-				<Pagination
-					currentPage={currentPage}
-					totalPages={totalPages}
-					onPageChange={setCurrentPage}
-				/>
+				{hasMore && (
+					<button
+						type="button"
+						onClick={() => setVisibleCount((prev) => prev + ACTIVITY_MEMBERS_PER_PAGE)}
+						className="flex h-[40px] items-center justify-center self-center rounded-[3px] border border-black-300 bg-white px-[24px] text-[14px] font-medium text-black-900 transition-colors hover:bg-black-100"
+					>
+						더보기
+					</button>
+				)}
 			</div>
 		</SectionRow>
 	)
@@ -590,12 +595,46 @@ function ActivityStatusFilter({
 	)
 }
 
-function RelatedLinksSection({ websites }: { websites: NonNullable<ProjectDetail["websites"]> }) {
+function RelatedLinksSection({
+	projectId,
+	websites,
+	onSaveError,
+}: {
+	projectId: number
+	websites: NonNullable<ProjectDetail["websites"]>
+	onSaveError: (message: string) => void
+}) {
+	const updateProject = useUpdateProject()
+	const [isAdding, setIsAdding] = useState(false)
+	const [newType, setNewType] = useState("")
+	const [newUrl, setNewUrl] = useState("")
+
+	const resetForm = () => {
+		setIsAdding(false)
+		setNewType("")
+		setNewUrl("")
+	}
+
+	const handleSave = async () => {
+		const type = newType.trim()
+		const url = newUrl.trim()
+		if (!type || !url) return
+		try {
+			await updateProject.mutateAsync({
+				projectId,
+				data: { websites: [...websites, { type, url }] },
+			})
+			resetForm()
+		} catch (error) {
+			onSaveError(error instanceof Error ? error.message : "링크 저장에 실패했습니다.")
+		}
+	}
+
 	return (
 		<SectionRow title="관련 링크">
 			<div className="w-[1456px] max-w-full overflow-x-auto bg-white">
 				<div className="min-w-[960px] border-black-300 border-t">
-					{websites.length === 0 && (
+					{websites.length === 0 && !isAdding && (
 						<div className="flex h-[50px] items-center px-[20px] text-[14px] text-black-600">
 							등록된 링크가 없습니다.
 						</div>
@@ -616,6 +655,45 @@ function RelatedLinksSection({ websites }: { websites: NonNullable<ProjectDetail
 							</a>
 						</div>
 					))}
+					{isAdding && (
+						<div className="flex h-[40px] items-center border-black-300 border-b">
+							<div className="flex w-[220px] items-center px-[20px]">
+								<Input
+									autoFocus
+									value={newType}
+									onChange={(event) => setNewType(event.target.value)}
+									placeholder="구분"
+									className="h-[28px] rounded-[5px] border-black-300 px-[16px] text-[14px] text-black-600 shadow-none focus-visible:border-peach-300 focus-visible:ring-0"
+								/>
+							</div>
+							<div className="flex min-w-0 flex-1 items-center px-[20px]">
+								<Input
+									value={newUrl}
+									onChange={(event) => setNewUrl(event.target.value)}
+									placeholder="URL을 입력해 주세요."
+									className="h-[28px] flex-1 rounded-[5px] border-black-300 px-[16px] text-[14px] text-black-600 shadow-none focus-visible:border-peach-300 focus-visible:ring-0"
+								/>
+							</div>
+							<div className="flex w-[140px] items-center justify-center px-[20px]">
+								<button
+									type="button"
+									onClick={handleSave}
+									disabled={!newType.trim() || !newUrl.trim() || updateProject.isPending}
+									className="flex h-[28px] w-full items-center justify-center rounded-[2px] bg-black-500 text-[14px] text-white transition-colors hover:bg-black-600 disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									저장
+								</button>
+							</div>
+						</div>
+					)}
+					<button
+						type="button"
+						onClick={() => (isAdding ? resetForm() : setIsAdding(true))}
+						className="flex h-[40px] w-full items-center justify-center gap-[8px] border-black-300 border-b text-[14px] font-medium text-black-500 transition-colors hover:bg-black-100"
+					>
+						<Plus className="size-[16px]" strokeWidth={1.8} />
+						{isAdding ? "취소" : "링크추가"}
+					</button>
 				</div>
 			</div>
 		</SectionRow>
@@ -717,18 +795,13 @@ function ProjectStatusHistoryDialog({
 										{STATUS_LABEL[history.status]}
 									</span>
 									<div className="flex items-center gap-[5px]">
-										<CalendarDateField
-											value={history.startDate}
-											onChange={() => undefined}
-											className="h-[42px] w-[140px] rounded-[6px] border-black-300 px-[10px] text-[14px] leading-[20px] text-black-900"
-										/>
+										<span className="flex h-[42px] w-[140px] items-center rounded-[6px] border border-black-300 px-[10px] text-[14px] leading-[20px] text-black-900">
+											{history.startDate}
+										</span>
 										<span className="text-[15px] text-black-300">-</span>
-										<CalendarDateField
-											value={history.endDate}
-											onChange={() => undefined}
-											className="h-[42px] w-[140px] rounded-[6px] border-black-300 px-[10px] text-[14px] leading-[20px] text-black-900"
-											popoverClassName="right-0"
-										/>
+										<span className="flex h-[42px] w-[140px] items-center rounded-[6px] border border-black-300 px-[10px] text-[14px] leading-[20px] text-black-900">
+											{history.endDate}
+										</span>
 									</div>
 								</div>
 							))}

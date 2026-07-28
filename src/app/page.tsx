@@ -1,109 +1,154 @@
 "use client"
 
-import { FolderOpen, Users } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth } from "@/components/providers/auth-provider"
+import { usePendingUsers } from "@/hooks/use-members"
+import { useRequests } from "@/hooks/use-requests"
+import type { UserLnbRole } from "@/types"
 
-// Mock data for dashboard
-const stats = {
-	totalMembers: 12,
-	activeProjects: 3,
-	recentActivity: [
-		{ type: "member", description: "새 회원 가입: 김철수", time: "2시간 전" },
-		{ type: "project", description: '프로젝트 "웹앱" 상태가 활성으로 변경됨', time: "4시간 전" },
-	],
+interface StatCardProps {
+	href: string
+	label: string
+	value: string
+	unit: string
 }
 
-export default function DashboardPage() {
+function StatCard({ href, label, value, unit }: StatCardProps) {
 	return (
-		<div className="space-y-6">
-			<div>
-				<h1 className="text-3xl font-bold">대시보드</h1>
-				<p className="text-muted-foreground">
-					와플스튜디오 회원 포털 와피스에 오신 것을 환영합니다!
+		<Link
+			href={href}
+			className="group relative flex h-[218px] w-[340px] shrink-0 border-black-900 border-l-[0.5px] px-[46px] py-[40px] transition-colors hover:bg-black-100 focus-visible:bg-black-100 focus-visible:outline-2 focus-visible:outline-peach-500 focus-visible:outline-offset-2"
+		>
+			<div className="flex flex-col gap-[40px]">
+				<h2 className="text-[18px] font-bold leading-[1.5] tracking-[-0.18px] text-black-900">
+					{label}
+				</h2>
+				<div className="flex items-end gap-[4px] whitespace-nowrap text-black-900">
+					<span className="text-[64px] font-medium leading-[0.7] tracking-[-0.64px]">{value}</span>
+					<span className="text-[16px] font-medium leading-[0.9] tracking-[-0.16px]">{unit}</span>
+				</div>
+			</div>
+			<Image
+				src="/dashboard/arrow-outward.svg"
+				alt=""
+				width={50}
+				height={50}
+				className="absolute top-[40px] right-[46px] size-[50px]"
+			/>
+		</Link>
+	)
+}
+
+interface QuickLinkCardProps {
+	href: string
+	imageSrc: string
+	imageAlt: string
+	imageClassName: string
+	title: string
+	description: string
+}
+
+function QuickLinkCard({
+	href,
+	imageSrc,
+	imageAlt,
+	imageClassName,
+	title,
+	description,
+}: QuickLinkCardProps) {
+	return (
+		<Link
+			href={href}
+			className="relative h-[240px] min-w-[280px] flex-1 border-black-300 border-l transition-colors hover:bg-black-100 focus-visible:bg-black-100 focus-visible:outline-2 focus-visible:outline-peach-500 focus-visible:outline-offset-2"
+		>
+			<Image src={imageSrc} alt={imageAlt} width={100} height={100} className={imageClassName} />
+			<div className="absolute right-[30px] bottom-[18px] left-[30px] flex flex-col gap-[4px]">
+				<h2 className="text-[18px] font-bold leading-[1.5] tracking-[-0.18px] text-black-900">
+					{title}
+				</h2>
+				<p className="text-[14px] font-medium leading-[1.5] tracking-[-0.14px] text-black-900">
+					{description}
 				</p>
 			</div>
+		</Link>
+	)
+}
 
-			{/* Stats Cards */}
-			<div className="grid gap-4 md:grid-cols-2">
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium">총 회원 수</CardTitle>
-						<Users className="h-4 w-4 text-muted-foreground" />
-					</CardHeader>
-					<CardContent>
-						<div className="text-2xl font-bold">{stats.totalMembers}</div>
-						<p className="text-xs text-muted-foreground">지난 달 대비 +2명</p>
-					</CardContent>
-				</Card>
+const isOperationsDashboard = (role: UserLnbRole) =>
+	role === "operations" || role === "waffle_leader"
 
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium">진행 중인 프로젝트</CardTitle>
-						<FolderOpen className="h-4 w-4 text-muted-foreground" />
-					</CardHeader>
-					<CardContent>
-						<div className="text-2xl font-bold">{stats.activeProjects}</div>
-						<p className="text-xs text-muted-foreground">이번 달 완료: 1개</p>
-					</CardContent>
-				</Card>
-			</div>
+export default function DashboardPage() {
+	const { user, activeRole } = useAuth()
+	const showPendingMembers = isOperationsDashboard(activeRole)
+	const showReceivedRequests = showPendingMembers || activeRole === "leader"
+	const pendingUsers = usePendingUsers(showPendingMembers)
+	const receivedRequests = useRequests({
+		scope: "received",
+		status: "pending",
+		limit: 100,
+		enabled: showReceivedRequests,
+	})
+	const pendingCount = pendingUsers.data?.length
+	const requestCount = receivedRequests.data?.items.length
 
-			{/* Recent Activity */}
-			<div className="grid gap-4 md:grid-cols-2">
-				<Card>
-					<CardHeader>
-						<CardTitle>최근 활동</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="space-y-4">
-							{stats.recentActivity.map((activity) => (
-								<div
-									key={`${activity.type}-${activity.description}-${activity.time}`}
-									className="flex items-center space-x-4"
-								>
-									<div className="w-2 h-2 bg-primary rounded-full" />
-									<div className="flex-1 space-y-1">
-										<p className="text-sm font-medium leading-none">{activity.description}</p>
-										<p className="text-xs text-muted-foreground">{activity.time}</p>
-									</div>
-									<Badge variant="outline" className="text-xs">
-										{activity.type === "member" ? "회원" : "프로젝트"}
-									</Badge>
-								</div>
-							))}
-						</div>
-					</CardContent>
-				</Card>
+	return (
+		<div className="mx-auto flex w-full max-w-[1100px] flex-col gap-[60px] px-[20px] pt-[38px] pb-[40px]">
+			<header className="flex flex-col gap-[4px]">
+				<h1 className="text-[28px] font-semibold leading-[1.5] tracking-[-0.28px] text-black-900">
+					안녕하세요, {user?.name ?? "회원"}님
+				</h1>
+				<p className="text-[16px] font-medium leading-[1.5] tracking-[-0.16px] text-black-900">
+					와플스튜디오 회원 포털 와피스에 오신 것을 환영합니다!
+				</p>
+			</header>
 
-				<Card>
-					<CardHeader>
-						<CardTitle>빠른 작업</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="space-y-2">
-							<Link
-								href="/members?quick=add"
-								className="block p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
-							>
-								<div className="flex items-center space-x-2">
-									<Users className="h-4 w-4" />
-									<span className="text-sm font-medium">새 회원 추가</span>
-								</div>
-							</Link>
-							<Link
-								href="/projects?quick=add"
-								className="block p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
-							>
-								<div className="flex items-center space-x-2">
-									<FolderOpen className="h-4 w-4" />
-									<span className="text-sm font-medium">프로젝트 생성</span>
-								</div>
-							</Link>
-						</div>
-					</CardContent>
-				</Card>
+			<div className="flex flex-col gap-[40px]">
+				{showReceivedRequests && (
+					<div className="flex flex-wrap gap-[20px]">
+						{showPendingMembers && (
+							<StatCard
+								href="/members/applications"
+								label="가입 대기 회원"
+								value={pendingCount == null ? "—" : String(pendingCount)}
+								unit="명"
+							/>
+						)}
+						<StatCard
+							href="/projects/requests"
+							label="나에게 온 요청"
+							value={requestCount == null ? "—" : String(requestCount).padStart(2, "0")}
+							unit="건"
+						/>
+					</div>
+				)}
+
+				<div className="flex flex-wrap gap-[20px]">
+					<QuickLinkCard
+						href="/mypage"
+						imageSrc="/dashboard/mypage.png"
+						imageAlt="와플 캐릭터 프로필"
+						imageClassName="absolute top-[47px] left-1/2 size-[45px] -translate-x-1/2"
+						title="마이페이지"
+						description="회원님의 프로필을 업로드해보세요."
+					/>
+					<QuickLinkCard
+						href="/activities"
+						imageSrc="/dashboard/activity-history.png"
+						imageAlt="노트북을 사용하는 와플 캐릭터"
+						imageClassName="absolute top-[48px] left-1/2 h-[57px] w-[95px] -translate-x-1/2"
+						title="내 활동이력 관리"
+						description="회원님의 프로필을 업로드해보세요."
+					/>
+					<QuickLinkCard
+						href="/certificates"
+						imageSrc="/dashboard/certificate.png"
+						imageAlt="와플 캐릭터 활동증명서"
+						imageClassName="absolute top-[28px] left-1/2 h-[79px] w-[90px] -translate-x-1/2"
+						title="내 활동증명서 발급"
+						description="활동이력을 증명서로 발급받아보세요."
+					/>
+				</div>
 			</div>
 		</div>
 	)

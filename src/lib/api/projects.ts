@@ -112,5 +112,19 @@ export function createProjectsApi(client: ApiClient) {
 				body: formData,
 			})
 		},
+
+		getAllProjectsMemberTemplate(): Promise<Blob> {
+			return client.requestBlob("/projects/members/bulk-all-projects/template")
+		},
+
+		replaceAllProjectsMembers(file: File): Promise<ApiResponse<ProjectDetail[]>> {
+			const formData = new FormData()
+			formData.append("file", file)
+
+			return client.request<ApiResponse<ProjectDetail[]>>("/projects/members/bulk-all-projects", {
+				method: "PUT",
+				body: formData,
+			})
+		},
 	}
 }

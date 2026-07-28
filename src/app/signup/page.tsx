@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { Logo } from "@/components/auth/logo"
+import { LogoMark } from "@/components/auth/logo"
 import { SignupErrorToast } from "@/components/auth/signup-error-toast"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -174,7 +174,7 @@ export default function SignupPage() {
 	}
 
 	return (
-		<div className="min-h-screen flex items-center justify-center p-4">
+		<div className="flex min-h-screen items-start justify-center px-[20px] py-[40px] sm:items-center sm:p-4">
 			<SignupErrorToast
 				message={termsError ?? error ?? ""}
 				isVisible={!!termsError || !!error}
@@ -183,17 +183,20 @@ export default function SignupPage() {
 					setError(null)
 				}}
 			/>
-			<div className="flex justify-start items-center gap-2.5 px-[50px] py-[70px] rounded-[15px] border border-[#dbdfe0] bg-white">
-				<div className="flex flex-col justify-start items-start gap-[50px]">
+			<div className="flex w-full max-w-[360px] flex-col items-start gap-2.5 bg-white sm:w-auto sm:max-w-none sm:rounded-[15px] sm:border sm:border-[#dbdfe0] sm:px-[50px] sm:py-[70px]">
+				<div className="flex w-full flex-col items-start justify-start gap-[40px] sm:w-auto sm:gap-[50px]">
 					{/* 헤더 */}
 					<div className="flex items-center gap-2.5">
-						<Logo size="sm" />
-						<h1 className="text-2xl font-semibold text-[#0a0a0a]">회원가입</h1>
+						<LogoMark width={22} height={23} />
+						<h1 className="text-[24px] font-semibold text-[#0a0a0a] sm:text-[28px]">회원가입</h1>
 					</div>
 
-					<div className="flex flex-col gap-[30px]">
+					<div className="flex w-full flex-col gap-[30px] sm:w-auto">
 						<Form {...form}>
-							<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-[30px]">
+							<form
+								onSubmit={form.handleSubmit(onSubmit)}
+								className="flex w-full flex-col gap-[30px] sm:w-auto"
+							>
 								{/* 입력 필드 그룹 */}
 								<div className="flex flex-col gap-[25px]">
 									{/* 이름 */}
@@ -207,7 +210,7 @@ export default function SignupPage() {
 													<Input
 														placeholder="홍길동"
 														className={cn(
-															"w-[360px] h-[50px] rounded-[5px] text-[15px]",
+															"w-full h-[50px] rounded-[5px] text-[15px] sm:w-[360px]",
 															fieldState.error ? "border-red-500" : "border-black-600",
 														)}
 														{...field}
@@ -229,7 +232,7 @@ export default function SignupPage() {
 													<Input
 														placeholder="23.5"
 														className={cn(
-															"w-[360px] h-[50px] rounded-[5px] text-[15px]",
+															"w-full h-[50px] rounded-[5px] text-[15px] sm:w-[360px]",
 															fieldState.error ? "border-red-500" : "border-black-600",
 														)}
 														{...field}
@@ -251,7 +254,7 @@ export default function SignupPage() {
 													<Input
 														placeholder="202X-XXXXX"
 														className={cn(
-															"w-[360px] h-[50px] rounded-[5px] text-[15px]",
+															"w-full h-[50px] rounded-[5px] text-[15px] sm:w-[360px]",
 															fieldState.error ? "border-red-500" : "border-black-600",
 														)}
 														{...field}
@@ -273,7 +276,7 @@ export default function SignupPage() {
 													<Input
 														placeholder="컴퓨터공학부"
 														className={cn(
-															"w-[360px] h-[50px] rounded-[5px] text-[15px]",
+															"w-full h-[50px] rounded-[5px] text-[15px] sm:w-[360px]",
 															fieldState.error ? "border-red-500" : "border-black-600",
 														)}
 														{...field}
@@ -296,7 +299,7 @@ export default function SignupPage() {
 														type="email"
 														placeholder="example@gmail.com"
 														className={cn(
-															"w-[360px] h-[50px] rounded-[5px] text-[15px]",
+															"w-full h-[50px] rounded-[5px] text-[15px] sm:w-[360px]",
 															fieldState.error ? "border-red-500" : "border-black-600",
 														)}
 														{...field}
@@ -318,7 +321,7 @@ export default function SignupPage() {
 													<Input
 														placeholder="010-1234-5678"
 														className={cn(
-															"w-[360px] h-[50px] rounded-[5px] text-[15px]",
+															"w-full h-[50px] rounded-[5px] text-[15px] sm:w-[360px]",
 															fieldState.error ? "border-red-500" : "border-black-600",
 														)}
 														{...field}
@@ -340,7 +343,7 @@ export default function SignupPage() {
 													<FormControl>
 														<SelectTrigger
 															className={cn(
-																"w-[360px] h-[50px] rounded-[5px] text-[17px] text-black-700 px-4 [&>svg]:text-black-600 data-[state=open]:rounded-b-none data-[state=open]:border-b-0",
+																"w-full h-[50px] rounded-[5px] text-[17px] text-black-700 px-4 [&>svg]:text-black-600 data-[state=open]:rounded-b-none data-[state=open]:border-b-0 sm:w-[360px]",
 																fieldState.error ? "border-red-500" : "border-black-600",
 															)}
 														>
@@ -348,7 +351,7 @@ export default function SignupPage() {
 														</SelectTrigger>
 													</FormControl>
 													<SelectContent
-														className="w-[360px] rounded-t-none rounded-b-[5px] border-black-600 p-0 shadow-none data-[side=bottom]:translate-y-0"
+														className="w-[var(--radix-select-trigger-width)] rounded-t-none rounded-b-[5px] border-black-600 p-0 shadow-none data-[side=bottom]:translate-y-0 sm:w-[360px]"
 														sideOffset={0}
 													>
 														<SelectItem
@@ -387,7 +390,7 @@ export default function SignupPage() {
 													<FormControl>
 														<SelectTrigger
 															className={cn(
-																"w-[360px] h-[50px] rounded-[5px] text-[17px] text-black-700 px-4 [&>svg]:text-black-600 data-[state=open]:rounded-b-none data-[state=open]:border-b-0",
+																"w-full h-[50px] rounded-[5px] text-[17px] text-black-700 px-4 [&>svg]:text-black-600 data-[state=open]:rounded-b-none data-[state=open]:border-b-0 sm:w-[360px]",
 																fieldState.error ? "border-red-500" : "border-black-600",
 															)}
 														>
@@ -395,7 +398,7 @@ export default function SignupPage() {
 														</SelectTrigger>
 													</FormControl>
 													<SelectContent
-														className="w-[360px] rounded-t-none rounded-b-[5px] border-black-600 p-0 shadow-none data-[side=bottom]:translate-y-0"
+														className="w-[var(--radix-select-trigger-width)] rounded-t-none rounded-b-[5px] border-black-600 p-0 shadow-none data-[side=bottom]:translate-y-0 sm:w-[360px]"
 														sideOffset={0}
 													>
 														<SelectItem
@@ -432,7 +435,11 @@ export default function SignupPage() {
 										render={({ field }) => (
 											<FormItem className="flex flex-row items-center gap-2.5 space-y-0">
 												<FormControl>
-													<Checkbox checked={field.value} onCheckedChange={field.onChange} />
+													<Checkbox
+														checked={field.value}
+														onCheckedChange={field.onChange}
+														className="data-[state=checked]:border-black-900 data-[state=checked]:bg-black-900"
+													/>
 												</FormControl>
 												<span className="text-[13px]">
 													<span className="text-[#505050]">[필수] </span>
@@ -454,7 +461,11 @@ export default function SignupPage() {
 										render={({ field }) => (
 											<FormItem className="flex flex-row items-center gap-2.5 space-y-0">
 												<FormControl>
-													<Checkbox checked={field.value} onCheckedChange={field.onChange} />
+													<Checkbox
+														checked={field.value}
+														onCheckedChange={field.onChange}
+														className="data-[state=checked]:border-black-900 data-[state=checked]:bg-black-900"
+													/>
 												</FormControl>
 												<span className="text-[13px]">
 													<span className="text-[#505050]">[필수] </span>
@@ -476,7 +487,11 @@ export default function SignupPage() {
 										render={({ field }) => (
 											<FormItem className="flex flex-row items-center gap-2.5 space-y-0">
 												<FormControl>
-													<Checkbox checked={field.value} onCheckedChange={field.onChange} />
+													<Checkbox
+														checked={field.value}
+														onCheckedChange={field.onChange}
+														className="data-[state=checked]:border-black-900 data-[state=checked]:bg-black-900"
+													/>
 												</FormControl>
 												<span className="text-[13px] text-[#505050]">
 													[선택] 이메일 정보 수신 동의
@@ -490,7 +505,11 @@ export default function SignupPage() {
 										render={({ field }) => (
 											<FormItem className="flex flex-row items-center gap-2.5 space-y-0">
 												<FormControl>
-													<Checkbox checked={field.value} onCheckedChange={field.onChange} />
+													<Checkbox
+														checked={field.value}
+														onCheckedChange={field.onChange}
+														className="data-[state=checked]:border-black-900 data-[state=checked]:bg-black-900"
+													/>
 												</FormControl>
 												<span className="text-[13px] text-[#505050]">
 													[선택] SMS 정보 수신 동의
@@ -503,7 +522,7 @@ export default function SignupPage() {
 								{/* 가입하기 버튼 */}
 								<Button
 									type="submit"
-									className="w-[360px] h-[50px] rounded-[5px] bg-[#121212] text-[15px] font-semibold text-white hover:bg-[#121212]/90 disabled:opacity-40"
+									className="w-full h-[50px] rounded-[5px] bg-[#121212] text-[15px] font-semibold text-white hover:bg-[#121212]/90 disabled:opacity-40 sm:w-[360px]"
 									disabled={isSubmitting || !form.formState.isValid}
 								>
 									{isSubmitting ? (

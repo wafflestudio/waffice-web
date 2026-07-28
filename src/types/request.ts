@@ -2,17 +2,23 @@ import type { ActivityStatus } from "./activity"
 import type { ProjectBrief } from "./project"
 import type { UserBrief } from "./user"
 
+/** GET /requests 전용 커서 페이지. next_cursor는 단순 id 기반이면 숫자, 복합 keyset 커서면
+ * (JS Number 정밀도 손실을 피하기 위한) 불투명 숫자 문자열이다 — 그대로 다음 요청에 전달해야 한다. */
+export interface RequestCursorPage<T> {
+	items: T[]
+	next_cursor?: number | string | null
+}
+
 // === 활동 이력 승인 요청(approval request) API 스키마 ===
-// waffice-fastapi app/routes/requests.py, app/schemas/request.py 기준.
-// position/ApprovalRequestListItem 확장 필드는 PR #36
-// (agent/activity-history-management, 2026-07-26 기준 미머지) 스펙을 미리 반영한 것.
-// 머지되면 그대로 쓸 수 있고, 머지 전에는 백엔드가 이 필드들을 내려주지 않을 수 있다.
+// waffice-fastapi app/routes/requests.py, app/schemas/request.py 기준 (PR #43 반영).
 
 export type RequestKind = "create" | "update" | "delete"
 export type RequestScope = "received" | "sent" | "all"
 export type RequestStatus = "pending" | "approved" | "rejected"
 export type RequestStatusFilter = RequestStatus | "all"
 export type RequestKindFilter = RequestKind | "all"
+/** 승인 대상. project_leader: 해당 프로젝트 팀장, operations: 운영진. */
+export type ReviewTarget = "project_leader" | "operations"
 
 export interface ActivityPayload {
 	project_id: number
@@ -50,17 +56,16 @@ export interface ApprovalRequestBody {
 
 export interface ApprovalRequestCreateRequest {
 	request_kind: RequestKind
+	review_target?: ReviewTarget
 	target_user_id?: number | null
 	activity_id?: number | null
 	after?: ActivityPayload | null
 	reason: string
-	reviewer_ids?: number[]
 }
 
 export interface ApprovalRequestUpdateRequest {
 	reason?: string | null
 	after?: ActivityPayload | null
-	reviewer_ids?: number[] | null
 }
 
 export interface ApprovalReviewRequest {
@@ -81,8 +86,6 @@ export interface RequestReviewerDetail {
 	user: UserBrief
 }
 
-/** PR #36 이후 target_user_id/activity_id/reviewers/after가 목록 응답에도 포함된다
- * (그 전에는 id/requester/request_kind/status/created_at/reviewed_at만 존재). */
 export interface ApprovalRequestListItem {
 	id: number
 	requester: UserBrief
@@ -101,6 +104,7 @@ export interface ApprovalRequestDetail {
 	requester: UserBrief
 	project: ProjectBrief | null
 	reviewed_by: UserBrief | null
+	review_target: ReviewTarget
 	reviewers: RequestReviewerDetail[]
 	status: RequestStatus
 	body: ApprovalRequestBody

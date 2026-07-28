@@ -30,13 +30,13 @@ export function Gnb({ isLoggedIn, onLogout }: GnbProps) {
 	return (
 		<header className="z-40 flex w-full shrink-0 flex-col items-start justify-center bg-white px-[50px] py-[17px] border-b-[1px] border-[#EBECF0]">
 			<div className="flex w-full items-center justify-between">
-				<Link href="/" className="relative block h-[20px] w-[86px]">
+				<Link href="/" className="relative block h-[20px] w-[94px]">
 					<Image
-						src="/waffle.svg"
+						src="/waffice-logo.svg"
 						alt="WAFFICE"
 						fill
 						priority
-						sizes="86px"
+						sizes="94px"
 						className="object-contain"
 					/>
 				</Link>

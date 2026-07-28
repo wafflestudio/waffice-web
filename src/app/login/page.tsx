@@ -97,11 +97,10 @@ export default function LoginPage() {
 	const displayError = authError || oauthError
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-background">
-			<Card className="w-[460px] px-[50px] pt-[70px] pb-[70px]">
-				<CardHeader className="flex flex-row items-center justify-center gap-2 p-0 mb-[70px]">
+		<div className="flex min-h-screen items-center justify-center bg-background px-[20px]">
+			<Card className="w-full max-w-[460px] px-[24px] pt-[48px] pb-[48px] sm:px-[50px] sm:pt-[70px] sm:pb-[70px]">
+				<CardHeader className="mb-[48px] flex items-center justify-center p-0 sm:mb-[70px]">
 					<Logo size="sm" />
-					<h1 className="text-2xl font-bold">WAFFICE</h1>
 				</CardHeader>
 				<CardContent className="p-0">
 					{displayError && (

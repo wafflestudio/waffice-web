@@ -1,10 +1,6 @@
 "use client"
 
-import {
-	ACTIVITY_STATUS_LABELS,
-	ACTIVITY_STATUS_STYLES,
-	unixToDateInput,
-} from "@/components/activities/activity-history.utils"
+import { unixToDateInput } from "@/components/activities/activity-history.utils"
 import type { AdminActivityRow } from "@/components/activities/admin-activity-history.utils"
 import {
 	DropdownMenu,
@@ -14,7 +10,6 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { FilterTrigger } from "@/components/ui/filter-tag"
-import { DotStatusBadge } from "@/components/ui/status-badge"
 import { cn } from "@/lib/utils"
 
 interface AdminActivityHistoryTableProps {
@@ -26,8 +21,7 @@ interface AdminActivityHistoryTableProps {
 }
 
 const CELL_CLASS = "flex min-w-0 items-center overflow-hidden px-[20px] text-[14px] text-black-900"
-const GRID_COLS =
-	"grid-cols-[minmax(180px,220px)_minmax(100px,140px)_minmax(220px,300px)_minmax(240px,1fr)_130px]"
+const GRID_COLS = "grid-cols-[minmax(180px,220px)_minmax(100px,140px)_minmax(220px,300px)_1fr]"
 const DROPDOWN_CONTENT_CLASS =
 	"min-w-0 rounded-[6px] border-black-300 p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
 const FILTER_TRIGGER_CLASS =
@@ -73,7 +67,6 @@ export function AdminActivityHistoryTable({
 					</DropdownMenu>
 				</div>
 				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>활동 내용</div>
-				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>요청 상태</div>
 			</div>
 
 			{rows.map((row) => (
@@ -94,11 +87,6 @@ export function AdminActivityHistoryTable({
 						{row.projectName ?? "-"}
 					</div>
 					<div className={cn(CELL_CLASS, "truncate")}>{row.description}</div>
-					<div className={cn(CELL_CLASS, "px-[15px]")}>
-						<DotStatusBadge dotClassName={ACTIVITY_STATUS_STYLES[row.status]}>
-							{ACTIVITY_STATUS_LABELS[row.status]}
-						</DotStatusBadge>
-					</div>
 				</button>
 			))}
 
