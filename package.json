@@ -6,6 +6,7 @@
 		"dev": "next dev --turbopack",
 		"build": "next build --turbopack",
 		"build:dev": "export $(cat .env.dev | xargs) && next build --turbopack",
+		"build:prod": "export $(cat .env.production | xargs) && next build --turbopack",
 		"start": "next start",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
