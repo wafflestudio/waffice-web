@@ -138,7 +138,7 @@ export default function DashboardPage() {
 						imageAlt="노트북을 사용하는 와플 캐릭터"
 						imageClassName="absolute top-[48px] left-1/2 h-[57px] w-[95px] -translate-x-1/2"
 						title="내 활동이력 관리"
-						description="회원님의 프로필을 업로드해보세요."
+						description="회원님의 활동이력을 확인하고 관리해보세요."
 					/>
 					<QuickLinkCard
 						href="/certificates"

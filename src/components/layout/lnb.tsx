@@ -99,6 +99,8 @@ const LEADER_NAV_ITEMS: NavItem[] = [
 	{ name: "세미나 수강신청", href: "/seminars", icon: GraduationCap },
 ]
 
+const SHOW_MOCK_MODE = process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH === "true"
+
 const ROLE_LABELS: Record<UserLnbRole, string> = {
 	regular: "정회원",
 	leader: "팀장",
@@ -333,11 +335,13 @@ export function Lnb() {
 							isCollapsed={isCollapsed}
 						/>
 					))}
-					<MockModeMenuItem
-						isCollapsed={isCollapsed}
-						enabled={mockModeEnabled}
-						onToggle={toggleMockMode}
-					/>
+					{SHOW_MOCK_MODE && (
+						<MockModeMenuItem
+							isCollapsed={isCollapsed}
+							enabled={mockModeEnabled}
+							onToggle={toggleMockMode}
+						/>
+					)}
 				</nav>
 			</div>
 
