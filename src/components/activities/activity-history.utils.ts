@@ -1,15 +1,17 @@
 import type { ActivityHistoryItem, ActivityHistoryStatus } from "@/types"
 
 export const ACTIVITY_STATUS_LABELS: Record<ActivityHistoryStatus, string> = {
-	create_pending: "추가 요청중",
-	update_pending: "수정 요청중",
-	active: "기록완료",
+	create_pending: "대기중",
+	update_pending: "대기중",
+	active: "완료",
+	rejected: "거절",
 }
 
 export const ACTIVITY_STATUS_STYLES: Record<ActivityHistoryStatus, string> = {
-	create_pending: "bg-[#f0975e]",
+	create_pending: "bg-[#ffd21f]",
 	update_pending: "bg-[#ffd21f]",
 	active: "bg-[#7aee7f]",
+	rejected: "bg-[#f44949]",
 }
 
 /** unix seconds -> "YYYY.MM.DD". CalendarDateField가 사용하는 표시 포맷과 동일하다. */

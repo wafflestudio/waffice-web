@@ -356,7 +356,7 @@ export default function MyPage() {
 	return (
 		<div className="flex w-full flex-col items-start">
 			<div className="flex w-full max-w-[1140px] flex-col gap-[40px]">
-				<h1 className="text-[28px] font-medium leading-normal text-black-900">마이페이지</h1>
+				<h1 className="text-[28px] font-semibold leading-normal text-black-900">마이페이지</h1>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-[30px]">
 						<div className="flex items-center gap-[30px]">
@@ -536,11 +536,7 @@ export default function MyPage() {
 												render={({ field }) => (
 													<FormItem className="flex items-center gap-[16px] space-y-0">
 														<FormControl>
-															<Checkbox
-																checked={field.value}
-																onCheckedChange={field.onChange}
-																className="size-[16px] rounded-[4px] border-black-500 data-[state=checked]:border-peach-300 data-[state=checked]:bg-peach-300"
-															/>
+															<Checkbox checked={field.value} onCheckedChange={field.onChange} />
 														</FormControl>
 														<FormLabel className="cursor-pointer text-[14px] font-normal tracking-[-0.28px] text-black-700">
 															SMS
@@ -554,11 +550,7 @@ export default function MyPage() {
 												render={({ field }) => (
 													<FormItem className="flex items-center gap-[16px] space-y-0">
 														<FormControl>
-															<Checkbox
-																checked={field.value}
-																onCheckedChange={field.onChange}
-																className="size-[16px] rounded-[4px] border-black-500 data-[state=checked]:border-peach-300 data-[state=checked]:bg-peach-300"
-															/>
+															<Checkbox checked={field.value} onCheckedChange={field.onChange} />
 														</FormControl>
 														<FormLabel className="cursor-pointer text-[14px] font-normal tracking-[-0.28px] text-black-700">
 															Email

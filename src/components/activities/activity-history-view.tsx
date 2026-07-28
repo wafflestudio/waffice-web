@@ -50,6 +50,7 @@ export function ActivityHistoryView() {
 		createRequestMutation.mutate(
 			{
 				request_kind: isEdit ? "update" : "create",
+				review_target: values.reviewTarget,
 				activity_id: isEdit ? requestTargetRecord.id : null,
 				after: {
 					project_id: values.projectId,

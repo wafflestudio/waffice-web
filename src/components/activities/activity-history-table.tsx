@@ -24,16 +24,24 @@ interface ActivityHistoryTableProps {
 	onSelect: (record: ActivityHistoryItem) => void
 }
 
-type StatusFilter = "전체" | ActivityHistoryStatus
+type StatusFilter = "전체" | "대기중" | "거절" | "완료"
 
-const STATUS_OPTIONS: StatusFilter[] = ["전체", "create_pending", "update_pending", "active"]
+const STATUS_OPTIONS: StatusFilter[] = ["전체", "대기중", "거절", "완료"]
+
+const STATUS_FILTER_STATUSES: Record<Exclude<StatusFilter, "전체">, ActivityHistoryStatus[]> = {
+	대기중: ["create_pending", "update_pending"],
+	거절: ["rejected"],
+	완료: ["active"],
+}
 
 const CELL_CLASS = "flex min-w-0 items-center overflow-hidden px-[20px] text-[14px] text-black-900"
 
 export function ActivityHistoryTable({ records, onSelect }: ActivityHistoryTableProps) {
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>("전체")
 	const visibleRecords =
-		statusFilter === "전체" ? records : records.filter((record) => record.status === statusFilter)
+		statusFilter === "전체"
+			? records
+			: records.filter((record) => STATUS_FILTER_STATUSES[statusFilter].includes(record.status))
 
 	return (
 		<div className="w-full overflow-hidden bg-white">
@@ -62,7 +70,7 @@ export function ActivityHistoryTable({ records, onSelect }: ActivityHistoryTable
 							>
 								{STATUS_OPTIONS.map((status) => (
 									<DropdownMenuFilterRadioItem key={status} value={status}>
-										{status === "전체" ? status : ACTIVITY_STATUS_LABELS[status]}
+										{status}
 									</DropdownMenuFilterRadioItem>
 								))}
 							</DropdownMenuRadioGroup>

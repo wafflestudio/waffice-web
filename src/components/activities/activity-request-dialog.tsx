@@ -15,12 +15,12 @@ import { DialogActionButton } from "@/components/ui/dialog-action-button"
 import { SelectField } from "@/components/ui/select-field"
 import { Toast } from "@/components/ui/toast"
 import { useProjects } from "@/hooks/use-projects"
-import type { ActivityHistoryItem } from "@/types"
+import type { ActivityHistoryItem, ReviewTarget } from "@/types"
 
 const requestSchema = z
 	.object({
 		projectName: z.string().min(1),
-		requestTargets: z.array(z.string()),
+		reviewTarget: z.enum(["project_leader", "operations"]),
 		startDate: z.string().min(1),
 		endDate: z.string(),
 		isEndDateUnknown: z.boolean(),
@@ -34,6 +34,7 @@ const requestSchema = z
 
 export interface ActivityRequestFormValues {
 	projectId: number
+	reviewTarget: ReviewTarget
 	startDate: number
 	endDate: number | null
 	description: string
@@ -51,7 +52,7 @@ interface ActivityRequestDialogProps {
 
 interface FormValues {
 	projectName: string
-	requestTargets: string[]
+	reviewTarget: ReviewTarget
 	startDate: string
 	endDate: string
 	isEndDateUnknown: boolean
@@ -61,7 +62,7 @@ interface FormValues {
 
 const EMPTY_VALUES: FormValues = {
 	projectName: "",
-	requestTargets: [],
+	reviewTarget: "project_leader",
 	startDate: "",
 	endDate: "",
 	isEndDateUnknown: true,
@@ -113,7 +114,7 @@ export function ActivityRequestDialog({
 	}, [form, open, record, projects])
 
 	const projectName = form.watch("projectName")
-	const requestTargets = form.watch("requestTargets")
+	const reviewTarget = form.watch("reviewTarget")
 	const startDate = form.watch("startDate")
 	const endDate = form.watch("endDate")
 	const isEndDateUnknown = form.watch("isEndDateUnknown")
@@ -138,6 +139,7 @@ export function ActivityRequestDialog({
 
 		onSubmit({
 			projectId,
+			reviewTarget: values.reviewTarget,
 			startDate: startUnix,
 			endDate: endUnix,
 			description: values.description.trim(),
@@ -172,11 +174,8 @@ export function ActivityRequestDialog({
 
 						<ActivityDialogRow label="요청대상">
 							<ActivityRequestTargetField
-								projectId={projectNameToId.get(projectName) ?? null}
-								value={requestTargets}
-								onChange={(value) =>
-									form.setValue("requestTargets", value, { shouldValidate: true })
-								}
+								value={reviewTarget}
+								onChange={(value) => form.setValue("reviewTarget", value, { shouldValidate: true })}
 							/>
 						</ActivityDialogRow>
 
@@ -213,7 +212,6 @@ export function ActivityRequestDialog({
 											})
 											if (checked) form.setValue("endDate", "")
 										}}
-										className="size-[16px] border-black-300 data-[state=checked]:border-peach-300 data-[state=checked]:bg-peach-300"
 									/>
 									미정
 								</label>

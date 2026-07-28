@@ -6,7 +6,6 @@ import { AdminActivityDetailDialog } from "@/components/activities/admin-activit
 import type { AdminActivityRow } from "@/components/activities/admin-activity-history.utils"
 import {
 	adminActivityItemToRow,
-	pendingCreateRequestToRow,
 	sortAdminActivityRows,
 } from "@/components/activities/admin-activity-history.utils"
 import { AdminActivityHistoryTable } from "@/components/activities/admin-activity-history-table"
@@ -14,12 +13,7 @@ import { ReceivedRequestDetailDialog } from "@/components/activities/received-re
 import { Toast } from "@/components/ui/toast"
 import { useActivities, useDeleteUserActivity } from "@/hooks/use-members"
 import { useProjects } from "@/hooks/use-projects"
-import {
-	useApproveRequest,
-	useRejectRequest,
-	useRequestDetail,
-	useRequests,
-} from "@/hooks/use-requests"
+import { useApproveRequest, useRejectRequest, useRequestDetail } from "@/hooks/use-requests"
 import type { ApprovalRequestDetail } from "@/types"
 
 const PAGE_SIZE = 20
@@ -29,12 +23,6 @@ export function AdminActivityHistoryView() {
 	const cursor = cursorStack[cursorStack.length - 1]
 
 	const activitiesQuery = useActivities(cursor, PAGE_SIZE)
-	const pendingCreatesQuery = useRequests({
-		scope: "received",
-		status: "pending",
-		requestKind: "create",
-		limit: 100,
-	})
 	const projectsQuery = useProjects(undefined, 100)
 	const deleteActivityMutation = useDeleteUserActivity()
 	const approveMutation = useApproveRequest()
@@ -53,24 +41,15 @@ export function AdminActivityHistoryView() {
 		setShowToast(true)
 	}
 
-	const projectNameById = useMemo(
-		() => new Map((projectsQuery.data?.items ?? []).map((project) => [project.id, project.name])),
-		[projectsQuery.data],
-	)
-
 	const [projectFilter, setProjectFilter] = useState("전체")
 
 	const rows = useMemo(() => {
-		const activityRows = (activitiesQuery.data?.items ?? []).map(adminActivityItemToRow)
-		const pendingRows =
-			cursorStack.length === 1
-				? (pendingCreatesQuery.data?.items ?? [])
-						.map((request) => pendingCreateRequestToRow(request, projectNameById))
-						.filter((row) => row != null)
-				: []
+		const activityRows = (activitiesQuery.data?.items ?? [])
+			.filter((item) => item.status === "active")
+			.map(adminActivityItemToRow)
 
-		return sortAdminActivityRows([...pendingRows, ...activityRows])
-	}, [activitiesQuery.data, pendingCreatesQuery.data, projectNameById, cursorStack.length])
+		return sortAdminActivityRows(activityRows)
+	}, [activitiesQuery.data])
 
 	const projectOptions = useMemo(
 		() => (projectsQuery.data?.items ?? []).map((project) => project.name),
@@ -82,8 +61,8 @@ export function AdminActivityHistoryView() {
 		[rows, projectFilter],
 	)
 
-	const isLoading = activitiesQuery.isLoading || pendingCreatesQuery.isLoading
-	const error = activitiesQuery.error ?? pendingCreatesQuery.error
+	const isLoading = activitiesQuery.isLoading
+	const error = activitiesQuery.error
 
 	const goToNextPage = () => {
 		const nextCursor = activitiesQuery.data?.next_cursor

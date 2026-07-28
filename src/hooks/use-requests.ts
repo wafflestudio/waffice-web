@@ -9,7 +9,7 @@ import type {
 	ApprovalRequestUpdateRequest,
 	ApprovalReviewRequest,
 	ApprovalReviewWithEditsRequest,
-	CursorPage,
+	RequestCursorPage,
 	RequestKindFilter,
 	RequestScope,
 	RequestStatusFilter,
@@ -21,7 +21,7 @@ export const requestQueryKeys = {
 		scope?: RequestScope
 		status?: RequestStatusFilter
 		requestKind?: RequestKindFilter
-		cursor?: number
+		cursor?: string
 		limit?: number
 	}) => [...requestQueryKeys.all, "list", options] as const,
 	detail: (requestId: number) => [...requestQueryKeys.all, "detail", requestId] as const,
@@ -39,16 +39,15 @@ interface UseRequestsOptions {
 	scope?: RequestScope
 	status?: RequestStatusFilter
 	requestKind?: RequestKindFilter
-	/** PR #36(2026-07-26 기준 미머지) 이후 지원되는 필터. */
 	activityId?: number
-	cursor?: number
+	cursor?: string
 	limit?: number
 	enabled?: boolean
 }
 
 /** GET /requests — 기본값은 scope=received&status=pending (LNB "나에게 온 요청"과 동일). */
 export function useRequests({ enabled = true, ...options }: UseRequestsOptions = {}) {
-	return useQuery<CursorPage<ApprovalRequestListItem>, Error>({
+	return useQuery<RequestCursorPage<ApprovalRequestListItem>, Error>({
 		queryKey: requestQueryKeys.list(options),
 		queryFn: async () =>
 			getResponseOrThrow(

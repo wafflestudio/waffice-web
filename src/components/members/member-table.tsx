@@ -44,13 +44,11 @@ const ITEMS_PER_PAGE = 10
 const DROPDOWN_CONTENT_CLASS =
 	"min-w-0 rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
 const HEADER_CELL_CLASS =
-	"h-[50px] px-[20px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]"
+	"h-[40px] px-[20px] text-[14px] font-medium text-[#121212] tracking-[-0.28px]"
 const BODY_CELL_CLASS =
-	"h-[60px] overflow-hidden px-[20px] text-[15px] font-normal text-[#121212] text-ellipsis"
+	"h-[50px] overflow-hidden px-[20px] text-[14px] font-normal text-[#121212] tracking-[-0.28px] text-ellipsis"
 const FILTER_TRIGGER_CLASS =
 	"h-auto w-auto gap-[6px] rounded-none p-0 text-[15px] font-medium tracking-[-0.3px] text-[#121212] hover:bg-transparent"
-const TABLE_CHECKBOX_CLASS =
-	"size-4 rounded-[3px] border-[#999] shadow-none data-[state=checked]:border-peach-300 data-[state=checked]:bg-peach-300 data-[state=checked]:text-white"
 
 const formatCurrentProjects = (member: Member) => {
 	const projectNames = member.current_projects?.map((project) => project.name).filter(Boolean) ?? []
@@ -127,15 +125,11 @@ export function MemberTable({
 		<div className="space-y-4">
 			{/* 테이블 */}
 			<div className="w-full overflow-hidden border-[#dbdfe0] border-t border-b bg-white">
-				<Table className="min-w-[1460px] table-fixed" containerClassName="scrollbar-hide">
+				<Table className="table-fixed" containerClassName="scrollbar-hide">
 					<TableHeader>
-						<TableRow className="h-[50px] bg-[#f7f7f7] hover:bg-[#f7f7f7]">
+						<TableRow className="h-[40px] bg-[#f7f7f7] hover:bg-[#f7f7f7]">
 							<TableHead className="h-[50px] w-[56px] px-[20px]">
-								<Checkbox
-									checked={isAllSelected}
-									onCheckedChange={handleSelectAll}
-									className={TABLE_CHECKBOX_CLASS}
-								/>
+								<Checkbox checked={isAllSelected} onCheckedChange={handleSelectAll} />
 							</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>이름</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>
@@ -177,7 +171,7 @@ export function MemberTable({
 								소식 수신용 이메일
 							</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "min-w-0")}>활동 프로젝트</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<FilterTrigger
@@ -215,15 +209,14 @@ export function MemberTable({
 								<TableRow
 									key={member.id}
 									onClick={() => handleMemberRowClick(member)}
-									className="h-[60px] cursor-pointer hover:bg-black-100"
+									className="h-[50px] cursor-pointer hover:bg-black-100"
 								>
 									<TableCell
-										className="h-[60px] w-[56px] px-[20px]"
+										className="h-[50px] w-[56px] px-[20px]"
 										onClick={(event) => event.stopPropagation()}
 									>
 										<Checkbox
 											checked={selectedMembers.includes(member.id)}
-											className={TABLE_CHECKBOX_CLASS}
 											onCheckedChange={(checked) =>
 												handleSelectMember(member.id, checked as boolean)
 											}

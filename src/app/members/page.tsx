@@ -176,14 +176,14 @@ export default function MembersPage() {
 	}
 
 	return (
-		<div className="flex flex-col gap-[30px]">
+		<div className="flex flex-col gap-[40px]">
 			{/* 헤더 */}
-			<h1 className="text-[36px] font-medium leading-none text-[#121212]">회원 관리</h1>
+			<h1 className="text-[28px] font-semibold leading-[1.5] text-[#121212]">회원 정보 관리</h1>
 
 			{/* 검색 영역 */}
 			<div className="flex flex-col gap-[16px]">
 				<h2 className="flex items-center gap-[2px] text-[#121212]">
-					<span className="text-[20px] font-medium leading-none">전체 회원</span>
+					<span className="text-[16px] font-medium leading-none">전체 회원</span>
 					<span className="text-[14px] font-medium leading-[1.4] tracking-[-0.28px]">
 						({members.length.toString().padStart(2, "0")})
 					</span>
@@ -193,7 +193,7 @@ export default function MembersPage() {
 					<div className="flex flex-col gap-[12px] xl:flex-row xl:items-center xl:justify-between">
 						<div className="flex flex-wrap items-center gap-[10px] xl:gap-[15px]">
 							<SearchInput
-								containerClassName="w-full sm:w-[300px]"
+								containerClassName="w-full sm:w-[260px]"
 								placeholder="검색어를 입력해 주세요"
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}

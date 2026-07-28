@@ -318,65 +318,67 @@ export default function MemberApplicationsPage() {
 		<div className="flex flex-col gap-[30px]">
 			{/* 헤더 */}
 			<div>
-				<h1 className="text-[36px] font-medium text-[#121212]">가입 신청 관리</h1>
+				<h1 className="text-[28px] font-semibold leading-[1.5] text-[#121212]">가입 요청 관리</h1>
 			</div>
 
 			{/* 검색 영역 */}
-			<div className="space-y-4">
-				<div className="flex flex-wrap items-center justify-between gap-[12px]">
-					<h2 className="flex items-baseline gap-[4px]">
-						<span className="text-[20px] font-medium text-[#121212]">전체 신청</span>
-						<span className="text-[14px] font-medium text-[#121212]">
-							({applications.length.toString().padStart(2, "0")})
-						</span>
-					</h2>
-				</div>
+			<div className="flex flex-col gap-[16px]">
+				<h2 className="flex items-baseline gap-[4px]">
+					<span className="text-[18px] font-medium text-[#121212] tracking-[-0.36px]">
+						전체 신청
+					</span>
+					<span className="text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
+						({applications.length.toString().padStart(2, "0")})
+					</span>
+				</h2>
 
-				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-[15px]">
-						<SearchInput
-							containerClassName="w-[300px]"
-							placeholder="신청자명을 입력해 주세요"
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-						/>
-						<Button
-							className="bg-peach-300 hover:bg-peach-500 text-white"
-							onClick={handleApproveClick}
-						>
-							가입 승인
-						</Button>
+				<div className="flex flex-col gap-[12px]">
+					<div className="flex flex-col gap-[12px] xl:flex-row xl:items-center xl:justify-between">
+						<div className="flex flex-wrap items-center gap-[10px] xl:gap-[15px]">
+							<SearchInput
+								containerClassName="w-full sm:w-[260px]"
+								placeholder="신청자명을 입력해 주세요"
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+							/>
+							<Button
+								className="bg-peach-300 hover:bg-peach-500 text-white"
+								onClick={handleApproveClick}
+							>
+								가입 승인
+							</Button>
+						</div>
+						{activeFilterTags.length > 0 && (
+							<FilterTagGroup className="flex-wrap xl:justify-end">
+								{activeFilterTags.map((tag) => (
+									<FilterTag key={tag.label} label={tag.label} onClick={tag.onRemove} />
+								))}
+								<FilterResetButton onClick={handleResetFilters}>초기화</FilterResetButton>
+							</FilterTagGroup>
+						)}
 					</div>
-					{activeFilterTags.length > 0 && (
-						<FilterTagGroup>
-							{activeFilterTags.map((tag) => (
-								<FilterTag key={tag.label} label={tag.label} onClick={tag.onRemove} />
-							))}
-							<FilterResetButton onClick={handleResetFilters}>초기화</FilterResetButton>
-						</FilterTagGroup>
-					)}
+
+					{/* 테이블 */}
+					<ApplicationTable
+						applications={applications}
+						searchQuery={searchQuery}
+						currentPage={currentPage}
+						onPageChange={setCurrentPage}
+						selectedApplications={selectedApplications}
+						onSelectedApplicationsChange={setSelectedApplications}
+						onApprove={handleApproveSingle}
+						onReject={handleRejectSingle}
+						generationSort={generationSort}
+						onGenerationSortChange={setGenerationSort}
+						dateSort={dateSort}
+						onDateSortChange={setDateSort}
+						roleFilter={roleFilter}
+						onRoleFilterChange={setRoleFilter}
+						statusFilter={statusFilter}
+						onStatusFilterChange={setStatusFilter}
+					/>
 				</div>
 			</div>
-
-			{/* 테이블 */}
-			<ApplicationTable
-				applications={applications}
-				searchQuery={searchQuery}
-				currentPage={currentPage}
-				onPageChange={setCurrentPage}
-				selectedApplications={selectedApplications}
-				onSelectedApplicationsChange={setSelectedApplications}
-				onApprove={handleApproveSingle}
-				onReject={handleRejectSingle}
-				generationSort={generationSort}
-				onGenerationSortChange={setGenerationSort}
-				dateSort={dateSort}
-				onDateSortChange={setDateSort}
-				roleFilter={roleFilter}
-				onRoleFilterChange={setRoleFilter}
-				statusFilter={statusFilter}
-				onStatusFilterChange={setStatusFilter}
-			/>
 
 			{/* 승인 다이얼로그 */}
 			<Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>

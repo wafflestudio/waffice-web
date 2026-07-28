@@ -14,7 +14,7 @@ export function MyProjectsView({ projects }: MyProjectsViewProps) {
 	// TODO(API): 내 프로젝트 목록 API가 준비되면 상위 page에서 현재 사용자의 프로젝트만 주입.
 	return (
 		<div className="flex w-full flex-col gap-[40px]">
-			<h1 className="text-[36px] font-medium text-black-900 leading-[1.2] tracking-[-0.72px]">
+			<h1 className="text-[28px] font-semibold text-black-900 leading-[1.5] tracking-[-0.56px]">
 				내 프로젝트 목록
 			</h1>
 

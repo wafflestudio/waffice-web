@@ -1,76 +1,39 @@
 "use client"
 
-import { ChevronDown } from "lucide-react"
-import { useMemo } from "react"
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuFilterCheckboxItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { useProjectMembers } from "@/hooks/use-projects"
+import { cn } from "@/lib/utils"
+import type { ReviewTarget } from "@/types"
 
-// TODO(backend): reviewer_ids에 매핑할 값. 현재는 UI만 구현되어 있고 제출 로직에는 연결되지 않음.
-// 운영팀/팀장을 enum으로 받는 백엔드 스펙이 확정되면 실제 reviewer_ids 매핑을 붙인다.
-export const OPS_TEAM_LABEL = "와플스튜디오 운영팀"
+const REVIEW_TARGET_OPTIONS: { value: ReviewTarget; label: string }[] = [
+	{ value: "project_leader", label: "팀장" },
+	{ value: "operations", label: "운영팀" },
+]
 
 interface ActivityRequestTargetFieldProps {
-	projectId: number | null
-	value: string[]
-	onChange: (value: string[]) => void
+	value: ReviewTarget
+	onChange: (value: ReviewTarget) => void
 }
 
-export function ActivityRequestTargetField({
-	projectId,
-	value,
-	onChange,
-}: ActivityRequestTargetFieldProps) {
-	const membersQuery = useProjectMembers(projectId, { status: "active", limit: 100 })
-	const leaderNames = useMemo(
-		() =>
-			(membersQuery.data?.items ?? [])
-				.filter((member) => member.role === "leader")
-				.map((member) => `${member.user.name}(팀장)`),
-		[membersQuery.data],
-	)
-	const options = useMemo(() => [...leaderNames, OPS_TEAM_LABEL], [leaderNames])
-
-	const toggleOption = (option: string) => {
-		if (value.includes(option)) {
-			onChange(value.filter((item) => item !== option))
-		} else {
-			onChange([...value, option])
-		}
-	}
-
-	const label = value.length > 0 ? value.join(", ") : "요청대상을 선택해주세요"
-
+export function ActivityRequestTargetField({ value, onChange }: ActivityRequestTargetFieldProps) {
 	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
+		<div className="flex items-center gap-[30px]">
+			{REVIEW_TARGET_OPTIONS.map((option) => (
 				<button
+					key={option.value}
 					type="button"
-					className="flex h-[42px] w-[300px] items-center justify-between gap-[8px] rounded-[6px] border border-black-300 bg-white px-[10px] text-[14px] tracking-[-0.28px] text-black-900 outline-none focus-visible:border-peach-300"
+					onClick={() => onChange(option.value)}
+					className="flex items-center gap-[8px] text-[14px] font-medium leading-[14px] text-black-900"
 				>
-					<span className="truncate">{value.length > 0 ? label : label}</span>
-					<ChevronDown className="size-[20px] shrink-0 text-black-900" />
-				</button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent
-				align="start"
-				className="z-[70] w-[300px] rounded-[6px] border-black-300 p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
-			>
-				{options.map((option) => (
-					<DropdownMenuFilterCheckboxItem
-						key={option}
-						checked={value.includes(option)}
-						onCheckedChange={() => toggleOption(option)}
-						onSelect={(event) => event.preventDefault()}
+					<span
+						className={cn(
+							"flex size-[16px] items-center justify-center rounded-full border",
+							value === option.value ? "border-black-900" : "border-black-400",
+						)}
 					>
-						{option}
-					</DropdownMenuFilterCheckboxItem>
-				))}
-			</DropdownMenuContent>
-		</DropdownMenu>
+						{value === option.value && <span className="size-[8px] rounded-full bg-black-900" />}
+					</span>
+					{option.label}
+				</button>
+			))}
+		</div>
 	)
 }

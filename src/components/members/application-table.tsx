@@ -165,28 +165,28 @@ export function ApplicationTable({
 	return (
 		<div className="space-y-4">
 			<div className="w-full overflow-hidden border-[#dbdfe0] border-t border-b bg-white">
-				<Table className="min-w-[1140px] table-fixed">
+				<Table className="table-fixed">
 					<TableHeader>
-						<TableRow className="bg-[#f7f7f7]">
-							<TableHead className="w-[56px] px-[20px]">
+						<TableRow className="h-[40px] bg-[#f7f7f7]">
+							<TableHead className="h-[40px] w-[56px] px-[20px]">
 								<Checkbox checked={isAllSelected} onCheckedChange={handleSelectAll} />
 							</TableHead>
-							<TableHead className="w-[140px] px-[20px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+							<TableHead className="h-[40px] w-[100px] px-[20px] text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
 								이름
 							</TableHead>
-							<TableHead className="w-[140px] px-[20px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+							<TableHead className="h-[40px] w-[100px] px-[20px] text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
 								<SortHeader label="기수" sort={generationSort} onChange={onGenerationSortChange} />
 							</TableHead>
-							<TableHead className="min-w-0 px-[20px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+							<TableHead className="h-[40px] min-w-0 px-[20px] text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
 								이메일
 							</TableHead>
-							<TableHead className="min-w-0 px-[20px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+							<TableHead className="h-[40px] min-w-0 px-[20px] text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
 								Github 아이디
 							</TableHead>
-							<TableHead className="w-[180px] px-[20px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+							<TableHead className="h-[40px] w-[120px] px-[20px] text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
 								<SortHeader label="가입 신청일" sort={dateSort} onChange={onDateSortChange} />
 							</TableHead>
-							<TableHead className="w-[140px] px-[20px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+							<TableHead className="h-[40px] w-[100px] px-[20px] text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<FilterTrigger
@@ -214,7 +214,7 @@ export function ApplicationTable({
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</TableHead>
-							<TableHead className="w-[140px] px-[20px] text-[15px] font-medium text-[#121212] tracking-[-0.3px]">
+							<TableHead className="h-[40px] w-[100px] px-[20px] text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<FilterTrigger
@@ -251,8 +251,8 @@ export function ApplicationTable({
 							const isPending = application.status === "대기" || application.status === "pending"
 
 							return (
-								<TableRow key={application.id} className="h-[60px]">
-									<TableCell className="w-[56px] px-[20px]">
+								<TableRow key={application.id} className="h-[50px]">
+									<TableCell className="h-[50px] w-[56px] px-[20px]">
 										<Checkbox
 											checked={selectedApplications.includes(application.id)}
 											onCheckedChange={(checked) =>
@@ -260,7 +260,7 @@ export function ApplicationTable({
 											}
 										/>
 									</TableCell>
-									<TableCell className="truncate px-[20px] text-[15px] font-normal text-[#121212]">
+									<TableCell className="h-[50px] truncate px-[20px] text-[14px] font-normal text-[#121212] tracking-[-0.28px]">
 										{onApprove || onReject ? (
 											<ApplicationForm
 												application={application}
@@ -276,25 +276,25 @@ export function ApplicationTable({
 											application.name
 										)}
 									</TableCell>
-									<TableCell className="truncate px-[20px] text-[15px] font-normal text-[#121212]">
+									<TableCell className="h-[50px] truncate px-[20px] text-[14px] font-normal text-[#121212] tracking-[-0.28px]">
 										{application.generation || "-"}
 									</TableCell>
-									<TableCell className="max-w-0 truncate px-[20px] text-[15px] font-normal text-[#121212]">
+									<TableCell className="h-[50px] max-w-0 truncate px-[20px] text-[14px] font-normal text-[#121212]">
 										{application.email}
 									</TableCell>
-									<TableCell className="max-w-0 truncate px-[20px] text-[15px] font-normal text-[#121212]">
+									<TableCell className="h-[50px] max-w-0 truncate px-[20px] text-[14px] font-normal text-[#121212]">
 										{application.github_username || "-"}
 									</TableCell>
-									<TableCell className="truncate px-[20px] text-[15px] font-normal text-[#121212]">
+									<TableCell className="h-[50px] truncate px-[20px] text-[14px] font-normal text-[#121212] tracking-[-0.28px]">
 										{formattedDate}
 									</TableCell>
-									<TableCell className="truncate px-[20px] text-[15px] font-normal text-[#121212]">
+									<TableCell className="h-[50px] truncate px-[20px] text-[14px] font-normal text-[#121212] tracking-[-0.28px]">
 										{application.role || "가입 대기"}
 									</TableCell>
-									<TableCell className="truncate px-[20px]">
+									<TableCell className="h-[50px] truncate px-[20px]">
 										<DotStatusBadge
 											dotClassName={isPending ? "bg-[#ffd21f]" : "bg-[#84aef1]"}
-											className="[&_span:first-child]:size-[8px] text-[15px] tracking-normal"
+											className="[&_span:first-child]:size-[8px] text-[14px] tracking-normal"
 										>
 											{isPending ? "대기" : "승인"}
 										</DotStatusBadge>

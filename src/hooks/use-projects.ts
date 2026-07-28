@@ -252,3 +252,24 @@ export function useDownloadProjectMemberTemplate() {
 		mutationFn: async (projectId: number) => apiClient.getProjectMemberTemplate(projectId),
 	})
 }
+
+export function useReplaceAllProjectsMembers() {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: async (file: File) =>
+			getResponseData(
+				await apiClient.replaceAllProjectsMembers(file),
+				"팀원 일괄 수정에 실패했습니다.",
+			),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: projectQueryKeys.all })
+		},
+	})
+}
+
+export function useDownloadAllProjectsMemberTemplate() {
+	return useMutation({
+		mutationFn: async () => apiClient.getAllProjectsMemberTemplate(),
+	})
+}
