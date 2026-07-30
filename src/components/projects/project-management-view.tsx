@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useAuth } from "@/components/providers/auth-provider"
 import { ActionButton } from "@/components/ui/action-button"
+import { FilterResetButton, FilterTag, FilterTagGroup } from "@/components/ui/filter-tag"
 import { SearchInput } from "@/components/ui/search-input"
 import { Toast } from "@/components/ui/toast"
 import {
@@ -22,6 +23,7 @@ import { ProjectCreateDialog } from "./project-create-dialog"
 import { ProjectDeleteDialog } from "./project-delete-dialog"
 import { ProjectManagementTable } from "./project-management-table"
 import { ProjectMemberBulkUpdateDialog } from "./project-member-bulk-update-dialog"
+import { PROJECT_STATUS_LABEL } from "./project-status-filter"
 
 interface ProjectManagementViewProps {
 	viewMode: ProjectManagementViewMode
@@ -120,32 +122,45 @@ export function ProjectManagementView({ viewMode }: ProjectManagementViewProps) 
 				</h2>
 
 				<div className="flex flex-col gap-[20px]">
-					<div className="flex flex-wrap items-center gap-[15px]">
-						<SearchInput
-							containerClassName="w-[300px]"
-							placeholder="검색어를 입력해 주세요"
-							value={searchQuery}
-							onChange={(event) => handleSearchChange(event.target.value)}
-						/>
-						{isAdminView && (
-							<>
-								<ActionButton
-									variant="primary"
-									size="inline"
-									onClick={() => setIsCreateDialogOpen(true)}
-									className="h-[36px] text-[14px] leading-[24px] tracking-normal"
-								>
-									새 프로젝트 생성
-								</ActionButton>
-								<ActionButton
-									variant="secondary"
-									size="inline"
-									onClick={() => setIsBulkUpdateDialogOpen(true)}
-									className="h-[36px] text-[14px] leading-[24px] tracking-normal"
-								>
-									팀원 일괄 수정
-								</ActionButton>
-							</>
+					<div className="flex flex-wrap items-center justify-between gap-[15px]">
+						<div className="flex flex-wrap items-center gap-[15px]">
+							<SearchInput
+								containerClassName="w-[300px]"
+								placeholder="검색어를 입력해 주세요"
+								value={searchQuery}
+								onChange={(event) => handleSearchChange(event.target.value)}
+							/>
+							{isAdminView && (
+								<>
+									<ActionButton
+										variant="primary"
+										size="inline"
+										onClick={() => setIsCreateDialogOpen(true)}
+										className="h-[36px] text-[14px] leading-[24px] tracking-normal"
+									>
+										새 프로젝트 생성
+									</ActionButton>
+									<ActionButton
+										variant="secondary"
+										size="inline"
+										onClick={() => setIsBulkUpdateDialogOpen(true)}
+										className="h-[36px] text-[14px] leading-[24px] tracking-normal"
+									>
+										팀원 일괄 수정
+									</ActionButton>
+								</>
+							)}
+						</div>
+						{statusFilter !== "전체" && (
+							<FilterTagGroup>
+								<FilterTag
+									label={PROJECT_STATUS_LABEL[statusFilter]}
+									onClick={() => handleStatusFilterChange("전체")}
+								/>
+								<FilterResetButton onClick={() => handleStatusFilterChange("전체")}>
+									초기화
+								</FilterResetButton>
+							</FilterTagGroup>
 						)}
 					</div>
 
