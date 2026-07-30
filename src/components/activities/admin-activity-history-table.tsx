@@ -21,7 +21,7 @@ interface AdminActivityHistoryTableProps {
 }
 
 const CELL_CLASS = "flex min-w-0 items-center overflow-hidden px-[20px] text-[14px] text-black-900"
-const GRID_COLS = "grid-cols-[minmax(180px,220px)_minmax(100px,140px)_minmax(220px,300px)_1fr]"
+const GRID_COLS = "grid-cols-[minmax(180px,220px)_120px_minmax(220px,320px)_1fr]"
 const DROPDOWN_CONTENT_CLASS =
 	"min-w-0 rounded-[6px] border-black-300 p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
 const FILTER_TRIGGER_CLASS =
@@ -45,7 +45,7 @@ export function AdminActivityHistoryTable({
 							<FilterTrigger
 								aria-label="활동 프로젝트 필터"
 								className={FILTER_TRIGGER_CLASS}
-								iconClassName="size-4 text-black-900"
+								iconClassName="size-[12px] text-black-900"
 							>
 								활동 프로젝트
 							</FilterTrigger>

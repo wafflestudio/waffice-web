@@ -133,7 +133,13 @@ export function AdminActivityHistoryView() {
 	return (
 		<div className="flex w-full flex-col gap-[40px]">
 			<h1 className="text-[28px] font-semibold leading-normal text-black-900">활동 이력 관리</h1>
-			<div className="flex w-full flex-col gap-[12px]">
+			<div className="flex w-full flex-col gap-[16px]">
+				<h2 className="flex items-center gap-[2px] text-black-900">
+					<span className="text-[18px] font-medium leading-none">전체 활동이력</span>
+					<span className="text-[14px] font-medium leading-[1.4] tracking-[-0.28px]">
+						({visibleRows.length.toString().padStart(2, "0")})
+					</span>
+				</h2>
 				{isLoading ? (
 					<div className="flex h-[120px] items-center justify-center border-black-300 border-y text-[14px] text-black-600">
 						불러오는 중입니다...
