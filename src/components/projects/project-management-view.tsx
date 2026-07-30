@@ -109,7 +109,7 @@ export function ProjectManagementView({ viewMode }: ProjectManagementViewProps) 
 
 	return (
 		<div className="flex flex-col gap-[60px]">
-			<h1 className="text-[28px] font-semibold leading-[1.5] text-black-900">프로젝트 관리</h1>
+			<h1 className="text-[28px] font-semibold leading-[1.5] text-black-900">프로젝트 목록</h1>
 
 			<div className="flex flex-col gap-[25px]">
 				<h2 className="flex items-center gap-[2px] text-black-900">
