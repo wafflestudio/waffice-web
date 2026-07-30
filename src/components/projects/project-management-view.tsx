@@ -110,22 +110,22 @@ export function ProjectManagementView({ viewMode }: ProjectManagementViewProps) 
 	}
 
 	return (
-		<div className="flex flex-col gap-[60px]">
+		<div className="flex flex-col gap-[40px]">
 			<h1 className="text-[28px] font-semibold leading-[1.5] text-black-900">프로젝트 목록</h1>
 
-			<div className="flex flex-col gap-[25px]">
+			<div className="flex flex-col gap-[20px]">
 				<h2 className="flex items-center gap-[2px] text-black-900">
-					<span className="text-[20px] font-medium leading-none">전체 프로젝트</span>
+					<span className="text-[18px] font-medium leading-none">전체 프로젝트</span>
 					<span className="text-[14px] font-medium leading-[1.4] tracking-[-0.28px]">
 						({projectRows.length.toString().padStart(2, "0")})
 					</span>
 				</h2>
 
-				<div className="flex flex-col gap-[20px]">
-					<div className="flex flex-wrap items-center justify-between gap-[15px]">
+				<div className="flex flex-col gap-[16px]">
+					<div className="flex flex-wrap items-end justify-between gap-[15px]">
 						<div className="flex flex-wrap items-center gap-[15px]">
 							<SearchInput
-								containerClassName="w-[300px]"
+								containerClassName="w-[260px]"
 								placeholder="검색어를 입력해 주세요"
 								value={searchQuery}
 								onChange={(event) => handleSearchChange(event.target.value)}
