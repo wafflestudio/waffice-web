@@ -5,7 +5,7 @@ import type {
 	ActivityHistoryItem,
 	ActivityUpdateRequest,
 } from "@/types/activity"
-import type { ApiResponse, CursorPage } from "@/types/common"
+import type { ApiResponse, CursorPage, Page } from "@/types/common"
 import type { AuditLogDetail, HistoryDetail } from "@/types/history"
 import type {
 	ApproveRequest,
@@ -116,16 +116,12 @@ export function createUsersApi(client: ApiClient) {
 			})
 		},
 
-		/** GET /activities — 운영진 전용, 전체 회원 활동 통합 조회.
-		 * PR #36(agent/activity-history-management, 2026-07-26 기준 미머지)에서 신규 추가. */
-		getActivities(
-			cursor?: number,
-			limit = 20,
-		): Promise<ApiResponse<CursorPage<ActivityHistoryAdminItem>>> {
+		/** GET /activities — 운영진 전용, 전체 회원 활동 통합 조회. */
+		getActivities(page = 1, size = 20): Promise<ApiResponse<Page<ActivityHistoryAdminItem>>> {
 			const params = new URLSearchParams()
-			if (cursor) params.append("cursor", cursor.toString())
-			params.append("limit", limit.toString())
-			return client.request<ApiResponse<CursorPage<ActivityHistoryAdminItem>>>(
+			params.append("page", page.toString())
+			params.append("size", size.toString())
+			return client.request<ApiResponse<Page<ActivityHistoryAdminItem>>>(
 				`/activities?${params.toString()}`,
 			)
 		},

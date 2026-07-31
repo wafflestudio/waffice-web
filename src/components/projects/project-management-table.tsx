@@ -111,7 +111,9 @@ export function ProjectManagementTable({
 								<ProjectStatusFilter value={statusFilter} onChange={onStatusFilterChange} />
 							</TableHead>
 							{showActions && (
-								<TableHead className={cn(HEADER_CELL_CLASS, "w-[80px] px-[20px] text-center")}>편집</TableHead>
+								<TableHead className={cn(HEADER_CELL_CLASS, "w-[80px] px-[20px] text-center")}>
+									편집
+								</TableHead>
 							)}
 						</TableRow>
 					</TableHeader>

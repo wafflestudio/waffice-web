@@ -13,6 +13,7 @@ import type {
 	AuditLogDetail,
 	CursorPage,
 	Member,
+	Page,
 	Qualification,
 	TemporaryMemberImportResult,
 	UserDetail,
@@ -30,8 +31,8 @@ export const memberQueryKeys = {
 	auditLog: (userId: number) => [...memberQueryKeys.all, "audit-log", userId] as const,
 	activities: (userId: number) => [...memberQueryKeys.all, "activities", userId] as const,
 	myActivities: () => [...memberQueryKeys.all, "me", "activities"] as const,
-	allActivities: (cursor?: number, limit = 20) =>
-		[...memberQueryKeys.all, "all-activities", cursor, limit] as const,
+	allActivities: (page = 1, size = 20) =>
+		[...memberQueryKeys.all, "all-activities", page, size] as const,
 }
 
 export const qualificationToRole = (qualification: Qualification): string => {
@@ -258,15 +259,15 @@ export function useMyActivities() {
 
 /** GET /activities — 운영진 전용 전체 회원 활동 통합 조회.
  * PR #36(agent/activity-history-management, 2026-07-26 기준 미머지) 이후 사용 가능. */
-export function useActivities(cursor?: number, limit = 20) {
+export function useActivities(page = 1, size = 20) {
 	const { user } = useAuth()
 	const canView = canManageMembers(user)
 
-	return useQuery<CursorPage<ActivityHistoryAdminItem>, Error>({
-		queryKey: memberQueryKeys.allActivities(cursor, limit),
+	return useQuery<Page<ActivityHistoryAdminItem>, Error>({
+		queryKey: memberQueryKeys.allActivities(page, size),
 		queryFn: async () =>
 			getResponseData(
-				await apiClient.getActivities(cursor, limit),
+				await apiClient.getActivities(page, size),
 				"전체 활동 이력을 불러오는데 실패했습니다.",
 			),
 		enabled: canView,

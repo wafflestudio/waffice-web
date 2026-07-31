@@ -10,19 +10,19 @@ import {
 } from "@/components/activities/admin-activity-history.utils"
 import { AdminActivityHistoryTable } from "@/components/activities/admin-activity-history-table"
 import { ReceivedRequestDetailDialog } from "@/components/activities/received-request-detail-dialog"
+import { Pagination } from "@/components/ui/pagination"
 import { Toast } from "@/components/ui/toast"
 import { useActivities, useDeleteUserActivity } from "@/hooks/use-members"
 import { useProjects } from "@/hooks/use-projects"
 import { useApproveRequest, useRejectRequest, useRequestDetail } from "@/hooks/use-requests"
 import type { ApprovalRequestDetail } from "@/types"
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 10
 
 export function AdminActivityHistoryView() {
-	const [cursorStack, setCursorStack] = useState<(number | undefined)[]>([undefined])
-	const cursor = cursorStack[cursorStack.length - 1]
+	const [currentPage, setCurrentPage] = useState(1)
 
-	const activitiesQuery = useActivities(cursor, PAGE_SIZE)
+	const activitiesQuery = useActivities(currentPage, PAGE_SIZE)
 	const projectsQuery = useProjects(undefined, 100)
 	const deleteActivityMutation = useDeleteUserActivity()
 	const approveMutation = useApproveRequest()
@@ -63,16 +63,7 @@ export function AdminActivityHistoryView() {
 
 	const isLoading = activitiesQuery.isLoading
 	const error = activitiesQuery.error
-
-	const goToNextPage = () => {
-		const nextCursor = activitiesQuery.data?.next_cursor
-		if (nextCursor == null) return
-		setCursorStack((stack) => [...stack, nextCursor])
-	}
-
-	const goToPreviousPage = () => {
-		setCursorStack((stack) => (stack.length > 1 ? stack.slice(0, -1) : stack))
-	}
+	const totalPages = Math.max(1, Math.ceil((activitiesQuery.data?.total ?? 0) / PAGE_SIZE))
 
 	const openRequestDetail = (requestId: number) => {
 		setSelectedRow(null)
@@ -157,24 +148,11 @@ export function AdminActivityHistoryView() {
 							onProjectFilterChange={setProjectFilter}
 							onSelect={setSelectedRow}
 						/>
-						<div className="flex items-center justify-center gap-[20px]">
-							<button
-								type="button"
-								onClick={goToPreviousPage}
-								disabled={cursorStack.length <= 1}
-								className="text-[14px] text-black-600 disabled:cursor-not-allowed disabled:text-black-300"
-							>
-								이전
-							</button>
-							<button
-								type="button"
-								onClick={goToNextPage}
-								disabled={activitiesQuery.data?.next_cursor == null}
-								className="text-[14px] text-black-600 disabled:cursor-not-allowed disabled:text-black-300"
-							>
-								다음
-							</button>
-						</div>
+						<Pagination
+							currentPage={currentPage}
+							totalPages={totalPages}
+							onPageChange={setCurrentPage}
+						/>
 					</>
 				)}
 			</div>
