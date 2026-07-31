@@ -102,7 +102,7 @@ function PaginationIconButton({
 		<button
 			type="button"
 			className={cn(
-				"text-black-900 transition-colors hover:text-peach-300 disabled:cursor-not-allowed disabled:text-black-300",
+				"text-black-400 active:text-peach-300 disabled:cursor-not-allowed disabled:text-black-300",
 				className,
 			)}
 			{...props}
