@@ -15,9 +15,12 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { FilterTrigger } from "@/components/ui/filter-tag"
+import { Pagination } from "@/components/ui/pagination"
 import { DotStatusBadge } from "@/components/ui/status-badge"
 import { cn } from "@/lib/utils"
 import type { ApprovalRequestListItem, RequestStatus } from "@/types"
+
+const PAGE_SIZE = 10
 
 interface ReceivedRequestTableProps {
 	requests: ApprovalRequestListItem[]
@@ -38,12 +41,25 @@ export function ReceivedRequestTable({
 	onSelect,
 }: ReceivedRequestTableProps) {
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>("전체")
-	const visibleRequests =
+	const [currentPage, setCurrentPage] = useState(1)
+
+	const filteredRequests =
 		statusFilter === "전체"
 			? requests
 			: requests.filter((request) => request.status === statusFilter)
+	const totalPages = Math.max(1, Math.ceil(filteredRequests.length / PAGE_SIZE))
+	const visibleRequests = filteredRequests.slice(
+		(currentPage - 1) * PAGE_SIZE,
+		currentPage * PAGE_SIZE,
+	)
+
+	const handleStatusFilterChange = (value: string) => {
+		setStatusFilter(value as StatusFilter)
+		setCurrentPage(1)
+	}
 
 	return (
+		<>
 		<div className="w-full overflow-hidden bg-white">
 			<div className={cn("grid h-[40px] border-black-300 border-y bg-black-100", GRID_COLS)}>
 				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>요청 일시</div>
@@ -56,7 +72,7 @@ export function ReceivedRequestTable({
 							<FilterTrigger
 								aria-label="요청상태 필터"
 								className="h-auto w-auto gap-[6px] rounded-none p-0 text-[14px] font-medium tracking-[-0.28px] text-black-900 hover:bg-transparent"
-								iconClassName="size-4 text-black-900"
+								iconClassName="size-[12px] text-black-900"
 							>
 								요청상태
 							</FilterTrigger>
@@ -67,7 +83,7 @@ export function ReceivedRequestTable({
 						>
 							<DropdownMenuRadioGroup
 								value={statusFilter}
-								onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+								onValueChange={handleStatusFilterChange}
 							>
 								{STATUS_OPTIONS.map((status) => (
 									<DropdownMenuFilterRadioItem key={status} value={status}>
@@ -104,7 +120,7 @@ export function ReceivedRequestTable({
 					<div className={cn(CELL_CLASS, "tracking-[-0.28px]")}>
 						{REQUEST_KIND_LABELS[request.request_kind]}
 					</div>
-					<div className={cn(CELL_CLASS, "px-[15px]")}>
+					<div className={CELL_CLASS}>
 						<DotStatusBadge dotClassName={REQUEST_STATUS_DOT_STYLES[request.status]}>
 							{REQUEST_STATUS_LABELS[request.status]}
 						</DotStatusBadge>
@@ -118,5 +134,11 @@ export function ReceivedRequestTable({
 				</div>
 			)}
 		</div>
+		<Pagination
+			currentPage={currentPage}
+			totalPages={totalPages}
+			onPageChange={setCurrentPage}
+		/>
+		</>
 	)
 }
