@@ -8,7 +8,6 @@ import {
 	FileText,
 	FlaskConical,
 	FolderOpen,
-	GraduationCap,
 	Home,
 	LogOut,
 	SquarePen,
@@ -96,7 +95,6 @@ const LEADER_NAV_ITEMS: NavItem[] = [
 	{ name: "내 프로젝트 관리", href: "/projects/my", icon: FolderOpen },
 	{ name: "내 활동 이력 관리", href: "/activities", icon: ClipboardList },
 	{ name: "내 활동증명서 발급", href: "/certificates", icon: FileText },
-	{ name: "세미나 수강신청", href: "/seminars", icon: GraduationCap },
 ]
 
 const SHOW_MOCK_MODE = process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH === "true"
