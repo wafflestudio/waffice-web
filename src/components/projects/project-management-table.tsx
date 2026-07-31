@@ -99,7 +99,7 @@ export function ProjectManagementTable({
 
 	return (
 		<div className="flex flex-col gap-[20px]">
-			<div className="w-full overflow-hidden bg-white">
+			<div className="w-full overflow-hidden border-black-300 border-b bg-white">
 				<Table className="min-w-[1140px] table-fixed">
 					<TableHeader>
 						<TableRow className="h-[40px] border-black-300 border-y bg-black-100 hover:bg-black-100">

@@ -44,7 +44,7 @@ export function ActivityHistoryTable({ records, onSelect }: ActivityHistoryTable
 			: records.filter((record) => STATUS_FILTER_STATUSES[statusFilter].includes(record.status))
 
 	return (
-		<div className="w-full overflow-hidden bg-white">
+		<div className="w-full overflow-hidden border-black-300 border-b bg-white [&>*:last-child]:border-b-0">
 			<div className="grid h-[40px] grid-cols-[minmax(180px,220px)_minmax(220px,320px)_minmax(240px,1fr)_120px] border-black-300 border-y bg-black-100">
 				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>활동 기간</div>
 				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>활동 프로젝트</div>

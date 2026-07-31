@@ -35,7 +35,7 @@ export function AdminActivityHistoryTable({
 	onSelect,
 }: AdminActivityHistoryTableProps) {
 	return (
-		<div className="w-full overflow-hidden bg-white">
+		<div className="w-full overflow-hidden border-black-300 border-b bg-white [&>*:last-child]:border-b-0">
 			<div className={cn("grid h-[40px] border-black-300 border-y bg-black-100", GRID_COLS)}>
 				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>활동 기간</div>
 				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>활동 팀원</div>
