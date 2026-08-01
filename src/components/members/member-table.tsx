@@ -122,7 +122,7 @@ export function MemberTable({
 		paginatedMembers.length > 0 && paginatedMembers.every((m) => selectedMembers.includes(m.id))
 
 	return (
-		<div className="space-y-4">
+		<div className="flex flex-1 flex-col gap-4">
 			{/* 테이블 */}
 			<div className="w-full overflow-hidden border-[#dbdfe0] border-t border-b bg-white">
 				<Table className="table-fixed" containerClassName="scrollbar-hide">

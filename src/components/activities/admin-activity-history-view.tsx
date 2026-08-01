@@ -122,7 +122,7 @@ export function AdminActivityHistoryView() {
 	}
 
 	return (
-		<div className="flex w-full flex-col gap-[40px]">
+		<div className="flex w-full flex-1 flex-col gap-[40px]">
 			<h1 className="text-[28px] font-semibold leading-normal text-black-900">활동이력 관리</h1>
 			<div className="flex w-full flex-col gap-[16px]">
 				<h2 className="flex items-center gap-[2px] text-black-900">
@@ -140,22 +140,23 @@ export function AdminActivityHistoryView() {
 						{error.message}
 					</div>
 				) : (
-					<>
-						<AdminActivityHistoryTable
-							rows={visibleRows}
-							projectOptions={projectOptions}
-							projectFilter={projectFilter}
-							onProjectFilterChange={setProjectFilter}
-							onSelect={setSelectedRow}
-						/>
-						<Pagination
-							currentPage={currentPage}
-							totalPages={totalPages}
-							onPageChange={setCurrentPage}
-						/>
-					</>
+					<AdminActivityHistoryTable
+						rows={visibleRows}
+						projectOptions={projectOptions}
+						projectFilter={projectFilter}
+						onProjectFilterChange={setProjectFilter}
+						onSelect={setSelectedRow}
+					/>
 				)}
 			</div>
+
+			{!isLoading && !error && (
+				<Pagination
+					currentPage={currentPage}
+					totalPages={totalPages}
+					onPageChange={setCurrentPage}
+				/>
+			)}
 
 			<AdminActivityDetailDialog
 				row={selectedRow}

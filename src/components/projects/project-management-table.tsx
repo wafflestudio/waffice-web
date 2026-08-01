@@ -98,7 +98,7 @@ export function ProjectManagementTable({
 	}
 
 	return (
-		<div className="flex flex-col gap-[20px]">
+		<div className="flex flex-1 flex-col gap-[20px]">
 			<div className="w-full overflow-hidden border-black-300 border-b bg-white">
 				<Table className="min-w-[1140px] table-fixed">
 					<TableHeader>

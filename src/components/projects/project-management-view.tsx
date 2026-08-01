@@ -110,10 +110,10 @@ export function ProjectManagementView({ viewMode }: ProjectManagementViewProps) 
 	}
 
 	return (
-		<div className="flex flex-col gap-[40px]">
+		<div className="flex flex-1 flex-col gap-[40px]">
 			<h1 className="text-[28px] font-semibold leading-[1.5] text-black-900">프로젝트 목록</h1>
 
-			<div className="flex flex-col gap-[20px]">
+			<div className="flex flex-1 flex-col gap-[20px]">
 				<h2 className="flex items-center gap-[2px] text-black-900">
 					<span className="text-[18px] font-medium leading-none">전체 프로젝트</span>
 					<span className="text-[14px] font-medium leading-[1.4] tracking-[-0.28px]">
@@ -121,7 +121,7 @@ export function ProjectManagementView({ viewMode }: ProjectManagementViewProps) 
 					</span>
 				</h2>
 
-				<div className="flex flex-col gap-[16px]">
+				<div className="flex flex-1 flex-col gap-[16px]">
 					<div className="flex flex-wrap items-end justify-between gap-[15px]">
 						<div className="flex flex-wrap items-center gap-[15px]">
 							<SearchInput

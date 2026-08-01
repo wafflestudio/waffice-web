@@ -34,7 +34,7 @@ export function Pagination({
 	return (
 		<nav
 			aria-label="페이지네이션"
-			className={cn("sticky bottom-[30px] flex items-center justify-center gap-[35px] bg-white py-[8px]", className)}
+			className={cn("mt-auto flex items-center justify-center gap-[35px] self-center", className)}
 		>
 			<div className="flex items-center gap-[18px]">
 				<PaginationIconButton

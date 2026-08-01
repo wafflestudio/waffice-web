@@ -163,7 +163,7 @@ export function ApplicationTable({
 		paginatedApplications.every((app) => selectedApplications.includes(app.id))
 
 	return (
-		<div className="space-y-4">
+		<div className="flex flex-1 flex-col gap-4">
 			<div className="w-full overflow-hidden border-[#dbdfe0] border-t border-b bg-white">
 				<Table className="table-fixed">
 					<TableHeader>
