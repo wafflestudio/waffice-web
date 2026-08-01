@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import {
 	ACTIVITY_STATUS_LABELS,
 	ACTIVITY_STATUS_STYLES,
@@ -19,16 +18,18 @@ import { DotStatusBadge } from "@/components/ui/status-badge"
 import { cn } from "@/lib/utils"
 import type { ActivityHistoryItem, ActivityHistoryStatus } from "@/types"
 
+export type ActivityStatusFilter = "전체" | "대기중" | "거절" | "완료"
+
 interface ActivityHistoryTableProps {
 	records: ActivityHistoryItem[]
+	statusFilter: ActivityStatusFilter
+	onStatusFilterChange: (value: ActivityStatusFilter) => void
 	onSelect: (record: ActivityHistoryItem) => void
 }
 
-type StatusFilter = "전체" | "대기중" | "거절" | "완료"
+const STATUS_OPTIONS: ActivityStatusFilter[] = ["전체", "대기중", "거절", "완료"]
 
-const STATUS_OPTIONS: StatusFilter[] = ["전체", "대기중", "거절", "완료"]
-
-const STATUS_FILTER_STATUSES: Record<Exclude<StatusFilter, "전체">, ActivityHistoryStatus[]> = {
+const STATUS_FILTER_STATUSES: Record<Exclude<ActivityStatusFilter, "전체">, ActivityHistoryStatus[]> = {
 	대기중: ["create_pending", "update_pending"],
 	거절: ["rejected"],
 	완료: ["active"],
@@ -36,8 +37,7 @@ const STATUS_FILTER_STATUSES: Record<Exclude<StatusFilter, "전체">, ActivityHi
 
 const CELL_CLASS = "flex min-w-0 items-center overflow-hidden px-[20px] text-[14px] text-black-900"
 
-export function ActivityHistoryTable({ records, onSelect }: ActivityHistoryTableProps) {
-	const [statusFilter, setStatusFilter] = useState<StatusFilter>("전체")
+export function ActivityHistoryTable({ records, statusFilter, onStatusFilterChange, onSelect }: ActivityHistoryTableProps) {
 	const visibleRecords =
 		statusFilter === "전체"
 			? records
@@ -66,7 +66,7 @@ export function ActivityHistoryTable({ records, onSelect }: ActivityHistoryTable
 						>
 							<DropdownMenuRadioGroup
 								value={statusFilter}
-								onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+								onValueChange={(value) => onStatusFilterChange(value as ActivityStatusFilter)}
 							>
 								{STATUS_OPTIONS.map((status) => (
 									<DropdownMenuFilterRadioItem key={status} value={status}>
