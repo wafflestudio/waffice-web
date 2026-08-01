@@ -189,10 +189,8 @@ export function ActivityDetailDialog({
 						취소
 					</DialogActionButton>
 					<DialogActionButton onClick={() => onOpenChange(false)}>확인</DialogActionButton>
-						</div>
 					</div>
-				</div>
-			</DesignDialogContent>
-		</Dialog>
+				</DesignDialogContent>
+			</Dialog>
 	)
 }
