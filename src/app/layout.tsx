@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-	title: "와플 스튜디오 관리 시스템",
-	description: "와플 스튜디오 내부 관리 웹페이지",
+	title: "WAFFICE",
+	description: "와플스튜디오 회원 포털 WAFFICE입니다.",
 }
 
 export default function RootLayout({
