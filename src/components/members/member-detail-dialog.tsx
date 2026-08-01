@@ -493,7 +493,7 @@ export function MemberDetailDialog({
 									/>
 
 									<HistorySection
-										title="프로젝트 활동 이력"
+										title="프로젝트 활동이력"
 										columns={[
 											{ label: "소속 프로젝트명", width: 220 },
 											{ label: "기간", width: 220 },
@@ -505,7 +505,7 @@ export function MemberDetailDialog({
 									/>
 
 									<HistorySection
-										title="운영팀 활동 이력"
+										title="운영팀 활동이력"
 										columns={[{ label: "기간", width: 220 }, { label: "역할" }]}
 										rows={operationRows}
 										isLoading={activitiesQuery.isLoading}

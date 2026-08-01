@@ -17,6 +17,13 @@ export interface CursorPage<T> {
 	next_cursor?: number | null
 }
 
+export interface Page<T> {
+	items: T[]
+	total: number
+	page: number
+	size: number
+}
+
 export interface ApiResponse<T> {
 	ok: boolean
 	data?: T | null

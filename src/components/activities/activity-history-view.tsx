@@ -5,9 +5,11 @@ import { useMemo, useState } from "react"
 import { ActivityDeleteDialog } from "@/components/activities/activity-delete-dialog"
 import { ActivityDetailDialog } from "@/components/activities/activity-detail-dialog"
 import { sortActivityHistoryItems } from "@/components/activities/activity-history.utils"
+import type { ActivityStatusFilter } from "@/components/activities/activity-history-table"
 import { ActivityHistoryTable } from "@/components/activities/activity-history-table"
 import type { ActivityRequestFormValues } from "@/components/activities/activity-request-dialog"
 import { ActivityRequestDialog } from "@/components/activities/activity-request-dialog"
+import { FilterResetButton, FilterTag, FilterTagGroup } from "@/components/ui/filter-tag"
 import { Toast } from "@/components/ui/toast"
 import { memberQueryKeys, useMyActivities } from "@/hooks/use-members"
 import { useCreateRequest } from "@/hooks/use-requests"
@@ -24,6 +26,8 @@ export function ActivityHistoryView() {
 	const [requestTargetRecord, setRequestTargetRecord] = useState<ActivityHistoryItem | null>(null)
 	const [toastMessage, setToastMessage] = useState("")
 	const [showToast, setShowToast] = useState(false)
+
+	const [statusFilter, setStatusFilter] = useState<ActivityStatusFilter>("전체")
 
 	const records = activitiesQuery.data ?? []
 	const sortedRecords = useMemo(() => sortActivityHistoryItems(records), [records])
@@ -66,8 +70,8 @@ export function ActivityHistoryView() {
 					queryClient.invalidateQueries({ queryKey: memberQueryKeys.myActivities() })
 					showMessage(
 						isEdit
-							? "활동 이력 수정 요청이 등록되었습니다."
-							: "활동 이력 추가 요청이 등록되었습니다.",
+							? "활동이력 수정 요청이 등록되었습니다."
+							: "활동이력 추가 요청이 등록되었습니다.",
 					)
 					setRequestMode(null)
 					setRequestTargetRecord(null)
@@ -86,13 +90,13 @@ export function ActivityHistoryView() {
 			{
 				request_kind: "delete",
 				activity_id: record.id,
-				reason: "활동 이력 삭제 요청",
+				reason: "활동이력 삭제 요청",
 			},
 			{
 				onSuccess: () => {
 					queryClient.invalidateQueries({ queryKey: memberQueryKeys.myActivities() })
 					setDeleteTarget(null)
-					showMessage("활동 이력 삭제 요청이 완료되었습니다.")
+					showMessage("활동이력 삭제 요청이 완료되었습니다.")
 				},
 				onError: (error) => {
 					showMessage(error.message)
@@ -105,19 +109,29 @@ export function ActivityHistoryView() {
 		<>
 			<div className="flex w-full flex-col gap-[40px]">
 				<h1 className="text-[28px] font-semibold leading-normal text-black-900">
-					내 활동 이력 관리
+					내 활동이력 관리
 				</h1>
 				<div className="flex w-full flex-col gap-[12px]">
-					<button
-						type="button"
-						onClick={() => {
-							setRequestTargetRecord(null)
-							setRequestMode("add")
-						}}
-						className="h-[36px] w-fit rounded-[3px] bg-peach-300 px-[16px] text-[14px] font-semibold text-white hover:bg-peach-500"
-					>
-						활동 이력 추가 요청
-					</button>
+					<div className="flex items-center justify-between">
+						<button
+							type="button"
+							onClick={() => {
+								setRequestTargetRecord(null)
+								setRequestMode("add")
+							}}
+							className="h-[36px] w-fit rounded-[3px] bg-peach-300 px-[16px] text-[14px] font-semibold text-white hover:bg-peach-500"
+						>
+							활동이력 추가 요청
+						</button>
+						{statusFilter !== "전체" && (
+							<FilterTagGroup>
+								<FilterTag label={statusFilter} onClick={() => setStatusFilter("전체")} />
+								<FilterResetButton onClick={() => setStatusFilter("전체")}>
+									초기화
+								</FilterResetButton>
+							</FilterTagGroup>
+						)}
+					</div>
 					{activitiesQuery.isLoading ? (
 						<div className="flex h-[120px] items-center justify-center border-black-300 border-y text-[14px] text-black-600">
 							불러오는 중입니다...
@@ -127,7 +141,12 @@ export function ActivityHistoryView() {
 							{activitiesQuery.error.message}
 						</div>
 					) : (
-						<ActivityHistoryTable records={sortedRecords} onSelect={setSelectedRecord} />
+						<ActivityHistoryTable
+							records={sortedRecords}
+							statusFilter={statusFilter}
+							onStatusFilterChange={setStatusFilter}
+							onSelect={setSelectedRecord}
+						/>
 					)}
 				</div>
 			</div>

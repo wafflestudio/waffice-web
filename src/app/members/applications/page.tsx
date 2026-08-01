@@ -315,14 +315,14 @@ export default function MemberApplicationsPage() {
 	}
 
 	return (
-		<div className="flex flex-col gap-[30px]">
+		<div className="flex flex-1 flex-col gap-[30px]">
 			{/* 헤더 */}
 			<div>
 				<h1 className="text-[28px] font-semibold leading-[1.5] text-[#121212]">가입 요청 관리</h1>
 			</div>
 
 			{/* 검색 영역 */}
-			<div className="flex flex-col gap-[16px]">
+			<div className="flex flex-1 flex-col gap-[16px]">
 				<h2 className="flex items-baseline gap-[4px]">
 					<span className="text-[18px] font-medium text-[#121212] tracking-[-0.36px]">
 						전체 신청
@@ -332,7 +332,7 @@ export default function MemberApplicationsPage() {
 					</span>
 				</h2>
 
-				<div className="flex flex-col gap-[12px]">
+				<div className="flex flex-1 flex-col gap-[12px]">
 					<div className="flex flex-col gap-[12px] xl:flex-row xl:items-center xl:justify-between">
 						<div className="flex flex-wrap items-center gap-[10px] xl:gap-[15px]">
 							<SearchInput

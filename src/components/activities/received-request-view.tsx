@@ -76,24 +76,32 @@ export function ReceivedRequestView() {
 
 	return (
 		<>
-			<div className="flex w-full flex-col gap-[40px]">
+			<div className="flex w-full flex-1 flex-col gap-[40px]">
 				<h1 className="text-[28px] font-semibold leading-normal text-black-900">나에게 온 요청</h1>
-				<div className="flex w-full flex-col gap-[12px]">
-					{requestsQuery.isLoading ? (
-						<div className="flex h-[120px] items-center justify-center border-black-300 border-y text-[14px] text-black-600">
-							불러오는 중입니다...
-						</div>
-					) : requestsQuery.isError ? (
-						<div className="flex h-[120px] items-center justify-center border-black-300 border-y text-[14px] text-black-600">
-							{requestsQuery.error.message}
-						</div>
-					) : (
-						<ReceivedRequestTable
-							requests={requests}
-							projectNameById={projectNameById}
-							onSelect={openDetail}
-						/>
-					)}
+				<div className="flex w-full flex-1 flex-col gap-[16px]">
+					<h2 className="flex items-center gap-[2px] text-black-900">
+						<span className="text-[18px] font-medium leading-none">전체 요청</span>
+						<span className="text-[14px] font-medium leading-[1.4] tracking-[-0.28px]">
+							({requests.length.toString().padStart(2, "0")})
+						</span>
+					</h2>
+					<div className="flex w-full flex-1 flex-col gap-[12px]">
+						{requestsQuery.isLoading ? (
+							<div className="flex h-[120px] items-center justify-center border-black-300 border-y text-[14px] text-black-600">
+								불러오는 중입니다...
+							</div>
+						) : requestsQuery.isError ? (
+							<div className="flex h-[120px] items-center justify-center border-black-300 border-y text-[14px] text-black-600">
+								{requestsQuery.error.message}
+							</div>
+						) : (
+							<ReceivedRequestTable
+								requests={requests}
+								projectNameById={projectNameById}
+								onSelect={openDetail}
+							/>
+						)}
+					</div>
 				</div>
 			</div>
 

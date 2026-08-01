@@ -47,7 +47,7 @@ const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
 const PROJECT_CREATE_STATUS_OPTIONS = ["active", "maintenance", "ended"] satisfies ProjectStatus[]
 
 const fieldClass =
-	"h-[50px] w-[360px] rounded-[5px] border-black-300 bg-white px-[15px] text-[14px] font-normal tracking-[-0.28px] text-black-900 shadow-none outline-none placeholder:text-black-600 focus-visible:border-peach-300 focus-visible:ring-0"
+	"h-[50px] w-[360px] rounded-[5px] border border-black-300 bg-white px-[15px] text-[14px] font-normal tracking-[-0.28px] text-black-900 shadow-none outline-none placeholder:text-black-600 focus-visible:border-peach-300 focus-visible:ring-0"
 
 function ProjectCreateField({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
@@ -88,6 +88,7 @@ export function ProjectCreateDialog({ open, onOpenChange, onSubmit }: ProjectCre
 				className="w-[460px] max-w-[calc(100vw-32px)] rounded-[12px] border border-black-300 px-[50px] pt-[10px] pb-[40px] shadow-none"
 				showDesignClose
 				onClose={() => onOpenChange(false)}
+				closeClassName="-mr-[40px]"
 			>
 				<div className="mt-[10px] flex flex-col gap-[50px]">
 					<DialogTitle className="text-[24px] font-medium leading-normal text-black-900">
@@ -111,13 +112,13 @@ export function ProjectCreateDialog({ open, onOpenChange, onSubmit }: ProjectCre
 											type="button"
 											className={cn(
 												fieldClass,
-												"flex items-center justify-between",
+												"flex items-center justify-between px-[16px] text-[15px] tracking-[-0.3px]",
 												!values.status && "text-black-600",
 												statusError && "border-red-500",
 											)}
 										>
 											<span>{values.status ? PROJECT_STATUS_LABEL[values.status] : "선택"}</span>
-											<ChevronDown className="ml-[10px] size-[20px] text-black-900" />
+											<ChevronDown className="ml-[10px] size-[24px] text-black-900" />
 										</button>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent

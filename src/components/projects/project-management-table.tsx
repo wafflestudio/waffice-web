@@ -37,9 +37,9 @@ interface ProjectManagementTableProps {
 const ITEMS_PER_PAGE = 11
 
 const HEADER_CELL_CLASS =
-	"h-[50px] px-[20px] text-[15px] font-medium tracking-[-0.3px] text-black-900"
+	"h-[40px] px-[15px] text-[14px] font-medium tracking-[-0.28px] text-black-900"
 const BODY_CELL_CLASS =
-	"h-[60px] overflow-hidden px-[20px] text-[15px] font-normal tracking-[-0.3px] text-ellipsis text-black-900"
+	"h-[50px] overflow-hidden px-[15px] text-[14px] font-normal tracking-[-0.28px] text-ellipsis text-black-900"
 
 const STATUS_DOT_CLASS: Record<ProjectStatus, string> = {
 	active: "bg-[#7aee7f]",
@@ -98,20 +98,22 @@ export function ProjectManagementTable({
 	}
 
 	return (
-		<div className="flex flex-col gap-[20px]">
-			<div className="w-full overflow-hidden bg-white">
+		<div className="flex flex-1 flex-col gap-[20px]">
+			<div className="w-full overflow-hidden border-black-300 border-b bg-white">
 				<Table className="min-w-[1140px] table-fixed">
 					<TableHeader>
-						<TableRow className="h-[50px] border-black-300 border-y bg-black-100 hover:bg-black-100">
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[140px]")}>프로젝트 이름</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>팀장</TableHead>
+						<TableRow className="h-[40px] border-black-300 border-y bg-black-100 hover:bg-black-100">
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[120px]")}>프로젝트 이름</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[80px]")}>팀장</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[80px]")}>팀원 수</TableHead>
 							<TableHead className={HEADER_CELL_CLASS}>활동 팀원</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[120px]")}>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>
 								<ProjectStatusFilter value={statusFilter} onChange={onStatusFilterChange} />
 							</TableHead>
 							{showActions && (
-								<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>편집</TableHead>
+								<TableHead className={cn(HEADER_CELL_CLASS, "w-[80px] px-[20px] text-center")}>
+									편집
+								</TableHead>
 							)}
 						</TableRow>
 					</TableHeader>
@@ -129,7 +131,7 @@ export function ProjectManagementTable({
 										openProjectDetail(project.id)
 									}
 								}}
-								className="h-[60px] cursor-pointer border-black-300 border-b hover:bg-black-100 focus-visible:bg-black-100 focus-visible:outline-none"
+								className="h-[50px] cursor-pointer border-black-300 border-b hover:bg-black-100 focus-visible:bg-black-100 focus-visible:outline-none"
 							>
 								<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>{project.name}</TableCell>
 								<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>
@@ -145,7 +147,7 @@ export function ProjectManagementTable({
 									<ProjectStatusBadge status={project.status} />
 								</TableCell>
 								{showActions && (
-									<TableCell className="h-[60px] w-[100px] px-[20px]">
+									<TableCell className="h-[50px] w-[80px] px-[20px] flex items-center justify-center">
 										<button
 											type="button"
 											aria-label={

@@ -13,6 +13,7 @@ import type {
 	AuditLogDetail,
 	CursorPage,
 	Member,
+	Page,
 	Qualification,
 	TemporaryMemberImportResult,
 	UserDetail,
@@ -30,8 +31,8 @@ export const memberQueryKeys = {
 	auditLog: (userId: number) => [...memberQueryKeys.all, "audit-log", userId] as const,
 	activities: (userId: number) => [...memberQueryKeys.all, "activities", userId] as const,
 	myActivities: () => [...memberQueryKeys.all, "me", "activities"] as const,
-	allActivities: (cursor?: number, limit = 20) =>
-		[...memberQueryKeys.all, "all-activities", cursor, limit] as const,
+	allActivities: (page = 1, size = 20) =>
+		[...memberQueryKeys.all, "all-activities", page, size] as const,
 }
 
 export const qualificationToRole = (qualification: Qualification): string => {
@@ -234,7 +235,7 @@ export function useUserActivities(userId: number | null) {
 			if (userId == null) throw new Error("회원 ID가 없습니다.")
 			return getResponseData(
 				await apiClient.getUserActivities(userId),
-				"회원 활동 이력을 불러오는데 실패했습니다.",
+				"회원 활동이력을 불러오는데 실패했습니다.",
 			)
 		},
 		enabled: userId != null && canView,
@@ -250,7 +251,7 @@ export function useMyActivities() {
 			if (mockEnabled) return buildMockMyActivities()
 			return getResponseData(
 				await apiClient.getMyActivities(),
-				"내 활동 이력을 불러오는데 실패했습니다.",
+				"내 활동이력을 불러오는데 실패했습니다.",
 			)
 		},
 	})
@@ -258,16 +259,16 @@ export function useMyActivities() {
 
 /** GET /activities — 운영진 전용 전체 회원 활동 통합 조회.
  * PR #36(agent/activity-history-management, 2026-07-26 기준 미머지) 이후 사용 가능. */
-export function useActivities(cursor?: number, limit = 20) {
+export function useActivities(page = 1, size = 20) {
 	const { user } = useAuth()
 	const canView = canManageMembers(user)
 
-	return useQuery<CursorPage<ActivityHistoryAdminItem>, Error>({
-		queryKey: memberQueryKeys.allActivities(cursor, limit),
+	return useQuery<Page<ActivityHistoryAdminItem>, Error>({
+		queryKey: memberQueryKeys.allActivities(page, size),
 		queryFn: async () =>
 			getResponseData(
-				await apiClient.getActivities(cursor, limit),
-				"전체 활동 이력을 불러오는데 실패했습니다.",
+				await apiClient.getActivities(page, size),
+				"전체 활동이력을 불러오는데 실패했습니다.",
 			),
 		enabled: canView,
 	})
@@ -280,10 +281,10 @@ export function useCreateUserActivity() {
 
 	return useMutation({
 		mutationFn: async ({ userId, data }: { userId: number; data: ActivityCreateRequest }) => {
-			if (!canManageMembers(user)) throw new Error("회원 활동 이력을 추가할 권한이 없습니다.")
+			if (!canManageMembers(user)) throw new Error("회원 활동이력을 추가할 권한이 없습니다.")
 			return getResponseData(
 				await apiClient.createUserActivity(userId, data),
-				"회원 활동 이력 추가에 실패했습니다.",
+				"회원 활동이력 추가에 실패했습니다.",
 			)
 		},
 		onSuccess: (_activity, variables) => {
@@ -307,10 +308,10 @@ export function useUpdateUserActivity() {
 			activityId: number
 			data: ActivityUpdateRequest
 		}) => {
-			if (!canManageMembers(user)) throw new Error("회원 활동 이력을 수정할 권한이 없습니다.")
+			if (!canManageMembers(user)) throw new Error("회원 활동이력을 수정할 권한이 없습니다.")
 			return getResponseData(
 				await apiClient.updateUserActivity(userId, activityId, data),
-				"회원 활동 이력 수정에 실패했습니다.",
+				"회원 활동이력 수정에 실패했습니다.",
 			)
 		},
 		onSuccess: (_activity, variables) => {
@@ -326,10 +327,10 @@ export function useDeleteUserActivity() {
 
 	return useMutation({
 		mutationFn: async ({ userId, activityId }: { userId: number; activityId: number }) => {
-			if (!canManageMembers(user)) throw new Error("회원 활동 이력을 삭제할 권한이 없습니다.")
+			if (!canManageMembers(user)) throw new Error("회원 활동이력을 삭제할 권한이 없습니다.")
 			return assertSuccessfulResponse(
 				await apiClient.deleteUserActivity(userId, activityId),
-				"회원 활동 이력 삭제에 실패했습니다.",
+				"회원 활동이력 삭제에 실패했습니다.",
 			)
 		},
 		onSuccess: (_data, variables) => {

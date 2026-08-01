@@ -23,7 +23,7 @@ export function AdminActivityDeleteDialog({
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DesignDialogContent className="w-[340px] max-w-[340px] rounded-[12px] border border-black-300 px-[40px] pt-[30px] pb-[26px] shadow-[0_0_10px_rgba(0,0,0,0.06)]">
-				<DialogTitle className="sr-only">활동 이력 삭제</DialogTitle>
+				<DialogTitle className="sr-only">활동이력 삭제</DialogTitle>
 				<p className="text-[15px] font-medium leading-[1.4] text-black-900">삭제하시겠습니까?</p>
 				<div className="mt-[40px] flex justify-end gap-[10px]">
 					<DialogActionButton

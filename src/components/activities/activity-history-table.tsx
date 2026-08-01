@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import {
 	ACTIVITY_STATUS_LABELS,
 	ACTIVITY_STATUS_STYLES,
@@ -19,16 +18,21 @@ import { DotStatusBadge } from "@/components/ui/status-badge"
 import { cn } from "@/lib/utils"
 import type { ActivityHistoryItem, ActivityHistoryStatus } from "@/types"
 
+export type ActivityStatusFilter = "전체" | "대기중" | "거절" | "완료"
+
 interface ActivityHistoryTableProps {
 	records: ActivityHistoryItem[]
+	statusFilter: ActivityStatusFilter
+	onStatusFilterChange: (value: ActivityStatusFilter) => void
 	onSelect: (record: ActivityHistoryItem) => void
 }
 
-type StatusFilter = "전체" | "대기중" | "거절" | "완료"
+const STATUS_OPTIONS: ActivityStatusFilter[] = ["전체", "대기중", "거절", "완료"]
 
-const STATUS_OPTIONS: StatusFilter[] = ["전체", "대기중", "거절", "완료"]
-
-const STATUS_FILTER_STATUSES: Record<Exclude<StatusFilter, "전체">, ActivityHistoryStatus[]> = {
+const STATUS_FILTER_STATUSES: Record<
+	Exclude<ActivityStatusFilter, "전체">,
+	ActivityHistoryStatus[]
+> = {
 	대기중: ["create_pending", "update_pending"],
 	거절: ["rejected"],
 	완료: ["active"],
@@ -36,15 +40,19 @@ const STATUS_FILTER_STATUSES: Record<Exclude<StatusFilter, "전체">, ActivityHi
 
 const CELL_CLASS = "flex min-w-0 items-center overflow-hidden px-[20px] text-[14px] text-black-900"
 
-export function ActivityHistoryTable({ records, onSelect }: ActivityHistoryTableProps) {
-	const [statusFilter, setStatusFilter] = useState<StatusFilter>("전체")
+export function ActivityHistoryTable({
+	records,
+	statusFilter,
+	onStatusFilterChange,
+	onSelect,
+}: ActivityHistoryTableProps) {
 	const visibleRecords =
 		statusFilter === "전체"
 			? records
 			: records.filter((record) => STATUS_FILTER_STATUSES[statusFilter].includes(record.status))
 
 	return (
-		<div className="w-full overflow-hidden bg-white">
+		<div className="w-full overflow-hidden border-black-300 border-b bg-white [&>*:last-child]:border-b-0">
 			<div className="grid h-[40px] grid-cols-[minmax(180px,220px)_minmax(220px,320px)_minmax(240px,1fr)_120px] border-black-300 border-y bg-black-100">
 				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>활동 기간</div>
 				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>활동 프로젝트</div>
@@ -53,11 +61,11 @@ export function ActivityHistoryTable({ records, onSelect }: ActivityHistoryTable
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<FilterTrigger
-								aria-label="기록 상태 필터"
+								aria-label="요청 상태 필터"
 								className="h-auto w-auto gap-[6px] rounded-none p-0 text-[14px] font-medium tracking-[-0.28px] text-black-900 hover:bg-transparent"
 								iconClassName="size-4 text-black-900"
 							>
-								기록 상태
+								요청 상태
 							</FilterTrigger>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent
@@ -66,7 +74,7 @@ export function ActivityHistoryTable({ records, onSelect }: ActivityHistoryTable
 						>
 							<DropdownMenuRadioGroup
 								value={statusFilter}
-								onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+								onValueChange={(value) => onStatusFilterChange(value as ActivityStatusFilter)}
 							>
 								{STATUS_OPTIONS.map((status) => (
 									<DropdownMenuFilterRadioItem key={status} value={status}>
@@ -103,7 +111,7 @@ export function ActivityHistoryTable({ records, onSelect }: ActivityHistoryTable
 
 			{visibleRecords.length === 0 && (
 				<div className="flex h-[120px] items-center justify-center border-black-300 border-b text-[14px] text-black-600">
-					해당 상태의 활동 이력이 없습니다.
+					해당 상태의 활동이력이 없습니다.
 				</div>
 			)}
 		</div>

@@ -34,7 +34,7 @@ export function Pagination({
 	return (
 		<nav
 			aria-label="페이지네이션"
-			className={cn("flex items-center justify-center gap-[35px]", className)}
+			className={cn("mt-auto flex items-center justify-center gap-[35px] self-center", className)}
 		>
 			<div className="flex items-center gap-[18px]">
 				<PaginationIconButton
@@ -102,7 +102,7 @@ function PaginationIconButton({
 		<button
 			type="button"
 			className={cn(
-				"text-black-900 transition-colors hover:text-peach-300 disabled:cursor-not-allowed disabled:text-black-300",
+				"text-black-400 active:text-peach-300 disabled:cursor-not-allowed disabled:text-black-300",
 				className,
 			)}
 			{...props}
