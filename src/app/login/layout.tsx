@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-	title: "로그인 - 와플 스튜디오",
-	description: "와플 스튜디오 로그인 페이지",
+	title: "WAFFICE 로그인",
+	description: "WAFFICE 로그인 페이지",
 }
 
 /**
