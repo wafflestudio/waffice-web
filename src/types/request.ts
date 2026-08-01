@@ -9,7 +9,7 @@ export interface RequestCursorPage<T> {
 	next_cursor?: number | string | null
 }
 
-// === 활동 이력 승인 요청(approval request) API 스키마 ===
+// === 활동이력 승인 요청(approval request) API 스키마 ===
 // waffice-fastapi app/routes/requests.py, app/schemas/request.py 기준 (PR #43 반영).
 
 export type RequestKind = "create" | "update" | "delete"

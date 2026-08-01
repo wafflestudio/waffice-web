@@ -58,7 +58,7 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
 		icon: FolderOpen,
 		subItems: [
 			{ name: "프로젝트 목록", href: "/projects" },
-			{ name: "활동 이력 관리", href: "/projects/activities" },
+			{ name: "활동이력 관리", href: "/projects/activities" },
 			{ name: "나에게 온 요청", href: "/projects/requests" },
 		],
 	},
@@ -68,7 +68,7 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
 		icon: SquarePen,
 		subItems: [{ name: "활동증명서 발급 이력", href: "/certificate-management" }],
 	},
-	{ name: "내 활동 이력 관리", href: "/activities", icon: ClipboardList },
+	{ name: "내 활동이력 관리", href: "/activities", icon: ClipboardList },
 	{ name: "내 활동증명서 발급", href: "/certificates", icon: FileText },
 ]
 
@@ -86,14 +86,14 @@ const PRESIDENT_NAV_ITEMS: NavItem[] = ADMIN_NAV_ITEMS.map((item) =>
 
 const REGULAR_NAV_ITEMS: NavItem[] = [
 	{ name: "대시보드", href: "/", icon: Home },
-	{ name: "내 활동 이력 관리", href: "/activities", icon: ClipboardList },
+	{ name: "내 활동이력 관리", href: "/activities", icon: ClipboardList },
 	{ name: "내 활동증명서 발급", href: "/certificates", icon: FileText },
 ]
 
 const LEADER_NAV_ITEMS: NavItem[] = [
 	{ name: "대시보드", href: "/", icon: Home },
 	{ name: "내 프로젝트 관리", href: "/projects/my", icon: FolderOpen },
-	{ name: "내 활동 이력 관리", href: "/activities", icon: ClipboardList },
+	{ name: "내 활동이력 관리", href: "/activities", icon: ClipboardList },
 	{ name: "내 활동증명서 발급", href: "/certificates", icon: FileText },
 ]
 

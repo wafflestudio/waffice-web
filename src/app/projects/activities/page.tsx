@@ -19,7 +19,7 @@ export default function ProjectsActivitiesPage() {
 
 	if (!canManageMembers(user)) {
 		return (
-			<Forbidden message="활동 이력 관리 페이지에 접근할 권한이 없습니다. 관리자 권한이 필요합니다." />
+			<Forbidden message="활동이력 관리 페이지에 접근할 권한이 없습니다. 관리자 권한이 필요합니다." />
 		)
 	}
 

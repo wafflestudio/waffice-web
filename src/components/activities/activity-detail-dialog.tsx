@@ -92,7 +92,7 @@ export function ActivityDetailDialog({
 				closeClassName="fixed top-[15px] right-[15px]"
 			>
 				<DialogTitle className="text-[28px] font-medium leading-normal text-black-900">
-					활동 이력 상세
+					활동이력 상세
 				</DialogTitle>
 
 				<div className="mt-[50px] flex w-full flex-col gap-[40px]">

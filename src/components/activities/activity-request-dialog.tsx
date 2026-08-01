@@ -156,7 +156,7 @@ export function ActivityRequestDialog({
 					closeClassName="fixed top-[15px] right-[15px]"
 				>
 					<DialogTitle className="text-[28px] font-medium leading-normal text-black-900">
-						활동 이력 {mode === "add" ? "추가" : "수정"} 요청
+						활동이력 {mode === "add" ? "추가" : "수정"} 요청
 					</DialogTitle>
 
 					<form className="mt-[50px] flex flex-col gap-[40px]" onSubmit={handleSubmit}>

@@ -92,7 +92,7 @@ export function AdminActivityHistoryTable({
 
 			{rows.length === 0 && (
 				<div className="flex h-[120px] items-center justify-center border-black-300 border-b text-[14px] text-black-600">
-					활동 이력이 없습니다.
+					활동이력이 없습니다.
 				</div>
 			)}
 		</div>

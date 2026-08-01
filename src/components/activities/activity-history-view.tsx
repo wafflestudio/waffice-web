@@ -74,8 +74,8 @@ export function ActivityHistoryView() {
 					queryClient.invalidateQueries({ queryKey: memberQueryKeys.myActivities() })
 					showMessage(
 						isEdit
-							? "활동 이력 수정 요청이 등록되었습니다."
-							: "활동 이력 추가 요청이 등록되었습니다.",
+							? "활동이력 수정 요청이 등록되었습니다."
+							: "활동이력 추가 요청이 등록되었습니다.",
 					)
 					setRequestMode(null)
 					setRequestTargetRecord(null)
@@ -94,13 +94,13 @@ export function ActivityHistoryView() {
 			{
 				request_kind: "delete",
 				activity_id: record.id,
-				reason: "활동 이력 삭제 요청",
+				reason: "활동이력 삭제 요청",
 			},
 			{
 				onSuccess: () => {
 					queryClient.invalidateQueries({ queryKey: memberQueryKeys.myActivities() })
 					setDeleteTarget(null)
-					showMessage("활동 이력 삭제 요청이 완료되었습니다.")
+					showMessage("활동이력 삭제 요청이 완료되었습니다.")
 				},
 				onError: (error) => {
 					showMessage(error.message)
@@ -113,7 +113,7 @@ export function ActivityHistoryView() {
 		<>
 			<div className="flex w-full flex-col gap-[40px]">
 				<h1 className="text-[28px] font-semibold leading-normal text-black-900">
-					내 활동 이력 관리
+					내 활동이력 관리
 				</h1>
 				<div className="flex w-full flex-col gap-[12px]">
 					<div className="flex items-center justify-between">
@@ -125,7 +125,7 @@ export function ActivityHistoryView() {
 							}}
 							className="h-[36px] w-fit rounded-[3px] bg-peach-300 px-[16px] text-[14px] font-semibold text-white hover:bg-peach-500"
 						>
-							활동 이력 추가 요청
+							활동이력 추가 요청
 						</button>
 						{statusFilter !== "전체" && (
 							<FilterTagGroup>

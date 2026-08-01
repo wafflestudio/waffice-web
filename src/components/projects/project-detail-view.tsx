@@ -368,7 +368,7 @@ export function ProjectDetailView({ project, viewMode }: ProjectDetailViewProps)
 			<SmallAlertDialog
 				open={dialog === "member-record-delete"}
 				title="정말로 해당 기록을 삭제하시겠습니까?"
-				description="기록을 삭제하면, 해당 회원은 이 팀과 관련된 활동 이력을 추가할 수 없게 됩니다. 팀원의 활동이 마무리된 경우에는 기록을 삭제하는 대신 활동 기간 종료일을 수정해 주세요."
+				description="기록을 삭제하면, 해당 회원은 이 팀과 관련된 활동이력을 추가할 수 없게 됩니다. 팀원의 활동이 마무리된 경우에는 기록을 삭제하는 대신 활동 기간 종료일을 수정해 주세요."
 				onOpenChange={(open) => setDialog(open ? "member-record-delete" : "member-edit")}
 				onConfirm={handleRemoveMember}
 			/>

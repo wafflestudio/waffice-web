@@ -172,7 +172,7 @@ export function CertificateApplicationDialog({
 									징계 이력이 있는 경우, 그 징계 의결의 주문, 이유, 의결일 및 징계 개시일은
 									활동증명서에 의무적으로 포함됩니다.
 									<br />
-									(회원의 자격, 활동 이력 관리 증명 등에 관한 회칙 제5조)
+									(회원의 자격, 활동이력 관리 증명 등에 관한 회칙 제5조)
 								</p>
 							</div>
 							<div className="flex flex-col gap-[4px] pl-[25px]">

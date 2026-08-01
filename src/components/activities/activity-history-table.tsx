@@ -103,7 +103,7 @@ export function ActivityHistoryTable({ records, statusFilter, onStatusFilterChan
 
 			{visibleRecords.length === 0 && (
 				<div className="flex h-[120px] items-center justify-center border-black-300 border-b text-[14px] text-black-600">
-					해당 상태의 활동 이력이 없습니다.
+					해당 상태의 활동이력이 없습니다.
 				</div>
 			)}
 		</div>

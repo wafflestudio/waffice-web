@@ -1,6 +1,6 @@
 import type { ActivityHistoryAdminItem, ActivityHistoryStatus } from "@/types"
 
-/** 운영진 "활동 이력 관리" 화면(완료된 활동만 노출)의 행 뷰 모델. */
+/** 운영진 "활동이력 관리" 화면(완료된 활동만 노출)의 행 뷰 모델. */
 export interface AdminActivityRow {
 	key: string
 	activityId: number | null

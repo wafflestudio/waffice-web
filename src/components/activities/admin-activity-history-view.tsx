@@ -112,7 +112,7 @@ export function AdminActivityHistoryView() {
 			{
 				onSuccess: () => {
 					setDeleteTarget(null)
-					showMessage("활동 이력을 삭제했습니다.")
+					showMessage("활동이력을 삭제했습니다.")
 				},
 				onError: (mutationError) => {
 					showMessage(mutationError.message)
@@ -123,7 +123,7 @@ export function AdminActivityHistoryView() {
 
 	return (
 		<div className="flex w-full flex-col gap-[40px]">
-			<h1 className="text-[28px] font-semibold leading-normal text-black-900">활동 이력 관리</h1>
+			<h1 className="text-[28px] font-semibold leading-normal text-black-900">활동이력 관리</h1>
 			<div className="flex w-full flex-col gap-[16px]">
 				<h2 className="flex items-center gap-[2px] text-black-900">
 					<span className="text-[18px] font-medium leading-none">전체 활동이력</span>

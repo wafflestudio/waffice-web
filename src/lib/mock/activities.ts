@@ -2,7 +2,7 @@ import type { ActivityHistoryItem } from "@/types"
 
 const DAY = 24 * 60 * 60
 
-/** 내 활동 이력(GET /users/me/activities) mock — 백엔드 ActivityHistoryItem[]와 동일한 형태. */
+/** 내 활동이력(GET /users/me/activities) mock — 백엔드 ActivityHistoryItem[]와 동일한 형태. */
 export function buildMockMyActivities(): ActivityHistoryItem[] {
 	const now = Math.floor(Date.now() / 1000)
 
