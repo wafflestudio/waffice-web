@@ -54,7 +54,7 @@ export function CertificateApplicationView() {
 
 	return (
 		<>
-			<div className="flex min-h-[calc(100vh-60px)] w-full flex-col gap-[30px]">
+			<div className="flex min-h-[calc(100vh-60px)] w-full flex-col gap-[40px]">
 				<h1 className="text-[28px] font-semibold leading-normal tracking-[-0.56px] text-black-900">
 					활동증명서 발급
 				</h1>
