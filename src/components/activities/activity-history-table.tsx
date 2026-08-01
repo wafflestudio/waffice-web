@@ -53,11 +53,11 @@ export function ActivityHistoryTable({ records, onSelect }: ActivityHistoryTable
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<FilterTrigger
-								aria-label="기록 상태 필터"
+								aria-label="요청 상태 필터"
 								className="h-auto w-auto gap-[6px] rounded-none p-0 text-[14px] font-medium tracking-[-0.28px] text-black-900 hover:bg-transparent"
 								iconClassName="size-4 text-black-900"
 							>
-								기록 상태
+								요청 상태
 							</FilterTrigger>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent
