@@ -102,8 +102,7 @@ export function ActivityDetailDialog({
 
 					<ActivityDialogRow label="활동 기간">
 						<p className="pt-[2px] text-[14px] text-black-900">
-									{unixToDateInput(record.start_date)} ~{" "}
-									{unixToDateInput(record.end_date) || "현재"}
+							{unixToDateInput(record.start_date)} ~ {unixToDateInput(record.end_date) || "현재"}
 						</p>
 					</ActivityDialogRow>
 
@@ -154,8 +153,7 @@ export function ActivityDetailDialog({
 												{formatRequestedAt(request.created_at)}
 											</div>
 											<div className="flex items-center truncate px-[20px]">
-														{request.reviewers.map((reviewer) => reviewer.user.name).join(", ") ||
-															"-"}
+												{request.reviewers.map((reviewer) => reviewer.user.name).join(", ") || "-"}
 											</div>
 											<div className="flex items-center px-[20px]">
 												{REQUEST_STATUS_LABELS[request.status]}
@@ -189,8 +187,8 @@ export function ActivityDetailDialog({
 						취소
 					</DialogActionButton>
 					<DialogActionButton onClick={() => onOpenChange(false)}>확인</DialogActionButton>
-					</div>
-				</DesignDialogContent>
-			</Dialog>
+				</div>
+			</DesignDialogContent>
+		</Dialog>
 	)
 }
