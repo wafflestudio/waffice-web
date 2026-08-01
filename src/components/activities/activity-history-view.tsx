@@ -9,11 +9,7 @@ import type { ActivityStatusFilter } from "@/components/activities/activity-hist
 import { ActivityHistoryTable } from "@/components/activities/activity-history-table"
 import type { ActivityRequestFormValues } from "@/components/activities/activity-request-dialog"
 import { ActivityRequestDialog } from "@/components/activities/activity-request-dialog"
-import {
-	FilterResetButton,
-	FilterTag,
-	FilterTagGroup,
-} from "@/components/ui/filter-tag"
+import { FilterResetButton, FilterTag, FilterTagGroup } from "@/components/ui/filter-tag"
 import { Toast } from "@/components/ui/toast"
 import { memberQueryKeys, useMyActivities } from "@/hooks/use-members"
 import { useCreateRequest } from "@/hooks/use-requests"
@@ -130,7 +126,9 @@ export function ActivityHistoryView() {
 						{statusFilter !== "전체" && (
 							<FilterTagGroup>
 								<FilterTag label={statusFilter} onClick={() => setStatusFilter("전체")} />
-								<FilterResetButton onClick={() => setStatusFilter("전체")}>초기화</FilterResetButton>
+								<FilterResetButton onClick={() => setStatusFilter("전체")}>
+									초기화
+								</FilterResetButton>
 							</FilterTagGroup>
 						)}
 					</div>

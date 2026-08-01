@@ -103,14 +103,14 @@ export function CertificateApplicationView() {
 					)}
 				</div>
 
-			{!isLoading && !error && (
-				<Pagination
-					currentPage={currentPage}
-					totalPages={totalPages}
-					onPageChange={setCurrentPage}
-				/>
-			)}
-		</div>
+				{!isLoading && !error && (
+					<Pagination
+						currentPage={currentPage}
+						totalPages={totalPages}
+						onPageChange={setCurrentPage}
+					/>
+				)}
+			</div>
 
 			<CertificateApplicationDialog
 				open={isApplicationDialogOpen}

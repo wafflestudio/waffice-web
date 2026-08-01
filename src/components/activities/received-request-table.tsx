@@ -60,85 +60,81 @@ export function ReceivedRequestTable({
 
 	return (
 		<div className="flex flex-1 flex-col">
-		<div className="w-full overflow-hidden border-black-300 border-b bg-white [&>*:last-child]:border-b-0">
-			<div className={cn("grid h-[40px] border-black-300 border-y bg-black-100", GRID_COLS)}>
-				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>요청 일시</div>
-				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>요청자명</div>
-				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>활동 프로젝트</div>
-				<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>요청구분</div>
-				<div className={CELL_CLASS}>
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<FilterTrigger
-								aria-label="요청상태 필터"
-								className="h-auto w-auto gap-[6px] rounded-none p-0 text-[14px] font-medium tracking-[-0.28px] text-black-900 hover:bg-transparent"
-								iconClassName="size-[12px] text-black-900"
-							>
-								요청상태
-							</FilterTrigger>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent
-							align="end"
-							className="min-w-0 w-[150px] rounded-[6px] border-black-300 p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
-						>
-							<DropdownMenuRadioGroup
-								value={statusFilter}
-								onValueChange={handleStatusFilterChange}
-							>
-								{STATUS_OPTIONS.map((status) => (
-									<DropdownMenuFilterRadioItem key={status} value={status}>
-										{status === "전체" ? status : REQUEST_STATUS_LABELS[status]}
-									</DropdownMenuFilterRadioItem>
-								))}
-							</DropdownMenuRadioGroup>
-						</DropdownMenuContent>
-					</DropdownMenu>
-				</div>
-			</div>
-
-			{visibleRequests.map((request) => (
-				<button
-					type="button"
-					key={request.id}
-					onClick={() => onSelect(request)}
-					className={cn(
-						"grid h-[50px] w-full border-black-300 border-b text-left transition-colors hover:bg-black-100 focus-visible:bg-peach-100 focus-visible:outline-none",
-						GRID_COLS,
-					)}
-				>
-					<div className={cn(CELL_CLASS, "tracking-[-0.28px]")}>
-						{unixToDateLabel(request.created_at)}
-					</div>
-					<div className={cn(CELL_CLASS, "truncate tracking-[-0.28px]")}>
-						{request.requester.name}
-					</div>
-					<div className={cn(CELL_CLASS, "truncate tracking-[-0.28px]")}>
-						{request.after?.project_id != null
-							? (projectNameById.get(request.after.project_id) ?? "-")
-							: "-"}
-					</div>
-					<div className={cn(CELL_CLASS, "tracking-[-0.28px]")}>
-						{REQUEST_KIND_LABELS[request.request_kind]}
-					</div>
+			<div className="w-full overflow-hidden border-black-300 border-b bg-white [&>*:last-child]:border-b-0">
+				<div className={cn("grid h-[40px] border-black-300 border-y bg-black-100", GRID_COLS)}>
+					<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>요청 일시</div>
+					<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>요청자명</div>
+					<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>활동 프로젝트</div>
+					<div className={cn(CELL_CLASS, "font-medium tracking-[-0.28px]")}>요청구분</div>
 					<div className={CELL_CLASS}>
-						<DotStatusBadge dotClassName={REQUEST_STATUS_DOT_STYLES[request.status]}>
-							{REQUEST_STATUS_LABELS[request.status]}
-						</DotStatusBadge>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<FilterTrigger
+									aria-label="요청상태 필터"
+									className="h-auto w-auto gap-[6px] rounded-none p-0 text-[14px] font-medium tracking-[-0.28px] text-black-900 hover:bg-transparent"
+									iconClassName="size-[12px] text-black-900"
+								>
+									요청상태
+								</FilterTrigger>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent
+								align="end"
+								className="min-w-0 w-[150px] rounded-[6px] border-black-300 p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
+							>
+								<DropdownMenuRadioGroup
+									value={statusFilter}
+									onValueChange={handleStatusFilterChange}
+								>
+									{STATUS_OPTIONS.map((status) => (
+										<DropdownMenuFilterRadioItem key={status} value={status}>
+											{status === "전체" ? status : REQUEST_STATUS_LABELS[status]}
+										</DropdownMenuFilterRadioItem>
+									))}
+								</DropdownMenuRadioGroup>
+							</DropdownMenuContent>
+						</DropdownMenu>
 					</div>
-				</button>
-			))}
-
-			{visibleRequests.length === 0 && (
-				<div className="flex h-[120px] items-center justify-center border-black-300 border-b text-[14px] text-black-600">
-					해당 상태의 요청이 없습니다.
 				</div>
-			)}
-		</div>
-		<Pagination
-			currentPage={currentPage}
-			totalPages={totalPages}
-			onPageChange={setCurrentPage}
-		/>
+
+				{visibleRequests.map((request) => (
+					<button
+						type="button"
+						key={request.id}
+						onClick={() => onSelect(request)}
+						className={cn(
+							"grid h-[50px] w-full border-black-300 border-b text-left transition-colors hover:bg-black-100 focus-visible:bg-peach-100 focus-visible:outline-none",
+							GRID_COLS,
+						)}
+					>
+						<div className={cn(CELL_CLASS, "tracking-[-0.28px]")}>
+							{unixToDateLabel(request.created_at)}
+						</div>
+						<div className={cn(CELL_CLASS, "truncate tracking-[-0.28px]")}>
+							{request.requester.name}
+						</div>
+						<div className={cn(CELL_CLASS, "truncate tracking-[-0.28px]")}>
+							{request.after?.project_id != null
+								? (projectNameById.get(request.after.project_id) ?? "-")
+								: "-"}
+						</div>
+						<div className={cn(CELL_CLASS, "tracking-[-0.28px]")}>
+							{REQUEST_KIND_LABELS[request.request_kind]}
+						</div>
+						<div className={CELL_CLASS}>
+							<DotStatusBadge dotClassName={REQUEST_STATUS_DOT_STYLES[request.status]}>
+								{REQUEST_STATUS_LABELS[request.status]}
+							</DotStatusBadge>
+						</div>
+					</button>
+				))}
+
+				{visibleRequests.length === 0 && (
+					<div className="flex h-[120px] items-center justify-center border-black-300 border-b text-[14px] text-black-600">
+						해당 상태의 요청이 없습니다.
+					</div>
+				)}
+			</div>
+			<Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
 		</div>
 	)
 }

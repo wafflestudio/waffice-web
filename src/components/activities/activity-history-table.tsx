@@ -29,7 +29,10 @@ interface ActivityHistoryTableProps {
 
 const STATUS_OPTIONS: ActivityStatusFilter[] = ["전체", "대기중", "거절", "완료"]
 
-const STATUS_FILTER_STATUSES: Record<Exclude<ActivityStatusFilter, "전체">, ActivityHistoryStatus[]> = {
+const STATUS_FILTER_STATUSES: Record<
+	Exclude<ActivityStatusFilter, "전체">,
+	ActivityHistoryStatus[]
+> = {
 	대기중: ["create_pending", "update_pending"],
 	거절: ["rejected"],
 	완료: ["active"],
@@ -37,7 +40,12 @@ const STATUS_FILTER_STATUSES: Record<Exclude<ActivityStatusFilter, "전체">, Ac
 
 const CELL_CLASS = "flex min-w-0 items-center overflow-hidden px-[20px] text-[14px] text-black-900"
 
-export function ActivityHistoryTable({ records, statusFilter, onStatusFilterChange, onSelect }: ActivityHistoryTableProps) {
+export function ActivityHistoryTable({
+	records,
+	statusFilter,
+	onStatusFilterChange,
+	onSelect,
+}: ActivityHistoryTableProps) {
 	const visibleRecords =
 		statusFilter === "전체"
 			? records
