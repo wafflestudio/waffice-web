@@ -123,7 +123,7 @@ export default function MemberApplicationsPage() {
 
 	const handleApproveClick = () => {
 		if (selectedApplications.length === 0) {
-			setToastMessage("승인할 신청을 선택해주세요.")
+			setToastMessage("승인할 요청을 선택해주세요.")
 			setShowToast(true)
 			return
 		}
@@ -132,7 +132,7 @@ export default function MemberApplicationsPage() {
 
 	const _handleRejectClick = () => {
 		if (selectedApplications.length === 0) {
-			setToastMessage("반려할 신청을 선택해주세요.")
+			setToastMessage("반려할 요청을 선택해주세요.")
 			setShowToast(true)
 			return
 		}
@@ -301,7 +301,7 @@ export default function MemberApplicationsPage() {
 
 	if (isForbidden) {
 		return (
-			<Forbidden message="가입 신청 관리 페이지에 접근할 권한이 없습니다. 관리자 권한이 필요합니다." />
+			<Forbidden message="가입 요청 관리 페이지에 접근할 권한이 없습니다. 관리자 권한이 필요합니다." />
 		)
 	}
 
@@ -325,7 +325,7 @@ export default function MemberApplicationsPage() {
 			<div className="flex flex-1 flex-col gap-[16px]">
 				<h2 className="flex items-baseline gap-[4px]">
 					<span className="text-[18px] font-medium text-[#121212] tracking-[-0.36px]">
-						전체 신청
+						전체 요청
 					</span>
 					<span className="text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
 						({applications.length.toString().padStart(2, "0")})
@@ -337,7 +337,7 @@ export default function MemberApplicationsPage() {
 						<div className="flex flex-wrap items-center gap-[10px] xl:gap-[15px]">
 							<SearchInput
 								containerClassName="w-full sm:w-[260px]"
-								placeholder="신청자명을 입력해 주세요"
+								placeholder="요청자명을 입력해 주세요"
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
 							/>
