@@ -342,10 +342,10 @@ export default function MemberApplicationsPage() {
 								onChange={(e) => setSearchQuery(e.target.value)}
 							/>
 							<Button
-								className="bg-peach-300 hover:bg-peach-500 text-white"
+								className="rounded-[3px] bg-peach-300 hover:bg-peach-500 text-white"
 								onClick={handleApproveClick}
 							>
-								가입 승인
+								회원 등급 변경
 							</Button>
 						</div>
 						{activeFilterTags.length > 0 && (
