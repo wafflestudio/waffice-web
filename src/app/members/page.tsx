@@ -178,7 +178,7 @@ export default function MembersPage() {
 	return (
 		<div className="flex flex-1 flex-col gap-[40px]">
 			{/* 헤더 */}
-			<h1 className="text-[28px] font-semibold leading-[1.5] text-[#121212]">회원 정보 관리</h1>
+			<h1 className="text-[28px] font-semibold leading-[normal] text-[#121212]">회원 정보 관리</h1>
 
 			{/* 검색 영역 */}
 			<div className="flex flex-1 flex-col gap-[16px]">
@@ -193,17 +193,23 @@ export default function MembersPage() {
 					<div className="flex flex-col gap-[12px] xl:flex-row xl:items-center xl:justify-between">
 						<div className="flex flex-wrap items-center gap-[10px] xl:gap-[15px]">
 							<SearchInput
-								containerClassName="w-full sm:w-[260px]"
+								containerClassName="h-[36px] w-full sm:w-[260px]"
 								placeholder="검색어를 입력해 주세요"
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
 							/>
-							<ActionButton variant="primary" size="inline" onClick={handleRoleChange}>
+							<ActionButton
+								variant="primary"
+								size="inline"
+								className="h-[36px] text-[14px] leading-[24px] tracking-normal"
+								onClick={handleRoleChange}
+							>
 								회원 자격 변경
 							</ActionButton>
 							<ActionButton
 								variant="secondary"
 								size="inline"
+								className="h-[36px] bg-peach-100 text-peach-300 hover:bg-peach-100/80 text-[14px] leading-[24px] tracking-normal"
 								onClick={() => setIsBulkUpdateDialogOpen(true)}
 							>
 								활동회원 명부 일괄 갱신
