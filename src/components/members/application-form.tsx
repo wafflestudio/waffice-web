@@ -23,7 +23,6 @@ interface Application {
 	name: string
 	generation: string
 	email: string
-	github_username: string
 	application_date: string
 	role?: string
 	status: string

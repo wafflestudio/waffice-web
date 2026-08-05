@@ -515,7 +515,7 @@ export default function MyPage() {
 									</FieldRow>
 									<FieldRow label="Github 아이디">
 										<Input
-											placeholder="waffice@gmail.com"
+											placeholder="waffice"
 											className={fieldClass}
 											{...form.register("githubId")}
 										/>

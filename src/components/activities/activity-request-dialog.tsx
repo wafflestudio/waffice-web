@@ -80,6 +80,7 @@ export function ActivityRequestDialog({
 }: ActivityRequestDialogProps) {
 	const endDateUnknownId = useId()
 	const [showErrorToast, setShowErrorToast] = useState(false)
+	const [openCalendarKey, setOpenCalendarKey] = useState<"start" | "end" | null>(null)
 	const projectsQuery = useProjects(undefined, 100)
 	const projects = useMemo(() => projectsQuery.data?.items ?? [], [projectsQuery.data])
 	const projectNameToId = useMemo(
@@ -187,6 +188,9 @@ export function ActivityRequestDialog({
 										onChange={(value) =>
 											form.setValue("startDate", value, { shouldValidate: true })
 										}
+										open={openCalendarKey === "start"}
+										onOpenChange={(nextOpen) => setOpenCalendarKey(nextOpen ? "start" : null)}
+										centered
 										className="h-[42px] w-[140px] rounded-[6px] text-[14px]"
 									/>
 									<span className="text-[15px] text-black-300">-</span>
@@ -196,6 +200,9 @@ export function ActivityRequestDialog({
 											form.setValue("endDate", value, { shouldValidate: true })
 											form.setValue("isEndDateUnknown", false, { shouldValidate: true })
 										}}
+										open={openCalendarKey === "end"}
+										onOpenChange={(nextOpen) => setOpenCalendarKey(nextOpen ? "end" : null)}
+										centered
 										className="h-[42px] w-[140px] rounded-[6px] text-[14px]"
 									/>
 								</div>
@@ -226,17 +233,17 @@ export function ActivityRequestDialog({
 							/>
 						</ActivityDialogRow>
 
-						<ActivityDialogRow label="요청 사유">
+						<ActivityDialogRow label="요청 비고">
 							<textarea
 								{...form.register("reason")}
-								placeholder="운영진에게 전달할 요청 사유를 작성해주세요."
+								placeholder="요청 대상에게 전달할 말이 있다면 작성해주세요."
 								className="h-[70px] w-full resize-none rounded-[5px] border border-black-300 px-[16px] py-[10px] text-[14px] outline-none placeholder:text-black-600 focus:border-peach-300"
 							/>
 						</ActivityDialogRow>
 
 						<div className="flex justify-end gap-[10px]">
 							<DialogActionButton variant="cancel" onClick={() => onOpenChange(false)}>
-								취소
+								요청 취소
 							</DialogActionButton>
 							<DialogActionButton type="submit" disabled={submitting}>
 								확인
