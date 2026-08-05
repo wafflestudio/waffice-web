@@ -29,7 +29,6 @@ interface Application {
 	student_id: string
 	affiliation: string
 	email: string
-	github_username: string
 	application_date: string
 	role: string
 	status: string
@@ -60,7 +59,7 @@ const ITEMS_PER_PAGE = 10
 const DROPDOWN_CONTENT_CLASS =
 	"min-w-0 rounded-[6px] border-[#dbdfe0] p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
 const FILTER_TRIGGER_CLASS =
-	"h-auto w-auto gap-[6px] rounded-none p-0 text-[15px] font-medium text-[#121212] hover:bg-transparent"
+	"h-auto w-auto gap-[6px] rounded-none p-0 text-[14px] font-medium tracking-[-0.28px] text-[#121212] hover:bg-transparent"
 
 type SortOrder = "asc" | "desc" | null
 
@@ -79,7 +78,7 @@ function SortHeader({
 				<FilterTrigger
 					aria-label={`${label} 정렬`}
 					className={FILTER_TRIGGER_CLASS}
-					iconClassName="size-4 text-[#121212]"
+					iconClassName="size-[12px] text-[#121212]"
 				>
 					{label}
 				</FilterTrigger>
@@ -234,7 +233,7 @@ export function ApplicationTable({
 										<FilterTrigger
 											aria-label="자격 필터"
 											className={FILTER_TRIGGER_CLASS}
-											iconClassName="size-4 text-[#121212]"
+											iconClassName="size-[12px] text-[#121212]"
 										>
 											자격
 										</FilterTrigger>
@@ -262,7 +261,7 @@ export function ApplicationTable({
 										<FilterTrigger
 											aria-label="승인여부 필터"
 											className={FILTER_TRIGGER_CLASS}
-											iconClassName="size-4 text-[#121212]"
+											iconClassName="size-[12px] text-[#121212]"
 										>
 											승인여부
 										</FilterTrigger>
