@@ -24,6 +24,7 @@ interface CalendarDateFieldProps {
 	onOpenChange?: (open: boolean) => void
 	className?: string
 	popoverClassName?: string
+	centered?: boolean
 }
 
 function Calendar({ value, onChange, className }: CalendarProps) {
@@ -50,7 +51,7 @@ function Calendar({ value, onChange, className }: CalendarProps) {
 	return (
 		<div
 			className={cn(
-				"w-[360px] rounded-[12px] border border-[#ebebeb] bg-white px-[45px] py-[35px] shadow-[0px_4px_16px_rgba(170,170,170,0.03)]",
+				"w-[360px] rounded-[12px] border border-black-300 bg-white px-[45px] py-[35px] shadow-[0_4px_16px_rgba(0,0,0,0.12)]",
 				className,
 			)}
 		>
@@ -111,6 +112,7 @@ function CalendarDateField({
 	onOpenChange,
 	className,
 	popoverClassName,
+	centered = false,
 }: CalendarDateFieldProps) {
 	const [internalOpen, setInternalOpen] = useState(false)
 	const isOpen = open ?? internalOpen
@@ -121,6 +123,16 @@ function CalendarDateField({
 			setInternalOpen(nextOpen)
 		}
 	}
+
+	const calendar = (
+		<Calendar
+			value={value}
+			onChange={(nextValue) => {
+				onChange(nextValue)
+				setOpen(false)
+			}}
+		/>
+	)
 
 	return (
 		<div className="relative">
@@ -135,17 +147,22 @@ function CalendarDateField({
 				<span>{value}</span>
 				<CalendarDays className="size-[16px] text-black-600" />
 			</button>
-			{isOpen && (
-				<div className={cn("absolute top-[44px] right-0 z-[70]", popoverClassName)}>
-					<Calendar
-						value={value}
-						onChange={(nextValue) => {
-							onChange(nextValue)
-							setOpen(false)
-						}}
-					/>
-				</div>
-			)}
+			{isOpen &&
+				(centered ? (
+					<div className="fixed inset-0 z-[70] flex items-center justify-center">
+						<button
+							type="button"
+							aria-label="달력 닫기"
+							onClick={() => setOpen(false)}
+							className="absolute inset-0 bg-black/20"
+						/>
+						<div className="relative">{calendar}</div>
+					</div>
+				) : (
+					<div className={cn("absolute top-[44px] right-0 z-[70]", popoverClassName)}>
+						{calendar}
+					</div>
+				))}
 		</div>
 	)
 }

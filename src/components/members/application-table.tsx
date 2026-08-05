@@ -25,6 +25,9 @@ interface Application {
 	id: number
 	name: string
 	generation: string
+	department: string
+	student_id: string
+	affiliation: string
 	email: string
 	github_username: string
 	application_date: string
@@ -49,6 +52,8 @@ interface ApplicationTableProps {
 	onRoleFilterChange: (v: string) => void
 	statusFilter: string
 	onStatusFilterChange: (v: string) => void
+	enrollmentFilter: string
+	onEnrollmentFilterChange: (v: string) => void
 }
 
 const ITEMS_PER_PAGE = 10
@@ -109,14 +114,18 @@ export function ApplicationTable({
 	onRoleFilterChange,
 	statusFilter,
 	onStatusFilterChange,
+	enrollmentFilter,
+	onEnrollmentFilterChange,
 }: ApplicationTableProps) {
 	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "가입 대기"]
 	const STATUS_OPTIONS = ["대기", "승인"]
+	const ENROLLMENT_OPTIONS = ["학부생", "휴학생", "졸업생", "대학원생"]
 
 	const filteredApplications = applications
 		.filter((app) => app.name.toLowerCase().includes(searchQuery.toLowerCase()))
 		.filter((app) => roleFilter === "전체" || app.role === roleFilter)
 		.filter((app) => statusFilter === "전체" || app.status === statusFilter)
+		.filter((app) => enrollmentFilter === "전체" || app.affiliation === enrollmentFilter)
 
 	const sortedApplications = [...filteredApplications].sort((a, b) => {
 		if (generationSort && dateSort) {
@@ -177,11 +186,44 @@ export function ApplicationTable({
 							<TableHead className="h-[40px] w-[100px] px-[20px] text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
 								<SortHeader label="기수" sort={generationSort} onChange={onGenerationSortChange} />
 							</TableHead>
-							<TableHead className="h-[40px] min-w-0 px-[20px] text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
-								이메일
+							<TableHead className="h-[40px] w-[160px] px-[20px] text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
+								소속
+							</TableHead>
+							<TableHead className="h-[40px] w-[130px] px-[20px] text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
+								학번
+							</TableHead>
+							<TableHead className="h-[40px] w-[100px] px-[20px] text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<FilterTrigger
+											aria-label="학적 상태 필터"
+											className={FILTER_TRIGGER_CLASS}
+											iconClassName="size-4 text-[#121212]"
+										>
+											학적 상태
+										</FilterTrigger>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent
+										align="start"
+										className={`w-[140px] ${DROPDOWN_CONTENT_CLASS}`}
+									>
+										<DropdownMenuRadioGroup
+											value={enrollmentFilter}
+											onValueChange={(v) =>
+												onEnrollmentFilterChange(v === enrollmentFilter ? "전체" : v)
+											}
+										>
+											{ENROLLMENT_OPTIONS.map((status) => (
+												<DropdownMenuFilterRadioItem key={status} value={status}>
+													{status}
+												</DropdownMenuFilterRadioItem>
+											))}
+										</DropdownMenuRadioGroup>
+									</DropdownMenuContent>
+								</DropdownMenu>
 							</TableHead>
 							<TableHead className="h-[40px] min-w-0 px-[20px] text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
-								Github 아이디
+								소식 수신용 이메일
 							</TableHead>
 							<TableHead className="h-[40px] w-[120px] px-[20px] text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
 								<SortHeader label="가입 신청일" sort={dateSort} onChange={onDateSortChange} />
@@ -279,11 +321,17 @@ export function ApplicationTable({
 									<TableCell className="h-[50px] truncate px-[20px] text-[14px] font-normal text-[#121212] tracking-[-0.28px]">
 										{application.generation || "-"}
 									</TableCell>
-									<TableCell className="h-[50px] max-w-0 truncate px-[20px] text-[14px] font-normal text-[#121212]">
-										{application.email}
+									<TableCell className="h-[50px] truncate px-[20px] text-[14px] font-normal text-[#121212] tracking-[-0.28px]">
+										{application.department || "-"}
+									</TableCell>
+									<TableCell className="h-[50px] truncate px-[20px] text-[14px] font-normal text-[#121212] tracking-[-0.28px]">
+										{application.student_id || "-"}
+									</TableCell>
+									<TableCell className="h-[50px] truncate px-[20px] text-[14px] font-normal text-[#121212] tracking-[-0.28px]">
+										{application.affiliation || "-"}
 									</TableCell>
 									<TableCell className="h-[50px] max-w-0 truncate px-[20px] text-[14px] font-normal text-[#121212]">
-										{application.github_username || "-"}
+										{application.email}
 									</TableCell>
 									<TableCell className="h-[50px] truncate px-[20px] text-[14px] font-normal text-[#121212] tracking-[-0.28px]">
 										{formattedDate}

@@ -51,6 +51,9 @@ interface Application {
 	id: number
 	name: string
 	generation: string
+	department: string
+	student_id: string
+	affiliation: string
 	email: string
 	github_username: string
 	application_date: string
@@ -62,7 +65,10 @@ const userDetailToApplication = (user: UserDetail): Application => ({
 	id: user.id,
 	name: user.name,
 	generation: user.generation,
-	email: user.email ?? "",
+	department: user.department ?? "",
+	student_id: user.student_id ?? "",
+	affiliation: user.graduation_status,
+	email: user.contact_email ?? user.email ?? "",
 	github_username: user.github_username || "",
 	application_date: new Date(user.created_at * 1000).toISOString(),
 	// 대기 중인 신청은 가입 시 신청자가 고른 자격(requested_qualification)을 보여준다.
@@ -91,6 +97,7 @@ export default function MemberApplicationsPage() {
 	const [dateSort, setDateSort] = useState<"desc" | "asc" | null>(null)
 	const [roleFilter, setRoleFilter] = useState("전체")
 	const [statusFilter, setStatusFilter] = useState("전체")
+	const [enrollmentFilter, setEnrollmentFilter] = useState("전체")
 
 	// Pending 유저 목록 가져오기
 	useEffect(() => {
@@ -282,6 +289,9 @@ export default function MemberApplicationsPage() {
 		...(statusFilter !== "전체"
 			? [{ label: statusFilter, onRemove: () => setStatusFilter("전체") }]
 			: []),
+		...(enrollmentFilter !== "전체"
+			? [{ label: enrollmentFilter, onRemove: () => setEnrollmentFilter("전체") }]
+			: []),
 	]
 
 	const handleResetFilters = () => {
@@ -289,6 +299,7 @@ export default function MemberApplicationsPage() {
 		setDateSort(null)
 		setRoleFilter("전체")
 		setStatusFilter("전체")
+		setEnrollmentFilter("전체")
 	}
 
 	if (isLoading) {
@@ -325,7 +336,7 @@ export default function MemberApplicationsPage() {
 			<div className="flex flex-1 flex-col gap-[16px]">
 				<h2 className="flex items-baseline gap-[4px]">
 					<span className="text-[18px] font-medium text-[#121212] tracking-[-0.36px]">
-						전체 신청
+						전체 요청
 					</span>
 					<span className="text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
 						({applications.length.toString().padStart(2, "0")})
@@ -376,6 +387,8 @@ export default function MemberApplicationsPage() {
 						onRoleFilterChange={setRoleFilter}
 						statusFilter={statusFilter}
 						onStatusFilterChange={setStatusFilter}
+						enrollmentFilter={enrollmentFilter}
+						onEnrollmentFilterChange={setEnrollmentFilter}
 					/>
 				</div>
 			</div>

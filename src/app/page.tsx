@@ -110,7 +110,7 @@ export default function DashboardPage() {
 							<StatCard
 								href="/members/applications"
 								label="가입 대기 회원"
-								value={pendingCount == null ? "—" : String(pendingCount)}
+								value={pendingCount == null ? "—" : String(pendingCount).padStart(2, "0")}
 								unit="명"
 							/>
 						)}
