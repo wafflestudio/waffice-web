@@ -412,7 +412,7 @@ export function Lnb() {
 									className="flex h-[20px] shrink-0 items-center gap-[3px] rounded-[20px] border border-black-400 px-[8px] text-center text-[12px] font-medium text-black-400 leading-normal tracking-[-0.36px] outline-none"
 								>
 									{ROLE_LABELS[activeRole]}
-									<ChevronDown className="h-[5px] w-[8px]" strokeWidth={2} />
+									<ChevronDown className="size-[12px] shrink-0" strokeWidth={2} />
 								</button>
 							</DropdownMenuTrigger>
 							{user && (

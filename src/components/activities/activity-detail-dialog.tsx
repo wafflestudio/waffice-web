@@ -88,14 +88,14 @@ export function ActivityDetailDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DesignDialogContent
 				showDesignClose
-				className="max-h-[calc(100vh-32px)] w-[calc(100vw-32px)] max-w-[calc(100vw-32px)] overflow-x-hidden overflow-y-auto rounded-[12px] border-0 px-[24px] py-[40px] sm:!w-[1000px] sm:!max-w-[1000px] sm:px-[100px]"
+				className="flex max-h-[calc(100vh-32px)] w-[calc(100vw-32px)] max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-[12px] border-0 px-[24px] py-[40px] sm:!h-[680px] sm:!w-[1000px] sm:!max-w-[1000px] sm:px-[100px]"
 				closeClassName="fixed top-[15px] right-[15px]"
 			>
-				<DialogTitle className="text-[28px] font-medium leading-normal text-black-900">
+				<DialogTitle className="shrink-0 text-[28px] font-medium leading-normal text-black-900">
 					활동이력 상세
 				</DialogTitle>
 
-				<div className="mt-[50px] flex w-full flex-col gap-[40px]">
+				<div className="-mr-[20px] mt-[50px] flex w-full flex-1 flex-col gap-[40px] overflow-x-hidden overflow-y-auto pr-[20px] scrollbar-modal">
 					<ActivityDialogRow label="활동 프로젝트">
 						<p className="pt-[2px] text-[14px] text-black-900">{record.project_name ?? "-"}</p>
 					</ActivityDialogRow>
@@ -182,7 +182,7 @@ export function ActivityDetailDialog({
 					)}
 				</div>
 
-				<div className="mt-[40px] flex justify-end gap-[10px]">
+				<div className="mt-[40px] flex shrink-0 justify-end gap-[10px]">
 					<DialogActionButton variant="cancel" onClick={() => onOpenChange(false)}>
 						취소
 					</DialogActionButton>

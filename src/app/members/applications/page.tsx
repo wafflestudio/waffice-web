@@ -66,8 +66,8 @@ const userDetailToApplication = (user: UserDetail): Application => ({
 	generation: user.generation,
 	department: user.department ?? "",
 	student_id: user.student_id ?? "",
-	affiliation: user.graduation_status ?? "",
-	email: user.email ?? "",
+	affiliation: user.graduation_status,
+	email: user.contact_email ?? user.email ?? "",
 	application_date: new Date(user.created_at * 1000).toISOString(),
 	// 대기 중인 신청은 가입 시 신청자가 고른 자격(requested_qualification)을 보여준다.
 	// 승인 완료된 회원은 확정된 qualification을 그대로 보여준다.

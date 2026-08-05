@@ -197,7 +197,7 @@ export function ApplicationTable({
 										<FilterTrigger
 											aria-label="학적 상태 필터"
 											className={FILTER_TRIGGER_CLASS}
-											iconClassName="size-[12px] text-[#121212]"
+											iconClassName="size-4 text-[#121212]"
 										>
 											학적 상태
 										</FilterTrigger>
