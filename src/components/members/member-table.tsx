@@ -199,6 +199,9 @@ export function MemberTable({
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[120px] text-center")}>
+								임시회원 여부
+							</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -243,6 +246,9 @@ export function MemberTable({
 									</TableCell>
 									<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>
 										{member.role || "활동회원"}
+									</TableCell>
+									<TableCell className={cn(BODY_CELL_CLASS, "truncate text-center")}>
+										{member.is_temporary ? "Y" : "N"}
 									</TableCell>
 								</TableRow>
 							)
