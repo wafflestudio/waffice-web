@@ -356,7 +356,7 @@ export default function MemberApplicationsPage() {
 								className="rounded-[3px] bg-peach-300 hover:bg-peach-500 text-white"
 								onClick={handleApproveClick}
 							>
-								회원 등급 변경
+								가입 승인
 							</Button>
 						</div>
 						{activeFilterTags.length > 0 && (
