@@ -126,9 +126,9 @@ export default function DashboardPage() {
 				<div className="flex flex-wrap gap-[20px]">
 					<QuickLinkCard
 						href="/mypage"
-						imageSrc="/dashboard/mypage.png"
+						imageSrc="/dashboard/mypage.svg"
 						imageAlt="와플 캐릭터 프로필"
-						imageClassName="absolute top-[47px] left-1/2 size-[45px] -translate-x-1/2"
+						imageClassName="absolute top-[24px] left-1/2 size-[90px] -translate-x-1/2"
 						title="마이페이지"
 						description="회원님의 프로필을 업로드해보세요."
 					/>
@@ -142,7 +142,7 @@ export default function DashboardPage() {
 					/>
 					<QuickLinkCard
 						href="/certificates"
-						imageSrc="/dashboard/certificate.png"
+						imageSrc="/dashboard/certificate.svg"
 						imageAlt="와플 캐릭터 활동증명서"
 						imageClassName="absolute top-[28px] left-1/2 h-[79px] w-[90px] -translate-x-1/2"
 						title="내 활동증명서 발급"

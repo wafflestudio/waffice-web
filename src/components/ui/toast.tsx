@@ -103,14 +103,14 @@ export function Toast({
 	}
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-			<div className="bg-white rounded-lg shadow-lg p-6 max-w-sm mx-4 pointer-events-auto">
-				<div className="flex flex-col items-center gap-4">
-					<p className="text-center text-sm text-gray-800">{message}</p>
+		<div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center">
+			<div className="pointer-events-auto w-full max-w-[400px] rounded-[12px] border border-black-300 bg-white px-[40px] pt-[30px] pb-[26px] shadow-[0px_0px_10px_0px_rgba(0,0,0,0.06)]">
+				<div className="flex flex-col items-end gap-[40px]">
+					<p className="w-full text-[15px] leading-[1.4] font-medium text-black-900">{message}</p>
 					<button
 						type="button"
 						onClick={onClose}
-						className="px-6 py-2 bg-peach-300 hover:bg-peach-500 text-white text-sm rounded transition-colors"
+						className="rounded-[4px] bg-peach-300 px-[30px] py-[8px] text-[15px] font-medium leading-[24px] text-white transition-colors hover:bg-peach-500"
 					>
 						확인
 					</button>
