@@ -2,7 +2,9 @@
 
 import { ArrowUpRight, ChevronDown, MoreHorizontal, Plus, Search, X } from "lucide-react"
 import type * as React from "react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useId, useMemo, useState } from "react"
+import { CalendarDateField } from "@/components/ui/calendar"
+import { Checkbox } from "@/components/ui/checkbox"
 import { DesignDialogContent } from "@/components/ui/design-dialog"
 import {
 	DesignTable,
@@ -34,10 +36,8 @@ import { useUsers } from "@/hooks/use-members"
 import {
 	useAddProjectMember,
 	useDeleteProject,
-	useDownloadProjectMemberTemplate,
 	useProjectMembers,
 	useRemoveProjectMember,
-	useReplaceProjectMembers,
 	useUpdateProject,
 	useUpdateProjectMember,
 } from "@/hooks/use-projects"
@@ -51,7 +51,6 @@ import type {
 	ProjectStatusHistory,
 } from "@/types"
 import { MOCK_PROJECT_STATUS_HISTORIES } from "./project-detail.mock"
-import { ProjectMemberBulkUpdateDialog } from "./project-member-bulk-update-dialog"
 
 interface ProjectDetailViewProps {
 	project: ProjectDetail
@@ -61,7 +60,6 @@ interface ProjectDetailViewProps {
 type DialogState =
 	| "member-add"
 	| "member-edit"
-	| "member-bulk-update"
 	| "status-history"
 	| "status-confirm"
 	| "status-success"
@@ -95,6 +93,11 @@ const toDisplayDate = (isoDate: string | null) => {
 	if (!isoDate) return "미정"
 	return isoDate.replaceAll("-", ".")
 }
+
+const dashDateToDot = (isoDate: string | null | undefined) =>
+	isoDate ? isoDate.replaceAll("-", ".") : ""
+
+const dotDateToDash = (dotDate: string) => (dotDate ? dotDate.replaceAll(".", "-") : "")
 
 const memberActivityStatus = (member: MemberDetail): "활동 중" | "과거 활동" =>
 	member.left_at == null ? "활동 중" : "과거 활동"
@@ -148,8 +151,6 @@ export function ProjectDetailView({ project, viewMode }: ProjectDetailViewProps)
 	const updateProjectMember = useUpdateProjectMember()
 	const removeProjectMember = useRemoveProjectMember()
 	const deleteProject = useDeleteProject()
-	const replaceProjectMembers = useReplaceProjectMembers()
-	const downloadTemplate = useDownloadProjectMemberTemplate()
 
 	useEffect(() => {
 		setPendingStatus(project.status)
@@ -214,13 +215,23 @@ export function ProjectDetailView({ project, viewMode }: ProjectDetailViewProps)
 		}
 	}
 
-	const handleUpdateMember = async (input: { role: MemberRole; position: string }) => {
+	const handleUpdateMember = async (input: {
+		role: MemberRole
+		position: string
+		joinedAt: string
+		leftAt: string | null
+	}) => {
 		if (!selectedMember) return
 		try {
 			await updateProjectMember.mutateAsync({
 				projectId: project.id,
 				userId: selectedMember.user.id,
-				data: { role: input.role, position: input.position || null },
+				data: {
+					role: input.role,
+					position: input.position || null,
+					joined_at: input.joinedAt || null,
+					left_at: input.leftAt,
+				},
 			})
 			setDialog(null)
 		} catch (error) {
@@ -270,14 +281,12 @@ export function ProjectDetailView({ project, viewMode }: ProjectDetailViewProps)
 					searchQuery={searchQuery}
 					showPastMembers={showPastMembers}
 					activityStatusFilter={activityStatusFilter}
-					isAdmin={isAdmin}
 					onSearchChange={setSearchQuery}
 					onTogglePast={() => setShowPastMembers((prev) => !prev)}
 					onActivityStatusFilterChange={setActivityStatusFilter}
 					onResetActivityStatusFilter={() => setActivityStatusFilter("전체")}
 					onOpenAdd={() => setDialog("member-add")}
 					onOpenEdit={openMemberEdit}
-					onBulkUpdate={() => setDialog("member-bulk-update")}
 				/>
 
 				<RelatedLinksSection
@@ -310,36 +319,6 @@ export function ProjectDetailView({ project, viewMode }: ProjectDetailViewProps)
 				onDeleteRecord={() => setDialog("member-record-delete")}
 				onSubmit={handleUpdateMember}
 				isSubmitting={updateProjectMember.isPending}
-			/>
-			<ProjectMemberBulkUpdateDialog
-				open={dialog === "member-bulk-update"}
-				onOpenChange={(open) => setDialog(open ? "member-bulk-update" : null)}
-				onSubmit={async (files) => {
-					const file = files[0]
-					if (!file) return
-					await replaceProjectMembers.mutateAsync({ projectId: project.id, file })
-					setDialog(null)
-				}}
-				onDownloadTemplate={() => {
-					downloadTemplate.mutate(project.id, {
-						onSuccess: (blob) => {
-							const url = URL.createObjectURL(blob)
-							const link = document.createElement("a")
-							link.href = url
-							link.download = `project-${project.id}-members.xlsx`
-							link.click()
-							URL.revokeObjectURL(url)
-						},
-						onError: (downloadError) => {
-							showMockToast(
-								downloadError instanceof Error
-									? downloadError.message
-									: "양식 다운로드에 실패했습니다.",
-							)
-						},
-					})
-				}}
-				isSubmitting={replaceProjectMembers.isPending}
 			/>
 			<ProjectStatusHistoryDialog
 				open={dialog === "status-history"}
@@ -389,14 +368,12 @@ interface ActivityMembersSectionProps {
 	searchQuery: string
 	showPastMembers: boolean
 	activityStatusFilter: ActivityStatusFilterValue
-	isAdmin: boolean
 	onSearchChange: (value: string) => void
 	onTogglePast: () => void
 	onActivityStatusFilterChange: (value: ActivityStatusFilterValue) => void
 	onResetActivityStatusFilter: () => void
 	onOpenAdd: () => void
 	onOpenEdit: (member: MemberDetail) => void
-	onBulkUpdate: () => void
 }
 
 function ActivityMembersSection({
@@ -406,14 +383,12 @@ function ActivityMembersSection({
 	searchQuery,
 	showPastMembers,
 	activityStatusFilter,
-	isAdmin,
 	onSearchChange,
 	onTogglePast,
 	onActivityStatusFilterChange,
 	onResetActivityStatusFilter,
 	onOpenAdd,
 	onOpenEdit,
-	onBulkUpdate,
 }: ActivityMembersSectionProps) {
 	const [visibleCount, setVisibleCount] = useState(ACTIVITY_MEMBERS_PER_PAGE)
 	const [lastFilterKey, setLastFilterKey] = useState(
@@ -445,15 +420,6 @@ function ActivityMembersSection({
 						>
 							추가
 						</button>
-						{isAdmin && (
-							<button
-								type="button"
-								onClick={onBulkUpdate}
-								className="flex h-[36px] items-center justify-center rounded-[3px] bg-peach-50 px-[18px] text-[14px] font-semibold leading-[20px] text-peach-500 transition-colors hover:bg-peach-100 active:bg-peach-100"
-							>
-								팀원 일괄 수정
-							</button>
-						)}
 						<button
 							type="button"
 							onClick={onTogglePast}
@@ -1008,16 +974,30 @@ function ProjectMemberEditDialog({
 	open: boolean
 	onOpenChange: (open: boolean) => void
 	onDeleteRecord: () => void
-	onSubmit: (input: { role: MemberRole; position: string }) => void
+	onSubmit: (input: {
+		role: MemberRole
+		position: string
+		joinedAt: string
+		leftAt: string | null
+	}) => void
 	isSubmitting: boolean
 }) {
 	const [isLeader, setIsLeader] = useState(member?.role === "leader")
 	const [position, setPosition] = useState(member?.position ?? "")
+	const [joinedAt, setJoinedAt] = useState(dashDateToDot(member?.joined_at))
+	const [leftAt, setLeftAt] = useState(dashDateToDot(member?.left_at))
+	const [isLeftDateUnknown, setIsLeftDateUnknown] = useState(!member?.left_at)
+	const [openCalendarKey, setOpenCalendarKey] = useState<"joined" | "left" | null>(null)
+	const leftDateUnknownId = useId()
 
 	useEffect(() => {
 		if (!open) return
 		setIsLeader(member?.role === "leader")
 		setPosition(member?.position ?? "")
+		setJoinedAt(dashDateToDot(member?.joined_at))
+		setLeftAt(dashDateToDot(member?.left_at))
+		setIsLeftDateUnknown(!member?.left_at)
+		setOpenCalendarKey(null)
 	}, [member, open])
 
 	return (
@@ -1060,6 +1040,44 @@ function ProjectMemberEditDialog({
 											className="h-[42px] w-[300px] rounded-[5px] border-black-300 px-[10px] text-[14px] tracking-[-0.28px] text-black-900 shadow-none placeholder:text-black-600 focus-visible:border-peach-300 focus-visible:ring-0"
 										/>
 									</MemberDialogRow>
+									<MemberDialogRow label="활동 기간">
+										<div className="flex items-center gap-[5px]">
+											<CalendarDateField
+												value={joinedAt || "YYYY.MM.DD"}
+												onChange={setJoinedAt}
+												open={openCalendarKey === "joined"}
+												onOpenChange={(nextOpen) => setOpenCalendarKey(nextOpen ? "joined" : null)}
+												centered
+												className="h-[42px] w-[140px] rounded-[6px] text-[14px]"
+											/>
+											<span className="text-[15px] text-black-300">-</span>
+											<CalendarDateField
+												value={isLeftDateUnknown ? "YYYY.MM.DD" : leftAt || "YYYY.MM.DD"}
+												onChange={(value) => {
+													setLeftAt(value)
+													setIsLeftDateUnknown(false)
+												}}
+												open={openCalendarKey === "left"}
+												onOpenChange={(nextOpen) => setOpenCalendarKey(nextOpen ? "left" : null)}
+												centered
+												className="h-[42px] w-[140px] rounded-[6px] text-[14px]"
+											/>
+											<label
+												htmlFor={leftDateUnknownId}
+												className="ml-[10px] flex cursor-pointer items-center gap-[10px] text-[14px] tracking-[-0.28px] text-black-700"
+											>
+												<Checkbox
+													id={leftDateUnknownId}
+													checked={isLeftDateUnknown}
+													onCheckedChange={(checked) => {
+														setIsLeftDateUnknown(checked === true)
+														if (checked) setLeftAt("")
+													}}
+												/>
+												미정
+											</label>
+										</div>
+									</MemberDialogRow>
 									<MemberDialogRow label="기록 삭제">
 										<DialogActionButton
 											variant="danger"
@@ -1076,7 +1094,14 @@ function ProjectMemberEditDialog({
 										취소
 									</DialogActionButton>
 									<DialogActionButton
-										onClick={() => onSubmit({ role: isLeader ? "leader" : "member", position })}
+										onClick={() =>
+											onSubmit({
+												role: isLeader ? "leader" : "member",
+												position,
+												joinedAt: dotDateToDash(joinedAt),
+												leftAt: isLeftDateUnknown ? null : dotDateToDash(leftAt),
+											})
+										}
 										disabled={isSubmitting}
 									>
 										확인
