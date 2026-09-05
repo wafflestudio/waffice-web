@@ -24,6 +24,7 @@ export interface Member {
 	updated_at: string
 	student_id?: string
 	department?: string
+	is_temporary?: boolean
 }
 
 export interface MemberCreate {

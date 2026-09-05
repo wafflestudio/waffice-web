@@ -83,4 +83,6 @@ export interface ProjectUpdateRequest {
 export interface MemberUpdateRequest {
 	role?: MemberRole | null
 	position?: string | null
+	joined_at?: string | null
+	left_at?: string | null
 }
