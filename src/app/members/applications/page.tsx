@@ -58,6 +58,7 @@ interface Application {
 	application_date: string
 	role: string
 	status: string
+	is_temporary: boolean
 }
 
 const userDetailToApplication = (user: UserDetail): Application => ({
@@ -76,6 +77,7 @@ const userDetailToApplication = (user: UserDetail): Application => ({
 			? qualificationToRole(user.requested_qualification)
 			: qualificationToRole(user.qualification),
 	status: user.qualification === "pending" ? "대기" : "승인",
+	is_temporary: user.is_temporary,
 })
 
 export default function MemberApplicationsPage() {

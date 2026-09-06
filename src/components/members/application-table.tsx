@@ -32,6 +32,7 @@ interface Application {
 	application_date: string
 	role: string
 	status: string
+	is_temporary: boolean
 }
 
 interface ApplicationTableProps {
@@ -221,6 +222,9 @@ export function ApplicationTable({
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</TableHead>
+							<TableHead className="h-[40px] w-[120px] px-[20px] text-center text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
+								임시회원 여부
+							</TableHead>
 							<TableHead className="h-[40px] min-w-0 px-[20px] text-[14px] font-medium text-[#121212] tracking-[-0.28px]">
 								소식 수신용 이메일
 							</TableHead>
@@ -328,6 +332,9 @@ export function ApplicationTable({
 									</TableCell>
 									<TableCell className="h-[50px] truncate px-[20px] text-[14px] font-normal text-[#121212] tracking-[-0.28px]">
 										{application.affiliation || "-"}
+									</TableCell>
+									<TableCell className="h-[50px] truncate px-[20px] text-center text-[14px] font-normal text-[#121212] tracking-[-0.28px]">
+										{application.is_temporary ? "Y" : "N"}
 									</TableCell>
 									<TableCell className="h-[50px] max-w-0 truncate px-[20px] text-[14px] font-normal text-[#121212]">
 										{application.email}
