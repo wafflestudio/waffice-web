@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/lib/api"
 import type {
 	ApiResponse,
+	CertificateHistoryItem,
 	CertificateOptions,
 	CertificateSummary,
 	CursorPage,
@@ -14,6 +15,8 @@ export const certificateQueryKeys = {
 	mySignature: () => [...certificateQueryKeys.all, "my-signature"] as const,
 	myList: (cursor?: string, limit = 20) =>
 		[...certificateQueryKeys.all, "my-list", cursor, limit] as const,
+	history: (cursor?: string, limit = 20) =>
+		[...certificateQueryKeys.all, "history", cursor, limit] as const,
 }
 
 function getResponseOrThrow<T>(response: ApiResponse<T>, fallbackMessage: string): T {
@@ -85,6 +88,19 @@ export function useMyCertificates(cursor?: string, limit = 20) {
 export function useDownloadCertificate() {
 	return useMutation({
 		mutationFn: async (certificateId: number) => apiClient.downloadCertificate(certificateId),
+	})
+}
+
+// === Staff/admin: 전체 발급 이력 (PR #21) ===
+
+export function useCertificateHistory(cursor?: string, limit = 20) {
+	return useQuery<CursorPage<CertificateHistoryItem>, Error>({
+		queryKey: certificateQueryKeys.history(cursor, limit),
+		queryFn: async () =>
+			getResponseOrThrow(
+				await apiClient.listCertificateHistory(cursor, limit),
+				"활동증명서 발급 이력을 불러오는데 실패했습니다.",
+			),
 	})
 }
 

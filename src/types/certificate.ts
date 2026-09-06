@@ -121,3 +121,29 @@ export function toMyCertificateApplication(summary: CertificateSummary): MyCerti
 		status: summary.status === "issued" ? "발급 완료" : "대기",
 	}
 }
+
+/** GET /certificates(운영진 전체 발급 이력) 목록 항목. */
+export interface CertificateHistoryItem {
+	id: number
+	kind: CertificateKind
+	issued_at: number | null
+	status: CertificateStatus
+	user: UserBrief
+	issue_number: string | null
+}
+
+const CERTIFICATE_KIND_LABEL: Record<CertificateKind, string> = {
+	self: "본인 신청",
+	draft: "운영진 대행",
+}
+
+/** GET /certificates 응답 항목 → 발급 이력 테이블 행으로 변환. */
+export function toCertificateIssueHistory(item: CertificateHistoryItem): CertificateIssueHistory {
+	return {
+		id: item.id,
+		requestType: CERTIFICATE_KIND_LABEL[item.kind],
+		issuedAt: item.issued_at != null ? formatEpochDate(item.issued_at) : "-",
+		recipient: item.user.name,
+		status: item.status === "original_pending" ? "발급 대기" : "발급 완료",
+	}
+}

@@ -1,8 +1,8 @@
 "use client"
 
-import { ArrowUpRight, ChevronDown, MoreHorizontal, Plus, Search, X } from "lucide-react"
+import { ArrowUpRight, Check, ChevronDown, MoreHorizontal, Plus, Search, X } from "lucide-react"
 import type * as React from "react"
-import { useEffect, useId, useMemo, useState } from "react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { CalendarDateField } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DesignDialogContent } from "@/components/ui/design-dialog"
@@ -418,7 +418,7 @@ function ActivityMembersSection({
 							onClick={onOpenAdd}
 							className="flex h-[36px] items-center justify-center rounded-[3px] bg-peach-300 px-[24px] text-[14px] font-semibold leading-[20px] text-white transition-colors hover:bg-peach-500 active:bg-peach-500"
 						>
-							추가
+							신규 팀원 추가
 						</button>
 						<button
 							type="button"
@@ -814,54 +814,72 @@ function MemberSearchSelect({
 	onSelect: (userId: number, label: string) => void
 }) {
 	const [query, setQuery] = useState("")
+	const [isOpen, setIsOpen] = useState(false)
+	const containerRef = useRef<HTMLDivElement>(null)
 	const results = useMemberSearch(query)
 
+	useEffect(() => {
+		if (!isOpen) return
+
+		const handlePointerDown = (event: PointerEvent) => {
+			if (!containerRef.current?.contains(event.target as Node)) setIsOpen(false)
+		}
+		document.addEventListener("pointerdown", handlePointerDown)
+		return () => document.removeEventListener("pointerdown", handlePointerDown)
+	}, [isOpen])
+
+	const displayValue = isOpen ? query : selectedLabel
+
 	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<button
-					type="button"
-					className="flex h-[42px] w-[300px] items-center gap-[10px] rounded-[5px] border border-black-300 bg-white px-[10px] text-left text-[14px] text-black-600 transition-colors hover:border-peach-300 focus-visible:border-peach-300 focus-visible:outline-none"
-				>
-					<Search className="size-[20px] shrink-0 text-black-600" strokeWidth={1.8} aria-hidden />
-					<span className={cn("truncate", !selectedLabel && "text-black-600")}>
-						{selectedLabel || "이름을 검색해 보세요."}
-					</span>
-				</button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent
-				align="start"
-				className="w-[300px] rounded-[6px] border-black-300 bg-white p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]"
-			>
-				<div className="p-[5px]">
-					<Input
-						autoFocus
-						value={query}
-						onChange={(event) => setQuery(event.target.value)}
-						placeholder="이름을 검색해 보세요."
-						className="h-[36px] rounded-[4px] border-black-300 text-[13px]"
-					/>
-				</div>
-				<DropdownMenuRadioGroup
-					value={selectedUserId != null ? String(selectedUserId) : ""}
-					onValueChange={() => undefined}
-				>
-					{results.map((user) => (
-						<DropdownMenuFilterRadioItem
-							key={user.id}
-							value={String(user.id)}
-							onClick={() => onSelect(user.id, `${user.name}(${user.student_id ?? user.id})`)}
-						>
-							{user.name}
-							{user.student_id ? `(${user.student_id})` : ""}
-						</DropdownMenuFilterRadioItem>
-					))}
+		<div ref={containerRef} className="relative w-[300px]">
+			<div className="flex h-[42px] w-full items-center gap-[10px] rounded-[5px] border border-black-300 bg-white px-[10px] transition-colors focus-within:border-peach-300 hover:border-peach-300">
+				<Search className="size-[20px] shrink-0 text-black-600" strokeWidth={1.8} aria-hidden />
+				<input
+					value={displayValue}
+					onChange={(event) => {
+						setQuery(event.target.value)
+						if (!isOpen) setIsOpen(true)
+					}}
+					onFocus={() => {
+						setQuery("")
+						setIsOpen(true)
+					}}
+					placeholder="이름을 검색해 보세요."
+					className="w-full min-w-0 text-[14px] text-black-900 outline-none placeholder:text-black-600"
+				/>
+			</div>
+			{isOpen && (
+				<div className="absolute top-[46px] left-0 z-[70] w-full overflow-hidden rounded-[6px] border border-black-300 bg-white p-[5px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]">
+					{results.map((user) => {
+						const label = `${user.name}${user.student_id ? `(${user.student_id})` : ""}`
+						const checked = selectedUserId === user.id
+						return (
+							<button
+								key={user.id}
+								type="button"
+								onClick={() => {
+									onSelect(user.id, label)
+									setQuery("")
+									setIsOpen(false)
+								}}
+								className={cn(
+									"flex h-[40px] w-full cursor-pointer items-center justify-between gap-[8px] rounded-[3px] px-[8px] py-[6px] text-left text-[14px] font-medium leading-[20px] outline-none transition-colors hover:bg-peach-100",
+									checked ? "text-peach-500" : "text-black-600",
+								)}
+							>
+								<span className="truncate">{label}</span>
+								{checked && <Check className="size-[20px] shrink-0 text-peach-500" />}
+							</button>
+						)
+					})}
 					{results.length === 0 && (
-						<p className="px-[10px] py-[8px] text-[13px] text-black-600">검색 결과가 없습니다.</p>
+						<p className="flex h-[40px] items-center px-[8px] text-[14px] font-medium text-black-600">
+							{query.trim() ? "목록에 없음" : "이름을 입력해 검색해 보세요."}
+						</p>
 					)}
-				</DropdownMenuRadioGroup>
-			</DropdownMenuContent>
-		</DropdownMenu>
+				</div>
+			)}
+		</div>
 	)
 }
 
