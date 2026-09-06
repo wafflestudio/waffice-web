@@ -8,12 +8,21 @@ import type {
 import type { ApiResponse, CursorPage, Page } from "@/types/common"
 import type { AuditLogDetail, HistoryDetail } from "@/types/history"
 import type {
+	ActiveRosterApplyResult,
+	ActiveRosterPreview,
 	ApproveRequest,
 	TemporaryMemberImportResult,
 	UserDetail,
 	UserUpdateRequest,
 } from "@/types/user"
 import type { ApiClient } from "./client"
+
+const buildActiveRosterFormData = (file: File, referenceDate?: number) => {
+	const formData = new FormData()
+	formData.append("file", file)
+	if (referenceDate != null) formData.append("reference_date", referenceDate.toString())
+	return formData
+}
 
 export function createUsersApi(client: ApiClient) {
 	return {
@@ -28,6 +37,26 @@ export function createUsersApi(client: ApiClient) {
 			return client.request<ApiResponse<TemporaryMemberImportResult>>("/users/temporary", {
 				method: "POST",
 				body: formData,
+			})
+		},
+
+		previewActiveRoster(
+			file: File,
+			referenceDate?: number,
+		): Promise<ApiResponse<ActiveRosterPreview>> {
+			return client.request<ApiResponse<ActiveRosterPreview>>("/users/active-roster/preview", {
+				method: "POST",
+				body: buildActiveRosterFormData(file, referenceDate),
+			})
+		},
+
+		applyActiveRoster(
+			file: File,
+			referenceDate?: number,
+		): Promise<ApiResponse<ActiveRosterApplyResult>> {
+			return client.request<ApiResponse<ActiveRosterApplyResult>>("/users/active-roster/apply", {
+				method: "POST",
+				body: buildActiveRosterFormData(file, referenceDate),
 			})
 		},
 

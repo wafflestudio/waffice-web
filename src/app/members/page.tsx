@@ -2,9 +2,10 @@
 
 import { Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
+import { dateInputToUnix } from "@/components/activities/activity-history.utils"
 import { Forbidden } from "@/components/error/forbidden"
+import { ActiveRosterConfirmDialog } from "@/components/members/active-roster-confirm-dialog"
 import { MemberBulkUpdateDialog } from "@/components/members/member-bulk-update-dialog"
-import { MemberBulkUpdateResultDialog } from "@/components/members/member-bulk-update-result-dialog"
 import { MemberTable } from "@/components/members/member-table"
 import { QualificationChangeDialog } from "@/components/members/qualification-change-dialog"
 import { useAuth } from "@/components/providers/auth-provider"
@@ -13,14 +14,18 @@ import { Button } from "@/components/ui/button"
 import { FilterResetButton, FilterTag, FilterTagGroup } from "@/components/ui/filter-tag"
 import { SearchInput } from "@/components/ui/search-input"
 import { Toast } from "@/components/ui/toast"
+import { ToastStack } from "@/components/ui/toast-stack"
 import {
 	roleToQualification,
-	useImportTemporaryMembers,
+	useApplyActiveRoster,
 	useMembers,
+	usePreviewActiveRoster,
 	useUpdateUserAdmin,
 } from "@/hooks/use-members"
+import { useToastStack } from "@/hooks/use-toast-stack"
+import { ApiError } from "@/lib/api/client"
 import { canManageMembers } from "@/lib/permissions"
-import type { MemberCreate, MemberUpdate, TemporaryMemberImportResult } from "@/types"
+import type { ActiveRosterCounts, MemberCreate, MemberUpdate } from "@/types"
 import { toUserUpdateRequest } from "@/types"
 
 export default function MembersPage() {
@@ -34,10 +39,15 @@ export default function MembersPage() {
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState("")
 	const [toastVariant, setToastVariant] = useState<"default" | "error">("default")
-	const [bulkUpdateResult, setBulkUpdateResult] = useState<TemporaryMemberImportResult | null>(null)
+	const [rosterPreview, setRosterPreview] = useState<{
+		counts: ActiveRosterCounts
+		file: File
+		referenceDate: number
+	} | null>(null)
 	const [generationSort, setGenerationSort] = useState<"desc" | "asc" | null>(null)
 	const [roleFilter, setRoleFilter] = useState("전체")
 	const [enrollmentFilter, setEnrollmentFilter] = useState("전체")
+	const errorToastStack = useToastStack()
 	const canViewMembers = canManageMembers(user)
 	const {
 		data: members = [],
@@ -49,7 +59,8 @@ export default function MembersPage() {
 		name: debouncedSearchQuery,
 	})
 	const updateUserMutation = useUpdateUserAdmin()
-	const importTemporaryMembersMutation = useImportTemporaryMembers()
+	const previewActiveRosterMutation = usePreviewActiveRoster()
+	const applyActiveRosterMutation = useApplyActiveRoster()
 	const isForbidden = error?.message.includes("403") ?? false
 
 	useEffect(() => {
@@ -107,27 +118,54 @@ export default function MembersPage() {
 		setIsDialogOpen(true)
 	}
 
-	const handleBulkUpdateSubmit = async ({ file }: { effectiveDate: string; file: File | null }) => {
+	const showActiveRosterError = (err: unknown) => {
+		if (err instanceof ApiError && err.rowErrors && err.rowErrors.length > 0) {
+			errorToastStack.pushMany(err.rowErrors.map((rowError) => rowError.message))
+			return
+		}
+		setToastVariant("error")
+		setToastMessage(err instanceof Error ? err.message : "활동회원 명부 갱신에 실패했습니다.")
+		setShowToast(true)
+	}
+
+	const handleBulkUpdateSubmit = async ({
+		effectiveDate,
+		file,
+	}: {
+		effectiveDate: string
+		file: File | null
+	}) => {
 		if (!file) return
 		setShowToast(false)
 
 		try {
-			const result = await importTemporaryMembersMutation.mutateAsync(file)
+			const referenceDate = dateInputToUnix(effectiveDate) ?? Math.floor(Date.now() / 1000)
+			const counts = await previewActiveRosterMutation.mutateAsync({ file, referenceDate })
 			setIsBulkUpdateDialogOpen(false)
+			setRosterPreview({ counts, file, referenceDate })
+		} catch (err) {
+			setIsBulkUpdateDialogOpen(false)
+			showActiveRosterError(err)
+		}
+	}
 
-			if (result.skipped.length > 0) {
-				setBulkUpdateResult(result)
-				return
-			}
+	const handleRosterApplyConfirm = async () => {
+		if (!rosterPreview) return
 
+		try {
+			const result = await applyActiveRosterMutation.mutateAsync({
+				file: rosterPreview.file,
+				referenceDate: rosterPreview.referenceDate,
+			})
+			setRosterPreview(null)
 			setToastVariant("default")
-			setToastMessage(`${result.created_count}명의 활동회원 명부가 반영되었습니다.`)
+			setToastMessage(
+				`활동회원 명부가 반영되었습니다. (활동회원 전환 ${result.promoted_count}명, 정회원 전환 ${result.demoted_count}명)`,
+			)
 			setShowToast(true)
 		} catch (err) {
-			setToastVariant("error")
-			setToastMessage(err instanceof Error ? err.message : "활동회원 명부 갱신에 실패했습니다.")
-			setShowToast(true)
-			throw err
+			setRosterPreview(null)
+			showActiveRosterError(err)
 		}
 	}
 
@@ -253,7 +291,7 @@ export default function MembersPage() {
 				open={isBulkUpdateDialogOpen}
 				onOpenChange={setIsBulkUpdateDialogOpen}
 				onSubmit={handleBulkUpdateSubmit}
-				isSubmitting={importTemporaryMembersMutation.isPending}
+				isSubmitting={previewActiveRosterMutation.isPending}
 				onDownloadTemplate={() => {
 					const link = document.createElement("a")
 					link.href = "/templates/active-member-roster-template.xlsx"
@@ -261,13 +299,14 @@ export default function MembersPage() {
 					link.click()
 				}}
 			/>
-			<MemberBulkUpdateResultDialog
-				open={bulkUpdateResult !== null}
+			<ActiveRosterConfirmDialog
+				open={rosterPreview !== null}
+				counts={rosterPreview?.counts ?? null}
+				isSubmitting={applyActiveRosterMutation.isPending}
 				onOpenChange={(open) => {
-					if (!open) setBulkUpdateResult(null)
+					if (!open) setRosterPreview(null)
 				}}
-				createdCount={bulkUpdateResult?.created_count ?? 0}
-				skipped={bulkUpdateResult?.skipped ?? []}
+				onConfirm={handleRosterApplyConfirm}
 			/>
 
 			{/* 성공 토스트 알림 */}
@@ -277,6 +316,7 @@ export default function MembersPage() {
 				onClose={() => setShowToast(false)}
 				variant={toastVariant}
 			/>
+			<ToastStack items={errorToastStack.items} onDismiss={errorToastStack.dismiss} />
 		</div>
 	)
 }

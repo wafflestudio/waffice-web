@@ -6,6 +6,7 @@ import { ActionButton } from "@/components/ui/action-button"
 import { FilterResetButton, FilterTag, FilterTagGroup } from "@/components/ui/filter-tag"
 import { SearchInput } from "@/components/ui/search-input"
 import { Toast } from "@/components/ui/toast"
+import { ToastStack } from "@/components/ui/toast-stack"
 import {
 	useCreateProject,
 	useDeleteProject,
@@ -13,6 +14,8 @@ import {
 	useProjects,
 	useReplaceAllProjectsMembers,
 } from "@/hooks/use-projects"
+import { useToastStack } from "@/hooks/use-toast-stack"
+import { ApiError } from "@/lib/api/client"
 import type {
 	ProjectCreateFormValues,
 	ProjectManagementRow,
@@ -45,10 +48,19 @@ export function ProjectManagementView({ viewMode }: ProjectManagementViewProps) 
 	const [deleteTargetProject, setDeleteTargetProject] = useState<ProjectManagementRow | null>(null)
 	const [toastMessage, setToastMessage] = useState("")
 	const [showToast, setShowToast] = useState(false)
+	const errorToastStack = useToastStack()
 
 	const showMessage = (message: string) => {
 		setToastMessage(message)
 		setShowToast(true)
+	}
+
+	const showBulkUpdateError = (error: unknown) => {
+		if (error instanceof ApiError && error.rowErrors && error.rowErrors.length > 0) {
+			errorToastStack.pushMany(error.rowErrors.map((rowError) => rowError.message))
+			return
+		}
+		showMessage(error instanceof Error ? error.message : "팀원 일괄 수정에 실패했습니다.")
 	}
 
 	const isAdminView = viewMode === "admin"
@@ -188,9 +200,14 @@ export function ProjectManagementView({ viewMode }: ProjectManagementViewProps) 
 				onSubmit={async (files) => {
 					const file = files[0]
 					if (!file) return
-					await replaceAllProjectsMembers.mutateAsync(file)
-					setIsBulkUpdateDialogOpen(false)
-					showMessage("팀원 명단이 일괄 수정되었습니다.")
+					try {
+						await replaceAllProjectsMembers.mutateAsync(file)
+						setIsBulkUpdateDialogOpen(false)
+						showMessage("팀원 명단이 일괄 수정되었습니다.")
+					} catch (error) {
+						setIsBulkUpdateDialogOpen(false)
+						showBulkUpdateError(error)
+					}
 				}}
 				onDownloadTemplate={() => {
 					downloadAllProjectsTemplate.mutate(undefined, {
@@ -222,6 +239,7 @@ export function ProjectManagementView({ viewMode }: ProjectManagementViewProps) 
 				onConfirm={handleDeleteProject}
 			/>
 			<Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />
+			<ToastStack items={errorToastStack.items} onDismiss={errorToastStack.dismiss} />
 		</div>
 	)
 }
