@@ -1,5 +1,6 @@
 import type {
 	CertificateDetail,
+	CertificateHistoryItem,
 	CertificateOptions,
 	CertificateSummary,
 	DraftCertificateCreate,
@@ -54,6 +55,19 @@ export function createCertificatesApi(client: ApiClient) {
 
 		downloadCertificate(certificateId: number): Promise<Blob> {
 			return client.requestBlob(`/certificates/${certificateId}/download`)
+		},
+
+		// === Staff/admin: 전체 발급 이력 (PR #21) ===
+		listCertificateHistory(
+			cursor?: string,
+			limit = 20,
+		): Promise<ApiResponse<CursorPage<CertificateHistoryItem>>> {
+			const params = new URLSearchParams()
+			if (cursor) params.append("cursor", cursor)
+			params.append("limit", limit.toString())
+			return client.request<ApiResponse<CursorPage<CertificateHistoryItem>>>(
+				`/certificates?${params.toString()}`,
+			)
 		},
 
 		// === Staff/admin: 초안 생성/미리보기 (PR #18) ===

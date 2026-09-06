@@ -137,6 +137,9 @@ export default function MembersPage() {
 	}) => {
 		if (!file) return
 		setShowToast(false)
+		// 이전 업로드의 집계 결과가 남아있으면, 이번 업로드가 실패했을 때
+		// "갱신 전 결과 확인" 모달이 과거 파일의 집계를 보여준 채로 다시 뜨게 되므로 먼저 비운다.
+		setRosterPreview(null)
 
 		try {
 			const referenceDate = dateInputToUnix(effectiveDate) ?? Math.floor(Date.now() / 1000)
