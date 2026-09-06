@@ -48,7 +48,7 @@ const buildWebsites = (websites: Website[] | null | undefined, linkedInUrl: stri
 }
 
 const formatDate = (value?: string | number) => {
-	if (!value) return ""
+	if (!value) return "-"
 
 	const date = new Date(value)
 	if (Number.isNaN(date.getTime())) return String(value)
@@ -385,7 +385,7 @@ export function MemberDetailDialog({
 											{member.name}
 										</p>
 										<p className="text-[14px] font-normal leading-[1.4] tracking-[-0.28px] text-black-600">
-											{email}
+											{member.is_temporary ? "임시회원" : email || "-"}
 										</p>
 									</div>
 								</header>

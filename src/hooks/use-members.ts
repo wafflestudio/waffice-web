@@ -5,6 +5,8 @@ import { apiClient } from "@/lib/api"
 import { buildMockMyActivities } from "@/lib/mock/activities"
 import { canManageMembers } from "@/lib/permissions"
 import type {
+	ActiveRosterApplyResult,
+	ActiveRosterPreview,
 	ActivityCreateRequest,
 	ActivityHistoryAdminItem,
 	ActivityHistoryItem,
@@ -84,6 +86,7 @@ export const userDetailToMember = (user: UserDetail): Member => ({
 	current_projects: user.current_projects ?? [],
 	student_id: user.student_id || undefined,
 	department: user.department || undefined,
+	is_temporary: user.is_temporary,
 	user,
 	status: user.qualification === "pending" ? "inactive" : "active",
 	join_date: new Date(user.created_at * 1000).toISOString(),
@@ -197,6 +200,31 @@ export function useImportTemporaryMembers() {
 			getResponseData(
 				await apiClient.importTemporaryMembers(file),
 				"임시회원 명부를 처리하는 데 실패했습니다.",
+			),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: memberQueryKeys.all })
+		},
+	})
+}
+
+export function usePreviewActiveRoster() {
+	return useMutation<ActiveRosterPreview, Error, { file: File; referenceDate?: number }>({
+		mutationFn: async ({ file, referenceDate }) =>
+			getResponseData(
+				await apiClient.previewActiveRoster(file, referenceDate),
+				"활동회원 명부 갱신 내용을 미리 볼 수 없습니다.",
+			),
+	})
+}
+
+export function useApplyActiveRoster() {
+	const queryClient = useQueryClient()
+
+	return useMutation<ActiveRosterApplyResult, Error, { file: File; referenceDate: number }>({
+		mutationFn: async ({ file, referenceDate }) =>
+			getResponseData(
+				await apiClient.applyActiveRoster(file, referenceDate),
+				"활동회원 명부 갱신에 실패했습니다.",
 			),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: memberQueryKeys.all })

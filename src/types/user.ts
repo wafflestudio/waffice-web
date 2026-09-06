@@ -67,6 +67,25 @@ export interface TemporaryMemberImportResult {
 	skipped: SkippedTemporaryMember[]
 }
 
+/** 활동회원 명부 갱신 diff 집계 (app/schemas/user.py ActiveRosterCounts). */
+export interface ActiveRosterCounts {
+	promoted_count: number
+	demoted_count: number
+	maintained_count: number
+	new_temporary_count: number
+}
+
+export interface ActiveRosterPreview extends ActiveRosterCounts {
+	reference_date: number
+}
+
+export interface ActiveRosterApplyResult extends ActiveRosterCounts {
+	reference_date: number
+	promoted: UserBrief[]
+	demoted: UserBrief[]
+	created_temporary: UserBrief[]
+}
+
 export interface ApproveRequest {
 	qualification: Exclude<Qualification, "pending">
 }
