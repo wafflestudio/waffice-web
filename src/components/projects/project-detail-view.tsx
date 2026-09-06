@@ -1082,7 +1082,7 @@ function ProjectMemberEditDialog({
 											/>
 											<label
 												htmlFor={leftDateUnknownId}
-												className="ml-[10px] flex cursor-pointer items-center gap-[10px] text-[14px] tracking-[-0.28px] text-black-700"
+												className="ml-[10px] flex shrink-0 cursor-pointer items-center gap-[10px] whitespace-nowrap text-[14px] tracking-[-0.28px] text-black-700"
 											>
 												<Checkbox
 													id={leftDateUnknownId}
