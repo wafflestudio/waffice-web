@@ -30,3 +30,11 @@ export interface ApiResponse<T> {
 	error?: string | null
 	message?: string | null
 }
+
+/** 팀원 명부 업로드 등에서 행 단위로 내려오는 검증 오류 (app/services/roster.py `_project_member_error`). */
+export interface RowValidationError {
+	row: number
+	field: string
+	code: string
+	message: string
+}
