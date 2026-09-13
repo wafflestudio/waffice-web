@@ -167,10 +167,10 @@ export function MemberTable({
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "w-[220px]")}>
+							<TableHead className={cn(HEADER_CELL_CLASS, "hidden w-[220px] 2xl:table-cell")}>
 								소식 수신용 이메일
 							</TableHead>
-							<TableHead className={cn(HEADER_CELL_CLASS, "min-w-0")}>활동 프로젝트</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[175px]")}>활동 프로젝트</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
@@ -238,7 +238,9 @@ export function MemberTable({
 									<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>
 										{member.affiliation || "학부생"}
 									</TableCell>
-									<TableCell className={cn(BODY_CELL_CLASS, "max-w-0 truncate")}>
+									<TableCell
+										className={cn(BODY_CELL_CLASS, "hidden max-w-0 truncate 2xl:table-cell")}
+									>
 										{member.email}
 									</TableCell>
 									<TableCell className={cn(BODY_CELL_CLASS, "truncate")} title={currentProjects}>
