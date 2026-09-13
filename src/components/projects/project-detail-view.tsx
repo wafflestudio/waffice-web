@@ -1,6 +1,15 @@
 "use client"
 
-import { ArrowUpRight, Check, ChevronDown, MoreHorizontal, Plus, Search, X } from "lucide-react"
+import {
+	ArrowUpRight,
+	Check,
+	ChevronDown,
+	Minus,
+	MoreHorizontal,
+	Plus,
+	Search,
+	X,
+} from "lucide-react"
 import type * as React from "react"
 import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { CalendarDateField } from "@/components/ui/calendar"
@@ -75,7 +84,6 @@ const STATUS_LABEL: Record<ProjectStatus, string> = {
 	ended: "종결",
 }
 
-const ACTIVITY_MEMBERS_PER_PAGE = 5
 type ActivityStatusFilterValue = "활동 중" | "과거 활동" | "전체"
 
 const STATUS_DOT_CLASS: Record<ProjectStatus, string> = {
@@ -265,11 +273,11 @@ export function ProjectDetailView({ project, viewMode }: ProjectDetailViewProps)
 		<div className="flex w-full flex-col gap-[40px] pb-[80px]">
 			<header className="flex items-end gap-[30px]">
 				<h1 className="text-[28px] font-semibold leading-[1.5] text-black-900">프로젝트 상세</h1>
-				<div className="flex h-[25px] flex-col justify-between">
-					<span className="text-[14px] font-medium leading-[18px] tracking-[-0.28px] text-black-900">
+				<div className="flex flex-col items-center gap-[4px]">
+					<span className="text-[20px] font-semibold leading-normal text-black-900">
 						{project.name}
 					</span>
-					<span className="h-[3px] w-full bg-peach-300" />
+					<span className="h-[3px] w-full min-w-[70px] bg-peach-300" />
 				</div>
 			</header>
 
@@ -390,18 +398,6 @@ function ActivityMembersSection({
 	onOpenAdd,
 	onOpenEdit,
 }: ActivityMembersSectionProps) {
-	const [visibleCount, setVisibleCount] = useState(ACTIVITY_MEMBERS_PER_PAGE)
-	const [lastFilterKey, setLastFilterKey] = useState(
-		`${showPastMembers}-${activityStatusFilter}-${searchQuery}`,
-	)
-	const filterKey = `${showPastMembers}-${activityStatusFilter}-${searchQuery}`
-	if (filterKey !== lastFilterKey) {
-		setLastFilterKey(filterKey)
-		setVisibleCount(ACTIVITY_MEMBERS_PER_PAGE)
-	}
-	const visibleMembersList = members.slice(0, visibleCount)
-	const hasMore = visibleCount < members.length
-
 	return (
 		<SectionRow title={showPastMembers ? "과거 활동 팀원" : "활동 팀원"}>
 			<div className="flex min-w-0 flex-col gap-[20px]">
@@ -481,7 +477,7 @@ function ActivityMembersSection({
 							</DesignTableHeaderRow>
 						</thead>
 						<tbody>
-							{visibleMembersList.map((member) => (
+							{members.map((member) => (
 								<DesignTableRow key={member.id} className="h-[50px]">
 									<DesignTableBodyCell className="overflow-visible">
 										<div className="flex items-center gap-[6px]">
@@ -514,15 +510,6 @@ function ActivityMembersSection({
 						</tbody>
 					</DesignTable>
 				</div>
-				{hasMore && (
-					<button
-						type="button"
-						onClick={() => setVisibleCount((prev) => prev + ACTIVITY_MEMBERS_PER_PAGE)}
-						className="flex h-[40px] items-center justify-center self-center rounded-[3px] border border-black-300 bg-white px-[24px] text-[14px] font-medium text-black-900 transition-colors hover:bg-black-100"
-					>
-						더보기
-					</button>
-				)}
 			</div>
 		</SectionRow>
 	)
@@ -596,10 +583,32 @@ function RelatedLinksSection({
 		}
 	}
 
+	const handleDelete = async (targetUrl: string) => {
+		try {
+			await updateProject.mutateAsync({
+				projectId,
+				data: { websites: websites.filter((website) => website.url !== targetUrl) },
+			})
+		} catch (error) {
+			onSaveError(error instanceof Error ? error.message : "링크 삭제에 실패했습니다.")
+		}
+	}
+
 	return (
 		<SectionRow title="관련 링크">
 			<div className="w-[1456px] max-w-full overflow-x-auto bg-white">
 				<div className="min-w-[960px] border-black-300 border-t">
+					<div className="flex h-[40px] border-black-300 border-b bg-black-100">
+						<div className="flex w-[220px] items-center overflow-hidden px-[80px] text-[14px] font-medium whitespace-nowrap text-black-900">
+							구분
+						</div>
+						<div className="flex min-w-0 flex-1 items-center px-[20px] text-[14px] font-medium whitespace-nowrap text-black-900">
+							바로가기
+						</div>
+						<div className="flex w-[72px] items-center justify-center px-[20px] text-[14px] font-medium whitespace-nowrap text-black-900">
+							삭제
+						</div>
+					</div>
 					{websites.length === 0 && !isAdding && (
 						<div className="flex h-[50px] items-center px-[20px] text-[14px] text-black-600">
 							등록된 링크가 없습니다.
@@ -619,6 +628,17 @@ function RelatedLinksSection({
 								<span className="truncate">{website.description || website.url}</span>
 								<ArrowUpRight className="size-[20px] shrink-0" strokeWidth={1.6} />
 							</a>
+							<div className="flex w-[72px] shrink-0 items-center justify-center">
+								<button
+									type="button"
+									aria-label={`${website.type} 링크 삭제`}
+									onClick={() => handleDelete(website.url)}
+									disabled={updateProject.isPending}
+									className="flex size-[24px] items-center justify-center rounded-[4px] border border-black-400 bg-white text-black-600 transition-colors hover:bg-black-100 disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									<Minus className="size-[16px]" strokeWidth={1.8} />
+								</button>
+							</div>
 						</div>
 					))}
 					{isAdding && (
@@ -640,12 +660,19 @@ function RelatedLinksSection({
 									className="h-[28px] flex-1 rounded-[5px] border-black-300 px-[16px] text-[14px] text-black-600 shadow-none focus-visible:border-peach-300 focus-visible:ring-0"
 								/>
 							</div>
-							<div className="flex w-[140px] items-center justify-center px-[20px]">
+							<div className="flex items-center gap-[10px] px-[20px]">
+								<button
+									type="button"
+									onClick={resetForm}
+									className="flex h-[28px] w-[70px] items-center justify-center rounded-[2px] border border-black-500 text-[14px] text-black-500 transition-colors hover:bg-black-100"
+								>
+									취소
+								</button>
 								<button
 									type="button"
 									onClick={handleSave}
 									disabled={!newType.trim() || !newUrl.trim() || updateProject.isPending}
-									className="flex h-[28px] w-full items-center justify-center rounded-[2px] bg-black-500 text-[14px] text-white transition-colors hover:bg-black-600 disabled:cursor-not-allowed disabled:opacity-50"
+									className="flex h-[28px] w-[70px] items-center justify-center rounded-[2px] bg-black-500 text-[14px] text-white transition-colors hover:bg-black-600 disabled:cursor-not-allowed disabled:opacity-50"
 								>
 									저장
 								</button>
@@ -1162,11 +1189,11 @@ function RadioButton({
 		>
 			<span
 				className={cn(
-					"flex size-[16px] items-center justify-center rounded-full border",
+					"flex size-[16px] shrink-0 items-center justify-center rounded-full border",
 					checked ? "border-black-900" : "border-black-400",
 				)}
 			>
-				{checked && <span className="size-[8px] rounded-full bg-black-900" />}
+				{checked && <span className="size-[8px] shrink-0 rounded-full bg-black-900" />}
 			</span>
 			{children}
 		</button>
