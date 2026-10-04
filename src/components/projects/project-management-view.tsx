@@ -16,6 +16,7 @@ import {
 } from "@/hooks/use-projects"
 import { useToastStack } from "@/hooks/use-toast-stack"
 import { ApiError } from "@/lib/api/client"
+import { downloadBlob } from "@/lib/download"
 import type {
 	ProjectCreateFormValues,
 	ProjectManagementRow,
@@ -212,12 +213,7 @@ export function ProjectManagementView({ viewMode }: ProjectManagementViewProps) 
 				onDownloadTemplate={() => {
 					downloadAllProjectsTemplate.mutate(undefined, {
 						onSuccess: (blob) => {
-							const url = URL.createObjectURL(blob)
-							const link = document.createElement("a")
-							link.href = url
-							link.download = "project-members-template.xlsx"
-							link.click()
-							URL.revokeObjectURL(url)
+							downloadBlob(blob, "project-members-template.xlsx")
 						},
 						onError: (downloadError) => {
 							showMessage(

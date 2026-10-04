@@ -20,7 +20,7 @@ import {
 	TableRow,
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
-import type { Member, MemberCreate, MemberUpdate } from "@/types"
+import type { Member, MemberCreate, MemberUpdate, NotificationConsentFilter } from "@/types"
 import { MemberDetailDialog } from "./member-detail-dialog"
 
 interface MemberTableProps {
@@ -37,6 +37,10 @@ interface MemberTableProps {
 	onRoleFilterChange: (role: string) => void
 	enrollmentFilter: string
 	onEnrollmentFilterChange: (status: string) => void
+	emailConsentFilter: NotificationConsentFilter
+	onEmailConsentFilterChange: (status: NotificationConsentFilter) => void
+	smsConsentFilter: NotificationConsentFilter
+	onSmsConsentFilterChange: (status: NotificationConsentFilter) => void
 }
 
 const ITEMS_PER_PAGE = 10
@@ -69,9 +73,14 @@ export function MemberTable({
 	onRoleFilterChange,
 	enrollmentFilter,
 	onEnrollmentFilterChange,
+	emailConsentFilter,
+	onEmailConsentFilterChange,
+	smsConsentFilter,
+	onSmsConsentFilterChange,
 }: MemberTableProps) {
 	const ROLE_OPTIONS = ["활동회원", "정회원", "준회원", "가입 대기"]
 	const ENROLLMENT_OPTIONS = ["학부생", "휴학생", "졸업생", "대학원생"]
+	const CONSENT_OPTIONS: NotificationConsentFilter[] = ["전체", "수신", "미수신"]
 
 	// 회원 상세 페이지 모달
 	const [selectedMember, setSelectedMember] = useState<Member | null>(null)
@@ -85,6 +94,16 @@ export function MemberTable({
 		.filter((member) => member.name.toLowerCase().includes(searchQuery.toLowerCase()))
 		.filter((member) => roleFilter === "전체" || (member.role || "활동회원") === roleFilter)
 		.filter((member) => enrollmentFilter === "전체" || member.affiliation === enrollmentFilter)
+		.filter(
+			(member) =>
+				emailConsentFilter === "전체" ||
+				member.user?.email_notifications_agreed === (emailConsentFilter === "수신"),
+		)
+		.filter(
+			(member) =>
+				smsConsentFilter === "전체" ||
+				member.user?.sms_notifications_agreed === (smsConsentFilter === "수신"),
+		)
 
 	// 기수 정렬
 	const sortedMembers = generationSort
@@ -171,6 +190,52 @@ export function MemberTable({
 								소식 수신용 이메일
 							</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[175px]")}>활동 프로젝트</TableHead>
+							<TableHead className={cn(HEADER_CELL_CLASS, "w-[130px]")}>
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<FilterTrigger
+											aria-label="수신 여부 필터"
+											className={FILTER_TRIGGER_CLASS}
+											iconClassName="size-4 text-[#121212]"
+										>
+											수신 여부
+										</FilterTrigger>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent
+										align="start"
+										className={`w-[150px] ${DROPDOWN_CONTENT_CLASS}`}
+									>
+										<p className="px-[8px] pt-[5px] text-[12px] text-black-500">이메일</p>
+										<DropdownMenuRadioGroup
+											value={emailConsentFilter}
+											onValueChange={(value) =>
+												onEmailConsentFilterChange(value as NotificationConsentFilter)
+											}
+										>
+											{CONSENT_OPTIONS.map((option) => (
+												<DropdownMenuFilterRadioItem key={`email-${option}`} value={option}>
+													{option}
+												</DropdownMenuFilterRadioItem>
+											))}
+										</DropdownMenuRadioGroup>
+										<p className="border-black-300 border-t px-[8px] pt-[8px] text-[12px] text-black-500">
+											문자
+										</p>
+										<DropdownMenuRadioGroup
+											value={smsConsentFilter}
+											onValueChange={(value) =>
+												onSmsConsentFilterChange(value as NotificationConsentFilter)
+											}
+										>
+											{CONSENT_OPTIONS.map((option) => (
+												<DropdownMenuFilterRadioItem key={`sms-${option}`} value={option}>
+													{option}
+												</DropdownMenuFilterRadioItem>
+											))}
+										</DropdownMenuRadioGroup>
+									</DropdownMenuContent>
+								</DropdownMenu>
+							</TableHead>
 							<TableHead className={cn(HEADER_CELL_CLASS, "w-[100px]")}>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
@@ -245,6 +310,10 @@ export function MemberTable({
 									</TableCell>
 									<TableCell className={cn(BODY_CELL_CLASS, "truncate")} title={currentProjects}>
 										{currentProjects}
+									</TableCell>
+									<TableCell className={cn(BODY_CELL_CLASS, "text-[12px] leading-[1.3]")}>
+										<div>이메일 {member.user?.email_notifications_agreed ? "Y" : "N"}</div>
+										<div>문자 {member.user?.sms_notifications_agreed ? "Y" : "N"}</div>
 									</TableCell>
 									<TableCell className={cn(BODY_CELL_CLASS, "truncate")}>
 										{member.role || "활동회원"}

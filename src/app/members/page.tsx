@@ -24,8 +24,14 @@ import {
 } from "@/hooks/use-members"
 import { useToastStack } from "@/hooks/use-toast-stack"
 import { ApiError } from "@/lib/api/client"
+import { downloadUrl } from "@/lib/download"
 import { canManageMembers } from "@/lib/permissions"
-import type { ActiveRosterCounts, MemberCreate, MemberUpdate } from "@/types"
+import type {
+	ActiveRosterCounts,
+	MemberCreate,
+	MemberUpdate,
+	NotificationConsentFilter,
+} from "@/types"
 import { toUserUpdateRequest } from "@/types"
 
 export default function MembersPage() {
@@ -47,6 +53,8 @@ export default function MembersPage() {
 	const [generationSort, setGenerationSort] = useState<"desc" | "asc" | null>(null)
 	const [roleFilter, setRoleFilter] = useState("전체")
 	const [enrollmentFilter, setEnrollmentFilter] = useState("전체")
+	const [emailConsentFilter, setEmailConsentFilter] = useState<NotificationConsentFilter>("전체")
+	const [smsConsentFilter, setSmsConsentFilter] = useState<NotificationConsentFilter>("전체")
 	const errorToastStack = useToastStack()
 	const canViewMembers = canManageMembers(user)
 	const {
@@ -101,12 +109,20 @@ export default function MembersPage() {
 		...(enrollmentFilter !== "전체"
 			? [{ label: enrollmentFilter, onRemove: () => setEnrollmentFilter("전체") }]
 			: []),
+		...(emailConsentFilter !== "전체"
+			? [{ label: `이메일 ${emailConsentFilter}`, onRemove: () => setEmailConsentFilter("전체") }]
+			: []),
+		...(smsConsentFilter !== "전체"
+			? [{ label: `문자 ${smsConsentFilter}`, onRemove: () => setSmsConsentFilter("전체") }]
+			: []),
 	]
 
 	const handleResetFilters = () => {
 		setGenerationSort(null)
 		setRoleFilter("전체")
 		setEnrollmentFilter("전체")
+		setEmailConsentFilter("전체")
+		setSmsConsentFilter("전체")
 	}
 
 	const handleRoleChange = () => {
@@ -281,6 +297,16 @@ export default function MembersPage() {
 						onRoleFilterChange={setRoleFilter}
 						enrollmentFilter={enrollmentFilter}
 						onEnrollmentFilterChange={setEnrollmentFilter}
+						emailConsentFilter={emailConsentFilter}
+						onEmailConsentFilterChange={(value) => {
+							setEmailConsentFilter(value)
+							setCurrentPage(1)
+						}}
+						smsConsentFilter={smsConsentFilter}
+						onSmsConsentFilterChange={(value) => {
+							setSmsConsentFilter(value)
+							setCurrentPage(1)
+						}}
 					/>
 				</div>
 			</div>
@@ -296,10 +322,7 @@ export default function MembersPage() {
 				onSubmit={handleBulkUpdateSubmit}
 				isSubmitting={previewActiveRosterMutation.isPending}
 				onDownloadTemplate={() => {
-					const link = document.createElement("a")
-					link.href = "/templates/active-member-roster-template.xlsx"
-					link.download = "활동회원_명부_양식.xlsx"
-					link.click()
+					downloadUrl("/templates/active-member-roster-template.xlsx", "활동회원_명부_양식.xlsx")
 				}}
 			/>
 			<ActiveRosterConfirmDialog
