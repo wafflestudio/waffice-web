@@ -24,6 +24,7 @@ import {
 } from "@/hooks/use-members"
 import { useToastStack } from "@/hooks/use-toast-stack"
 import { ApiError } from "@/lib/api/client"
+import { downloadUrl } from "@/lib/download"
 import { canManageMembers } from "@/lib/permissions"
 import type {
 	ActiveRosterCounts,
@@ -321,10 +322,7 @@ export default function MembersPage() {
 				onSubmit={handleBulkUpdateSubmit}
 				isSubmitting={previewActiveRosterMutation.isPending}
 				onDownloadTemplate={() => {
-					const link = document.createElement("a")
-					link.href = "/templates/active-member-roster-template.xlsx"
-					link.download = "활동회원_명부_양식.xlsx"
-					link.click()
+					downloadUrl("/templates/active-member-roster-template.xlsx", "활동회원_명부_양식.xlsx")
 				}}
 			/>
 			<ActiveRosterConfirmDialog
