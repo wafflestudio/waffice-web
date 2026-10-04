@@ -323,7 +323,7 @@ export function MemberDetailDialog({
 			],
 		}))
 
-	const hasRequiredFields = () => Boolean(generation.trim() && email.trim() && enrollment.trim())
+	const hasRequiredFields = () => Boolean(generation.trim() && enrollment.trim())
 
 	const handleSubmitClick = () => {
 		if (!hasRequiredFields()) {
