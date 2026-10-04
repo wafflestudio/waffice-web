@@ -5,7 +5,12 @@ import { DesignDialogContent } from "@/components/ui/design-dialog"
 import { Dialog, DialogTitle } from "@/components/ui/dialog"
 import { DialogActionButton } from "@/components/ui/dialog-action-button"
 import { Toast } from "@/components/ui/toast"
-import { useIssueCertificate, usePreviewCertificate } from "@/hooks/use-certificates"
+import {
+	useDownloadCertificate,
+	useIssueCertificate,
+	usePreviewCertificate,
+} from "@/hooks/use-certificates"
+import { downloadBlob } from "@/lib/download"
 import type { CertificateOptions } from "@/types"
 
 interface CertificatePreviewDialogProps {
@@ -26,6 +31,7 @@ export function CertificatePreviewDialog({
 	const [showErrorToast, setShowErrorToast] = useState(false)
 	const previewCertificate = usePreviewCertificate()
 	const issueCertificate = useIssueCertificate()
+	const downloadCertificate = useDownloadCertificate()
 
 	const showError = useCallback((message: string) => {
 		setToastMessage(message)
@@ -71,9 +77,23 @@ export function CertificatePreviewDialog({
 	const handleIssue = async () => {
 		if (!options) return
 		try {
-			await issueCertificate.mutateAsync(options)
-			handleOpenChange(false)
+			const certificate = await issueCertificate.mutateAsync(options)
+			onOpenChange(false)
+			setPdfUrl(null)
+			previewCertificate.reset()
 			onIssued()
+			if (certificate.status === "issued") {
+				try {
+					const blob = await downloadCertificate.mutateAsync(certificate.id)
+					downloadBlob(blob, `certificate_${certificate.id}.pdf`)
+				} catch (error) {
+					showError(
+						error instanceof Error
+							? `발급은 완료됐지만 다운로드에 실패했습니다: ${error.message}`
+							: "발급은 완료됐지만 다운로드에 실패했습니다.",
+					)
+				}
+			}
 		} catch (error) {
 			showError(error instanceof Error ? error.message : "활동증명서 발급에 실패했습니다.")
 		}

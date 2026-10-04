@@ -148,11 +148,20 @@ export function useMembers(cursor?: number, limit = 100, options: UseMembersQuer
 	return useQuery<Member[], Error>({
 		queryKey: memberQueryKeys.memberList(cursor, limit, name),
 		queryFn: async () => {
-			const users = getResponseData(
-				await apiClient.getUsers(cursor, limit, name),
-				"회원 목록을 불러오는데 실패했습니다.",
-			)
-			return users.items
+			const users: UserDetail[] = []
+			let nextCursor = cursor
+			while (true) {
+				const page = getResponseData(
+					await apiClient.getUsers(nextCursor, limit, name),
+					"회원 목록을 불러오는데 실패했습니다.",
+				)
+				users.push(...page.items)
+				if (page.next_cursor == null) break
+				if (page.next_cursor === nextCursor)
+					throw new Error("회원 목록 페이지를 불러오지 못했습니다.")
+				nextCursor = page.next_cursor
+			}
+			return users
 				.filter((user) => user.qualification !== "pending" || user.is_temporary)
 				.map(userDetailToMember)
 		},

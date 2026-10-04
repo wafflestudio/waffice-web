@@ -1,7 +1,7 @@
 "use client"
 
 import { X as XIcon } from "lucide-react"
-import { useId, useRef, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import { CalendarDateField } from "@/components/ui/calendar"
 import { DesignDialogContent } from "@/components/ui/design-dialog"
 import { Dialog, DialogClose, DialogTitle } from "@/components/ui/dialog"
@@ -46,6 +46,10 @@ export function MemberBulkUpdateDialog({
 	const [isDragging, setIsDragging] = useState(false)
 	const fileInputId = useId()
 	const fileInputRef = useRef<HTMLInputElement>(null)
+
+	useEffect(() => {
+		if (open) setEffectiveDate(todayDateInput())
+	}, [open])
 
 	const reset = () => {
 		setEffectiveDate(todayDateInput())

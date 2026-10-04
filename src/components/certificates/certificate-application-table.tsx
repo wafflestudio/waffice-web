@@ -19,6 +19,7 @@ import {
 import { DotStatusBadge } from "@/components/ui/status-badge"
 import { Toast } from "@/components/ui/toast"
 import { useDownloadCertificate } from "@/hooks/use-certificates"
+import { downloadBlob } from "@/lib/download"
 import type { MyCertificateApplication, MyCertificateApplicationStatus } from "@/types"
 
 export type CertificateApplicationStatusFilter = "전체" | MyCertificateApplicationStatus
@@ -53,12 +54,7 @@ export function CertificateApplicationTable({
 		setDownloadingId(row.id)
 		downloadCertificate.mutate(row.id, {
 			onSuccess: (blob) => {
-				const url = URL.createObjectURL(blob)
-				const link = document.createElement("a")
-				link.href = url
-				link.download = `certificate_${row.id}.pdf`
-				link.click()
-				URL.revokeObjectURL(url)
+				downloadBlob(blob, `certificate_${row.id}.pdf`)
 				setDownloadingId(null)
 			},
 			onError: (error) => {
