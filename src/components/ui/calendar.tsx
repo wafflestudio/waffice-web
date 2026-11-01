@@ -47,6 +47,11 @@ function Calendar({ value, onChange, className }: CalendarProps) {
 		setSelectedDay(day)
 		onChange(`${year}.${String(month).padStart(2, "0")}.${String(day).padStart(2, "0")}`)
 	}
+	const moveMonth = (offset: number) => {
+		const nextMonth = new Date(year, month - 1 + offset, 1)
+		setYear(nextMonth.getFullYear())
+		setMonth(nextMonth.getMonth() + 1)
+	}
 
 	return (
 		<div
@@ -69,10 +74,10 @@ function Calendar({ value, onChange, className }: CalendarProps) {
 					/>
 				</div>
 				<div className="flex items-center gap-[14px] text-black-800">
-					<button type="button" onClick={() => setMonth(month === 1 ? 12 : month - 1)}>
+					<button type="button" aria-label="이전 달" onClick={() => moveMonth(-1)}>
 						<ChevronLeft className="size-[16px]" />
 					</button>
-					<button type="button" onClick={() => setMonth(month === 12 ? 1 : month + 1)}>
+					<button type="button" aria-label="다음 달" onClick={() => moveMonth(1)}>
 						<ChevronRight className="size-[16px]" />
 					</button>
 				</div>
