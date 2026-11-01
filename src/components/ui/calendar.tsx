@@ -31,7 +31,7 @@ function Calendar({ value, onChange, className }: CalendarProps) {
 	const initialDate = useMemo(() => {
 		const normalized = value.replaceAll(".", "-")
 		const date = new Date(normalized)
-		return Number.isNaN(date.getTime()) ? new Date(2026, 4, 7) : date
+		return Number.isNaN(date.getTime()) ? new Date() : date
 	}, [value])
 	const [year, setYear] = useState(initialDate.getFullYear())
 	const [month, setMonth] = useState(initialDate.getMonth() + 1)
@@ -40,7 +40,7 @@ function Calendar({ value, onChange, className }: CalendarProps) {
 	const daysInMonth = new Date(year, month, 0).getDate()
 	// 그리드가 월요일 시작이므로 JS의 일요일(0) 기준 요일을 월요일(0)~일요일(6) 기준으로 옮긴다.
 	const firstWeekday = (new Date(year, month - 1, 1).getDay() + 6) % 7
-	const years = Array.from({ length: 11 }, (_, index) => 2026 - index)
+	const years = Array.from({ length: 11 }, (_, index) => new Date().getFullYear() - index)
 	const months = Array.from({ length: 12 }, (_, index) => index + 1)
 
 	const selectDay = (day: number) => {

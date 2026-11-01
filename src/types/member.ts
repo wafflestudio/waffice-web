@@ -4,6 +4,7 @@ import type { UserDetail, Website } from "./user"
 
 export type EnrollmentStatus = "학부생" | "휴학생" | "졸업생" | "대학원생"
 export type AccessRight = "운영진" | "팀장"
+export type NotificationConsentFilter = "전체" | "수신" | "미수신"
 
 export interface Member {
 	id: number
