@@ -34,7 +34,7 @@ jobs:
       - name: Build project
         run: pnpm run build:prod
         env:
-          NEXT_PUBLIC_GTM_ID: GTM-P9XCF8S7
+          NEXT_PUBLIC_GTM_ID: GTM-W2DZQJ7B
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
